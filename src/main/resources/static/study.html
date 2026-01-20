@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习小屋 - 云端自习室</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <style>
+        body {
+            background: var(--gradient-warm);
+            min-height: 100vh;
+        }
+
+        .page-container {
+            padding: var(--space-5);
+            padding-bottom: calc(var(--nav-height) + var(--space-6));
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .page-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        /* 专注入口大按钮 */
+        .focus-entry-card {
+            background: var(--gradient-primary);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8) var(--space-6);
+            text-align: center;
+            color: #fff;
+            margin-bottom: var(--space-6);
+            box-shadow: var(--shadow-card);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            display: block;
+        }
+
+        .focus-entry-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(124, 58, 237, 0.25);
+        }
+
+        .focus-entry-card:active {
+            transform: translateY(-2px);
+        }
+
+        .focus-entry-icon {
+            font-size: 56px;
+            margin-bottom: var(--space-4);
+            display: block;
+        }
+
+        .focus-entry-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--space-2);
+        }
+
+        .focus-entry-desc {
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+        }
+
+        /* 今日数据 */
+        .today-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-top: var(--space-4);
+        }
+
+        .today-stat {
+            text-align: center;
+        }
+
+        .today-stat-value {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .today-stat-label {
+            font-size: var(--font-size-xs);
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* 工具区块 */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-secondary);
+        }
+
+        /* 工具网格 */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+        }
+
+        .tool-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-3);
+            text-decoration: none;
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tool-card:active {
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .tool-card:nth-child(1) .tool-icon { background: #FEF3C7; }
+        .tool-card:nth-child(2) .tool-icon { background: #DBEAFE; }
+        .tool-card:nth-child(3) .tool-icon { background: #FCE7F3; }
+        .tool-card:nth-child(4) .tool-icon { background: #D1FAE5; }
+
+        .tool-label {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .tool-desc {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-tertiary);
+            text-align: center;
+        }
+
+        /* 宠物预览卡片 */
+        .pet-preview-card {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-top: var(--space-6);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            cursor: pointer;
+            transition: var(--transition-normal);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .pet-preview-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .pet-preview-avatar {
+            width: 64px;
+            height: 64px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .pet-preview-info {
+            flex: 1;
+        }
+
+        .pet-preview-name {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-dark);
+            margin-bottom: var(--space-1);
+        }
+
+        .pet-preview-level {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .pet-preview-arrow {
+            font-size: 20px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* 经验条 */
+        .pet-exp-bar {
+            margin-top: var(--space-2);
+            height: 6px;
+            background: var(--color-divider);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .pet-exp-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container page-with-nav">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">学习小屋 📚</h1>
+            <p class="page-subtitle">专注学习，快乐成长</p>
+        </div>
+
+        <!-- 专注入口 -->
+        <a href="/focus.html" class="focus-entry-card">
+            <span class="focus-entry-icon">🎯</span>
+            <div class="focus-entry-title">开始专注</div>
+            <div class="focus-entry-desc">进入沉浸式专注空间，宠物陪伴学习</div>
+            
+            <div class="today-stats">
+                <div class="today-stat">
+                    <div class="today-stat-value" id="todayDuration">--</div>
+                    <div class="today-stat-label">今日学习</div>
+                </div>
+                <div class="today-stat">
+                    <div class="today-stat-value" id="todayCount">-</div>
+                    <div class="today-stat-label">专注次数</div>
+                </div>
+                <div class="today-stat">
+                    <div class="today-stat-value" id="todayExp">-</div>
+                    <div class="today-stat-label">获得经验</div>
+                </div>
+            </div>
+        </a>
+
+        <!-- 学习工具 -->
+        <div class="section-header">
+            <span class="section-title">学习工具</span>
+        </div>
+
+        <div class="tool-grid">
+            <a href="/focus.html" class="tool-card">
+                <div class="tool-icon">🎵</div>
+                <span class="tool-label">白噪音</span>
+                <span class="tool-desc">沉浸式环境音</span>
+            </a>
+            <a href="/shredder.html" class="tool-card">
+                <div class="tool-icon">📝</div>
+                <span class="tool-label">情绪碎纸机</span>
+                <span class="tool-desc">释放压力</span>
+            </a>
+            <a href="/pet.html" class="tool-card">
+                <div class="tool-icon">🐱</div>
+                <span class="tool-label">我的宠物</span>
+                <span class="tool-desc">查看宠物详情</span>
+            </a>
+            <a href="/stats.html" class="tool-card">
+                <div class="tool-icon">📊</div>
+                <span class="tool-label">学习统计</span>
+                <span class="tool-desc">数据分析</span>
+            </a>
+        </div>
+
+        <!-- 宠物预览 -->
+        <a href="/pet.html" class="pet-preview-card">
+            <div class="pet-preview-avatar" id="petAvatar">🐱</div>
+            <div class="pet-preview-info">
+                <div class="pet-preview-name" id="petName">我的宠物</div>
+                <div class="pet-preview-level" id="petLevel">Lv.1 · 幼年体</div>
+                <div class="pet-exp-bar">
+                    <div class="pet-exp-fill" id="petExpFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <span class="pet-preview-arrow">›</span>
+        </a>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <a href="/index.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">自习室</span>
+        </a>
+        <a href="/study.html" class="nav-item active">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">学习小屋</span>
+        </a>
+        <a href="/member.html" class="nav-item">
+            <span class="nav-icon">👑</span>
+            <span class="nav-label">会员</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">我的</span>
+        </a>
+    </nav>
+
+    <script src="/js/nav.js"></script>
+    <script src="/js/pet-ai.js"></script>
+    <script>
+        // 宠物 Emoji 映射
+        const PET_EMOJIS = {
+            cat: { egg: '🥚', baby: '🐱', teen: '😺', adult: '😸', professional: '🎓😸' },
+            dog: { egg: '🥚', baby: '🐶', teen: '🐕', adult: '🦮', professional: '🎓🐶' },
+            rabbit: { egg: '🥚', baby: '🐰', teen: '🐇', adult: '🐇', professional: '🎓🐰' }
+        };
+
+        const STAGE_NAMES = {
+            egg: '蛋',
+            baby: '幼年体',
+            teen: '少年体',
+            adult: '成年体',
+            professional: '职业形态'
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTodayStats();
+            loadPetInfo();
+        });
+
+        // 格式化时长（秒转为可读格式）
+        function formatDuration(seconds) {
+            if (!seconds || seconds <= 0) return '0分';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) {
+                return minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`;
+            }
+            return `${minutes}分`;
+        }
+
+        // 加载今日统计
+        async function loadTodayStats() {
+            try {
+                const res = await fetch('/api/focus/today');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('todayDuration').textContent = formatDuration(data.totalDuration || 0);
+                    document.getElementById('todayCount').textContent = data.focusCount || 0;
+                    document.getElementById('todayExp').textContent = data.expEarned || 0;
+                }
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
+        }
+
+        // 加载宠物信息
+        async function loadPetInfo() {
+            try {
+                const res = await fetch('/api/pet');
+                const data = await res.json();
+                
+                if (data.success && data.hasPet) {
+                    const pet = data.pet;
+                    const type = pet.type || 'cat';
+                    const stage = pet.stage || 'baby';
+                    const emojis = PET_EMOJIS[type] || PET_EMOJIS.cat;
+                    
+                    document.getElementById('petAvatar').textContent = emojis[stage] || emojis.baby;
+                    document.getElementById('petName').textContent = pet.name || '我的宠物';
+                    document.getElementById('petLevel').textContent = `Lv.${pet.level || 1} · ${STAGE_NAMES[stage] || '幼年体'}`;
+                    
+                    const expPercent = ((pet.exp || 0) % 100);
+                    document.getElementById('petExpFill').style.width = `${expPercent}%`;
+                } else {
+                    document.getElementById('petAvatar').textContent = '🥚';
+                    document.getElementById('petName').textContent = '领养宠物';
+                    document.getElementById('petLevel').textContent = '点击领养你的专属伙伴';
+                }
+            } catch (err) {
+                console.error('加载宠物信息失败:', err);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人中心 - 云端自习室</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* 顶部区域 */
+        .header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            padding: 60px var(--space-5) var(--space-8);
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        /* 用户卡片 */
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .user-avatar {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .user-meta {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 统计卡片 */
+        .stats-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            margin: -30px var(--space-4) 0;
+            padding: var(--space-5);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 10;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-4);
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: var(--space-3);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        /* 主容器 */
+        .container {
+            padding: var(--space-5) var(--space-4);
+        }
+
+        /* 功能列表 */
+        .menu-section {
+            margin-bottom: var(--space-5);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-3);
+            padding-left: 4px;
+        }
+
+        .menu-list {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--color-border);
+            text-decoration: none;
+            color: var(--color-text-primary);
+            transition: var(--transition-fast);
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: var(--color-card-bg);
+        }
+
+        .menu-item:active {
+            background: var(--color-border);
+        }
+
+        .menu-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .menu-content {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .menu-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-top: 2px;
+        }
+
+        .menu-arrow {
+            color: var(--color-text-tertiary);
+            font-size: 14px;
+        }
+
+        .menu-badge {
+            background: var(--color-error);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            margin-right: var(--space-2);
+        }
+
+        /* 退出按钮 */
+        .logout-btn {
+            width: 100%;
+            padding: var(--space-4);
+            background: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 15px;
+            color: var(--color-error);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logout-btn:hover {
+            background: #FEF2F2;
+        }
+
+        /* 版本信息 */
+        .version-info {
+            text-align: center;
+            padding: var(--space-6) 0;
+            color: var(--color-text-tertiary);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部区域 -->
+    <div class="header">
+        <div class="header-title">个人中心</div>
+        <div class="user-card">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">加载中...</div>
+                <div class="user-meta" id="userMeta">累计学习 -- | Lv.--</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-card">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="statDays">0</div>
+                <div class="stat-label">连续学习</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statHours">0</div>
+                <div class="stat-label">累计时长</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statLevel">1</div>
+                <div class="stat-label">当前等级</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 常用功能 -->
+        <div class="menu-section">
+            <div class="section-title">常用功能</div>
+            <div class="menu-list">
+                <a href="stats.html" class="menu-item">
+                    <div class="menu-icon">📊</div>
+                    <div class="menu-content">
+                        <div class="menu-title">学习统计</div>
+                        <div class="menu-desc">查看详细学习数据</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="pet.html" class="menu-item">
+                    <div class="menu-icon">🐱</div>
+                    <div class="menu-content">
+                        <div class="menu-title">我的宠物</div>
+                        <div class="menu-desc">查看宠物详情</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showMessage()">
+                    <div class="menu-icon">💬</div>
+                    <div class="menu-content">
+                        <div class="menu-title">留言板</div>
+                        <div class="menu-desc">给自习室留言</div>
+                    </div>
+                    <span class="menu-badge">New</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 系统设置 -->
+        <div class="menu-section">
+            <div class="section-title">系统设置</div>
+            <div class="menu-list">
+                <a href="#" class="menu-item" onclick="showSettings()">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-content">
+                        <div class="menu-title">设置</div>
+                        <div class="menu-desc">通知、隐私、账号</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showHelp()">
+                    <div class="menu-icon">❓</div>
+                    <div class="menu-content">
+                        <div class="menu-title">帮助与反馈</div>
+                        <div class="menu-desc">常见问题、意见反馈</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item" onclick="showAbout()">
+                    <div class="menu-icon">ℹ️</div>
+                    <div class="menu-content">
+                        <div class="menu-title">关于</div>
+                        <div class="menu-desc">版本信息、用户协议</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 退出登录 -->
+        <button class="logout-btn" onclick="logout()">退出登录</button>
+
+        <!-- 版本信息 -->
+        <div class="version-info">
+            云端自习室 v2.0.0
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">自习室</span>
+        </a>
+        <a href="study.html" class="nav-item">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">学习小屋</span>
+        </a>
+        <a href="member.html" class="nav-item">
+            <span class="nav-icon">👑</span>
+            <span class="nav-label">会员</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">我的</span>
+        </a>
+    </nav>
+
+    <script src="js/nav.js"></script>
+    <script>
+        // 加载用户信息
+        document.addEventListener('DOMContentLoaded', loadUserInfo);
+
+        async function loadUserInfo() {
+            try {
+                // 从后端获取用户信息
+                const res = await fetch('/api/user/info');
+                const data = await res.json();
+                
+                if (data.success && data.user) {
+                    const user = data.user;
+                    document.getElementById('userName').textContent = user.nickname || user.username || '学习者';
+                    localStorage.setItem('userInfo', JSON.stringify(user));
+                } else {
+                    // 从 localStorage 获取备用信息
+                    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                    document.getElementById('userName').textContent = userInfo.nickname || userInfo.username || '学习者';
+                }
+            } catch (err) {
+                console.error('获取用户信息失败:', err);
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                document.getElementById('userName').textContent = userInfo.nickname || userInfo.username || '学习者';
+            }
+            
+            // 加载统计数据
+            loadStats();
+        }
+
+        async function loadStats() {
+            try {
+                // 获取学习统计 - 使用正确的接口
+                const [focusRes, statsRes] = await Promise.all([
+                    fetch('/api/focus/today'),
+                    fetch('/api/stats/weekly')
+                ]);
+                
+                const focusData = await focusRes.json();
+                const statsData = await statsRes.json();
+                
+                // 今日数据
+                if (focusData.success) {
+                    // 可以在这里使用今日数据
+                }
+                
+                // 周统计数据
+                if (statsData.success) {
+                    const totalMinutes = statsData.totalMinutes || 0;
+                    const hours = Math.floor(totalMinutes / 60);
+                    document.getElementById('statHours').textContent = hours > 0 ? hours + 'h' : totalMinutes + '分';
+                }
+                
+                // 计算连续学习天数
+                if (statsData.success && statsData.dailyData) {
+                    let streakDays = 0;
+                    const dailyData = statsData.dailyData.slice().reverse(); // 从今天往前数
+                    for (const day of dailyData) {
+                        if (day.minutes > 0) {
+                            streakDays++;
+                        } else {
+                            break;
+                        }
+                    }
+                    document.getElementById('statDays').textContent = streakDays + '天';
+                }
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
+
+            // 获取宠物等级
+            try {
+                const petRes = await fetch('/api/pet');
+                const petData = await petRes.json();
+                
+                if (petData.success && petData.hasPet) {
+                    const pet = petData.pet;
+                    document.getElementById('statLevel').textContent = pet.level || 1;
+                    
+                    // 更新用户元信息
+                    const hours = document.getElementById('statHours').textContent;
+                    document.getElementById('userMeta').textContent = 
+                        `累计学习 ${hours} | Lv.${pet.level || 1}`;
+                } else {
+                    document.getElementById('statLevel').textContent = 1;
+                    const hours = document.getElementById('statHours').textContent;
+                    document.getElementById('userMeta').textContent = `累计学习 ${hours} | Lv.1`;
+                }
+            } catch (err) {
+                console.error('加载宠物失败:', err);
+            }
+        }
+
+        function showMessage() {
+            alert('留言板功能开发中...');
+        }
+
+        function showSettings() {
+            alert('设置功能开发中...');
+        }
+
+        function showHelp() {
+            alert('帮助与反馈功能开发中...');
+        }
+
+        function showAbout() {
+            alert('云端自习室 v2.0.0\n\n一个帮助你专注学习的自习室应用');
+        }
+
+        async function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    await fetch('/api/logout', { method: 'POST' });
+                } catch (err) {
+                    console.error('退出登录失败:', err);
+                }
+                localStorage.removeItem('userInfo');
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }
+        }
+    </script>
+</body>
+</html>

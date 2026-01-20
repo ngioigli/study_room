@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习统计 - 学习小屋</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html {
+            min-height: 100%;
+            font-family: 'M PLUS Rounded 1c', 'PingFang SC', sans-serif;
+            background: linear-gradient(180deg, #F8F9FA 0%, #E8F4FD 100%);
+        }
+
+        /* 顶部导航 */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(248, 249, 250, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        .back-btn {
+            text-decoration: none;
+            color: #636E72;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-btn:hover {
+            background: #fff;
+            transform: translateX(-3px);
+        }
+        .nav-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2D3436;
+        }
+        .nav-placeholder {
+            width: 80px;
+        }
+
+        /* 主容器 */
+        .container {
+            padding: 80px 20px 40px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* 时间选择器 */
+        .time-tabs {
+            display: flex;
+            background: #fff;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .time-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #636E72;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .time-tab.active {
+            background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        /* 核心数据卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .stat-card .stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2D3436;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #B2BEC3;
+        }
+
+        /* 图表卡片 */
+        .chart-card {
+            background: #fff;
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2D3436;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-title .title-icon {
+            font-size: 20px;
+        }
+        .chart-container {
+            width: 100%;
+            height: 200px;
+        }
+
+        /* 时段热力图 */
+        .heatmap-container {
+            width: 100%;
+            height: 120px;
+        }
+
+        /* 学习画像 */
+        .profile-card {
+            background: linear-gradient(135deg, #6C5CE7, #A29BFE);
+            border-radius: 25px;
+            padding: 25px;
+            color: #fff;
+            box-shadow: 0 15px 40px rgba(108, 92, 231, 0.3);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+        }
+        .profile-info {
+            flex: 1;
+        }
+        .profile-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .profile-subtitle {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .profile-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .profile-tag {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .profile-summary {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #F0F0F5;
+            border-top-color: #6C5CE7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            margin-top: 15px;
+            color: #636E72;
+            font-size: 14px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #B2BEC3;
+        }
+        .empty-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .empty-text {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <a href="/focus.html" class="back-btn">
+        <span>←</span> 返回
+    </a>
+    <span class="nav-title">学习统计</span>
+    <div class="nav-placeholder"></div>
+</div>
+
+<div class="container">
+    <!-- 时间选择器 -->
+    <div class="time-tabs">
+        <div class="time-tab active" data-period="weekly">本周</div>
+        <div class="time-tab" data-period="monthly">本月</div>
+    </div>
+
+    <!-- 核心数据卡片 -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value" id="totalTime">--</div>
+            <div class="stat-label">总时长</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value" id="totalCount">--</div>
+            <div class="stat-label">专注次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="avgTime">--</div>
+            <div class="stat-label">日均时长</div>
+        </div>
+    </div>
+
+    <!-- 趋势图表 -->
+    <div class="chart-card">
+        <div class="chart-title">
+            <span class="title-icon">📈</span>
+            <span>学习趋势</span>
+        </div>
+        <div class="chart-container" id="trendChart"></div>
+    </div>
+
+    <!-- 时段分布 -->
+    <div class="chart-card">
+        <div class="chart-title">
+            <span class="title-icon">🕐</span>
+            <span>学习时段分布</span>
+        </div>
+        <div class="heatmap-container" id="hourlyChart"></div>
+    </div>
+
+    <!-- 学习画像 -->
+    <div class="profile-card" id="profileCard">
+        <div class="profile-header">
+            <div class="profile-avatar">📚</div>
+            <div class="profile-info">
+                <div class="profile-title">我的学习画像</div>
+                <div class="profile-subtitle" id="profileSubtitle">基于最近学习数据分析</div>
+            </div>
+        </div>
+        <div class="profile-tags" id="profileTags">
+            <span class="profile-tag">加载中...</span>
+        </div>
+        <div class="profile-summary" id="profileSummary">
+            正在分析你的学习习惯...
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPeriod = 'weekly';
+    let trendChart = null;
+    let hourlyChart = null;
+
+    // 页面加载
+    document.addEventListener('DOMContentLoaded', function() {
+        initCharts();
+        loadStats();
+        loadProfile();
+    });
+
+    // 时间选择器
+    document.querySelectorAll('.time-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.time-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentPeriod = this.dataset.period;
+            loadStats();
+        });
+    });
+
+    // 初始化图表
+    function initCharts() {
+        trendChart = echarts.init(document.getElementById('trendChart'));
+        hourlyChart = echarts.init(document.getElementById('hourlyChart'));
+
+        // 响应式
+        window.addEventListener('resize', function() {
+            trendChart.resize();
+            hourlyChart.resize();
+        });
+    }
+
+    // 加载统计数据
+    function loadStats() {
+        const endpoint = currentPeriod === 'weekly' ? '/api/stats/weekly' : '/api/stats/monthly';
+        
+        fetch(endpoint)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatsCards(data);
+                    updateTrendChart(data.dailyData);
+                }
+            })
+            .catch(err => console.error('加载统计失败:', err));
+
+        // 加载时段分布
+        fetch('/api/stats/hourly')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateHourlyChart(data.hourlyData);
+                }
+            })
+            .catch(err => console.error('加载时段分布失败:', err));
+    }
+
+    // 更新统计卡片
+    function updateStatsCards(data) {
+        const totalMinutes = data.totalMinutes || 0;
+        const totalCount = data.totalCount || 0;
+        const avgMinutes = data.avgMinutes || 0;
+
+        document.getElementById('totalTime').innerText = formatDuration(totalMinutes);
+        document.getElementById('totalCount').innerText = totalCount;
+        document.getElementById('avgTime').innerText = formatDuration(avgMinutes);
+    }
+
+    // 格式化时长
+    function formatDuration(minutes) {
+        if (minutes < 60) return `${minutes}分`;
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return m > 0 ? `${h}h${m}m` : `${h}h`;
+    }
+
+    // 更新趋势图表
+    function updateTrendChart(dailyData) {
+        if (!dailyData || dailyData.length === 0) {
+            trendChart.setOption({
+                title: {
+                    text: '暂无数据',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: { color: '#B2BEC3', fontSize: 14 }
+                }
+            });
+            return;
+        }
+
+        const labels = dailyData.map(d => d.dayOfWeek || d.date.slice(5));
+        const values = dailyData.map(d => d.minutes);
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    return `${params[0].name}<br/>学习 ${params[0].value} 分钟`;
+                }
+            },
+            grid: {
+                left: '10%',
+                right: '5%',
+                top: '10%',
+                bottom: '15%'
+            },
+            xAxis: {
+                type: 'category',
+                data: labels,
+                axisLine: { lineStyle: { color: '#E8E8E8' } },
+                axisLabel: { color: '#636E72', fontSize: 11 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                axisTick: { show: false },
+                splitLine: { lineStyle: { color: '#F0F0F5' } },
+                axisLabel: { color: '#B2BEC3', fontSize: 10 }
+            },
+            series: [{
+                type: 'bar',
+                data: values,
+                barWidth: '50%',
+                itemStyle: {
+                    borderRadius: [8, 8, 0, 0],
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: '#6C5CE7' },
+                        { offset: 1, color: '#A29BFE' }
+                    ])
+                }
+            }]
+        };
+
+        trendChart.setOption(option);
+    }
+
+    // 更新时段分布图表
+    function updateHourlyChart(hourlyData) {
+        if (!hourlyData || hourlyData.length === 0) return;
+
+        // 简化为6个时段
+        const periods = [
+            { name: '凌晨', range: [0, 6], icon: '🌙' },
+            { name: '早晨', range: [6, 9], icon: '🌅' },
+            { name: '上午', range: [9, 12], icon: '☀️' },
+            { name: '下午', range: [12, 18], icon: '🌤️' },
+            { name: '傍晚', range: [18, 21], icon: '🌆' },
+            { name: '深夜', range: [21, 24], icon: '🌃' }
+        ];
+
+        const periodData = periods.map(p => {
+            let total = 0;
+            for (let h = p.range[0]; h < p.range[1]; h++) {
+                total += hourlyData[h]?.minutes || 0;
+            }
+            return { name: p.name, value: total, icon: p.icon };
+        });
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: function(params) {
+                    const d = periodData[params[0].dataIndex];
+                    return `${d.icon} ${d.name}<br/>学习 ${d.value} 分钟`;
+                }
+            },
+            grid: {
+                left: '5%',
+                right: '5%',
+                top: '15%',
+                bottom: '20%'
+            },
+            xAxis: {
+                type: 'category',
+                data: periodData.map(d => d.icon + '\n' + d.name),
+                axisLine: { lineStyle: { color: '#E8E8E8' } },
+                axisLabel: { 
+                    color: '#636E72', 
+                    fontSize: 10,
+                    interval: 0
+                }
+            },
+            yAxis: {
+                type: 'value',
+                show: false
+            },
+            series: [{
+                type: 'bar',
+                data: periodData.map(d => d.value),
+                barWidth: '40%',
+                itemStyle: {
+                    borderRadius: [6, 6, 0, 0],
+                    color: function(params) {
+                        const colors = ['#74B9FF', '#FDCB6E', '#E17055', '#00B894', '#6C5CE7', '#A29BFE'];
+                        return colors[params.dataIndex];
+                    }
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '{c}分',
+                    fontSize: 10,
+                    color: '#636E72'
+                }
+            }]
+        };
+
+        hourlyChart.setOption(option);
+    }
+
+    // 加载学习画像
+    function loadProfile() {
+        fetch('/api/stats/profile')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateProfile(data);
+                }
+            })
+            .catch(err => console.error('加载画像失败:', err));
+    }
+
+    // 更新学习画像
+    function updateProfile(data) {
+        const tags = data.tags || [];
+        const summary = data.summary || '继续保持学习习惯！';
+
+        if (tags.length > 0) {
+            document.getElementById('profileTags').innerHTML = tags.map(tag => 
+                `<span class="profile-tag">${tag}</span>`
+            ).join('');
+        } else {
+            document.getElementById('profileTags').innerHTML = 
+                '<span class="profile-tag">初来乍到</span>';
+        }
+
+        document.getElementById('profileSummary').innerText = summary;
+        
+        const weeklyMinutes = data.weeklyMinutes || 0;
+        document.getElementById('profileSubtitle').innerText = 
+            `本周已学习 ${formatDuration(weeklyMinutes)}`;
+    }
+</script>
+</body>
+</html>

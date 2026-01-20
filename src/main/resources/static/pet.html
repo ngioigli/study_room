@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宠物详情 - 学习小屋</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pet-sprites.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            padding: 0 var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-full);
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition-fast);
+        }
+
+        .back-btn:hover {
+            background: var(--color-border);
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .settings-btn {
+            padding: 8px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* 一键孵化按钮（测试用） */
+        .instant-hatch-btn {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3);
+        }
+
+        .instant-hatch-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.4);
+        }
+
+        .instant-hatch-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 导航右侧按钮组 */
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 主容器 */
+        .container {
+            padding: 72px var(--space-4) var(--space-6);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* 宠物展示区 */
+        .pet-stage {
+            background: linear-gradient(180deg, rgba(124, 58, 237, 0.05) 0%, rgba(124, 58, 237, 0.02) 100%);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8) var(--space-4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 280px;
+        }
+
+        .pet-stage::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(124, 58, 237, 0.08), transparent);
+        }
+
+        /* 宠物气泡 - 自适应文字长度 */
+        .pet-bubble {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+            white-space: normal;
+            min-width: 80px;
+            max-width: 280px;
+            width: auto;
+            text-align: center;
+            line-height: 1.4;
+            font-family: var(--font-family-rounded);
+            word-break: break-word;
+        }
+
+        .pet-bubble.visible {
+            opacity: 1;
+            animation: bubbleIn 0.3s ease;
+        }
+
+        .pet-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* 宠物头像 */
+        .pet-avatar {
+            font-size: 100px;
+            cursor: pointer;
+            z-index: 1;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .pet-avatar:active {
+            transform: scale(0.95);
+        }
+
+        /* 宠物信息卡片 */
+        .pet-info-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-top: -30px;
+            position: relative;
+            z-index: 2;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .pet-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+        }
+
+        .pet-stage-badge {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            color: white;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 等级进度 */
+        .level-section {
+            margin-bottom: var(--space-4);
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .level-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .exp-text {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .exp-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .exp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        /* 心情区域 */
+        .mood-section {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(167, 139, 250, 0.05));
+            border-radius: var(--radius-lg);
+        }
+
+        .mood-icon {
+            font-size: 32px;
+        }
+
+        .mood-info {
+            flex: 1;
+        }
+
+        .mood-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .mood-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(124, 58, 237, 0.1);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .mood-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-error), var(--color-warning), var(--color-success));
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        .mood-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-primary);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* 互动按钮区 */
+        .action-section {
+            margin-top: var(--space-6);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-3);
+            padding-left: 4px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+            justify-items: center;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: var(--space-4) var(--space-2);
+            background: var(--color-card-bg);
+            border: none;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            width: 100%;
+            min-height: 80px;
+        }
+
+        .action-btn:hover {
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .action-btn .btn-icon {
+            font-size: 28px;
+        }
+
+        .action-btn .btn-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        .action-btn .btn-cooldown {
+            font-size: 10px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* 成长日志 */
+        .log-section {
+            margin-top: var(--space-6);
+        }
+
+        .log-list {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-icon {
+            font-size: 20px;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-text {
+            font-size: 14px;
+            color: var(--color-text-primary);
+        }
+
+        .log-time {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* 孵化界面 */
+        .hatch-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-8) var(--space-4);
+        }
+
+        .hatch-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .hatch-subtitle {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-6);
+        }
+
+        .pet-options {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .pet-option {
+            width: 90px;
+            height: 110px;
+            background: white;
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-normal);
+        }
+
+        .pet-option:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pet-option.selected {
+            border-color: var(--color-primary);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), white);
+        }
+
+        .pet-option .option-icon {
+            font-size: 40px;
+        }
+
+        .pet-option .option-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        .name-input {
+            width: 100%;
+            max-width: 280px;
+            padding: 14px 20px;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: var(--space-5);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .name-input:focus {
+            border-color: var(--color-primary);
+        }
+
+        .hatch-btn {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            border-radius: var(--radius-full);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+            transition: var(--transition-normal);
+        }
+
+        .hatch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
+        }
+
+        /* 加载状态 */
+        .loading-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: var(--space-4);
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        /* 隐藏状态 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航 -->
+        <nav class="top-nav">
+            <a href="study.html" class="back-btn">
+                <span>←</span> 返回
+            </a>
+            <span class="nav-title">宠物详情</span>
+            <div class="nav-right">
+                <button class="instant-hatch-btn" @click="instantHatch" v-if="hasPet && pet.stage === 'egg'">⚡ 一键孵化</button>
+                <button class="settings-btn">⚙️</button>
+            </div>
+        </nav>
+
+        <!-- Toast 提示 -->
+        <div class="toast" :class="{ visible: toast.show }">{{ toast.message }}</div>
+
+        <div class="container">
+            <!-- 加载状态 -->
+            <div class="loading-view" v-if="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在唤醒你的小伙伴...</div>
+            </div>
+
+            <!-- 孵化界面 -->
+            <div class="hatch-view" v-else-if="!hasPet">
+                <div class="hatch-title">选择你的伙伴</div>
+                <div class="hatch-subtitle">它将陪伴你一起学习成长</div>
+                
+                <div class="pet-options">
+                    <div 
+                        class="pet-option" 
+                        :class="{ selected: selectedType === 'cat' }"
+                        @click="selectedType = 'cat'"
+                    >
+                        <span class="option-icon">🐱</span>
+                        <span class="option-label">小猫咪</span>
+                    </div>
+                    <div 
+                        class="pet-option" 
+                        :class="{ selected: selectedType === 'dog' }"
+                        @click="selectedType = 'dog'"
+                    >
+                        <span class="option-icon">🐶</span>
+                        <span class="option-label">小狗狗</span>
+                    </div>
+                    <div 
+                        class="pet-option" 
+                        :class="{ selected: selectedType === 'rabbit' }"
+                        @click="selectedType = 'rabbit'"
+                    >
+                        <span class="option-icon">🐰</span>
+                        <span class="option-label">小兔子</span>
+                    </div>
+                </div>
+                
+                <input 
+                    type="text" 
+                    class="name-input" 
+                    v-model="petName"
+                    placeholder="给它起个名字吧" 
+                    maxlength="10"
+                >
+                
+                <button class="hatch-btn" @click="createPet">开始孵化</button>
+            </div>
+
+            <!-- 宠物主界面 -->
+            <div v-else>
+                <!-- 宠物展示区 -->
+                <div class="pet-stage">
+                    <div class="pet-bubble" :class="{ visible: bubble.show }">{{ bubble.text }}</div>
+                    <div 
+                        class="pet-avatar" 
+                        :class="behaviorState"
+                        @click="handlePetClick"
+                    >{{ petEmoji }}</div>
+                </div>
+
+                <!-- 宠物信息卡片 -->
+                <div class="pet-info-card">
+                    <div class="pet-header">
+                        <span class="pet-name">{{ pet.name }}</span>
+                        <span class="pet-stage-badge">{{ stageName }}</span>
+                    </div>
+
+                    <div class="level-section">
+                        <div class="level-header">
+                            <span class="level-text">Lv.{{ pet.level }}</span>
+                            <span class="exp-text">{{ expInLevel }} / 100 EXP</span>
+                        </div>
+                        <div class="exp-bar">
+                            <div class="exp-bar-fill" :style="{ width: expPercent + '%' }"></div>
+                        </div>
+                    </div>
+
+                    <div class="mood-section">
+                        <span class="mood-icon">{{ moodEmoji }}</span>
+                        <div class="mood-info">
+                            <div class="mood-label">心情值</div>
+                            <div class="mood-bar">
+                                <div class="mood-bar-fill" :style="{ width: pet.mood + '%' }"></div>
+                            </div>
+                        </div>
+                        <span class="mood-value">{{ pet.mood }}%</span>
+                    </div>
+                </div>
+
+                <!-- 互动按钮 -->
+                <div class="action-section">
+                    <div class="section-title">互动</div>
+                    <div class="action-grid">
+                        <button 
+                            class="action-btn" 
+                            :class="{ disabled: cooldowns.feed > 0 }"
+                            @click="interact('feed')"
+                        >
+                            <span class="btn-icon">🍖</span>
+                            <span class="btn-label">喂食</span>
+                            <span class="btn-cooldown" v-if="cooldowns.feed > 0">{{ formatCooldown(cooldowns.feed) }}</span>
+                        </button>
+                        <button 
+                            class="action-btn" 
+                            :class="{ disabled: cooldowns.pet > 0 }"
+                            @click="interact('pet')"
+                        >
+                            <span class="btn-icon">👋</span>
+                            <span class="btn-label">抚摸</span>
+                            <span class="btn-cooldown" v-if="cooldowns.pet > 0">{{ formatCooldown(cooldowns.pet) }}</span>
+                        </button>
+                        <button 
+                            class="action-btn"
+                            @click="interact('talk')"
+                        >
+                            <span class="btn-icon">💬</span>
+                            <span class="btn-label">聊天</span>
+                        </button>
+                        <button 
+                            class="action-btn" 
+                            :class="{ disabled: cooldowns.play > 0 }"
+                            @click="interact('play')"
+                        >
+                            <span class="btn-icon">🎮</span>
+                            <span class="btn-label">玩耍</span>
+                            <span class="btn-cooldown" v-if="cooldowns.play > 0">{{ formatCooldown(cooldowns.play) }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 成长日志 -->
+                <div class="log-section">
+                    <div class="section-title">成长日志</div>
+                    <div class="log-list">
+                        <div class="log-item" v-for="log in growthLogs" :key="log.id">
+                            <span class="log-icon">{{ log.icon }}</span>
+                            <div class="log-content">
+                                <div class="log-text">{{ log.text }}</div>
+                                <div class="log-time">{{ log.time }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, onUnmounted } = Vue;
+
+        // 宠物 Emoji 映射
+        const PET_EMOJIS = {
+            cat: { egg: '🥚', baby: '🐱', teen: '😺', adult: '😸', professional: '🎓' },
+            dog: { egg: '🥚', baby: '🐶', teen: '🐕', adult: '🦮', professional: '🎓' },
+            rabbit: { egg: '🥚', baby: '🐰', teen: '🐇', adult: '🐇', professional: '🎓' }
+        };
+
+        // 阶段名称映射
+        const STAGE_NAMES = {
+            egg: '蛋',
+            baby: '幼年体',
+            teen: '青年体',
+            adult: '成年体',
+            professional: '学霸形态'
+        };
+
+        // 互动对话（扩展版）
+        const DIALOGUES = {
+            feed: [
+                '好吃好吃~', '谢谢投喂！', '吃饱饱，学习好~', '能量满满！',
+                '这个味道不错呢~', '主人真贴心！', '吃得好开心~',
+                '今天的食物特别香~', '谢谢主人的爱心投喂！', '吃饱了有力气学习啦~'
+            ],
+            pet: [
+                '嘿嘿~', '好舒服~', '喵~', '摸摸头~', 
+                '再摸摸~', '好温暖呀~', '主人的手好温柔~',
+                '这样摸摸最舒服了~', '感受到主人的爱了~', '好幸福的感觉~'
+            ],
+            talk: {
+                morning: [
+                    '早上好啊主人！', '新的一天开始啦~', '今天也要加油哦！',
+                    '早起的鸟儿有虫吃~', '美好的一天从现在开始！', '主人早安，今天要做什么呢？',
+                    '阳光真好，心情也变好了~', '早晨的空气真清新！'
+                ],
+                afternoon: [
+                    '下午好~', '学习累了吗？', '要不要休息一下？',
+                    '下午的阳光真舒服~', '继续加油哦！', '午后时光最适合学习了',
+                    '主人辛苦了，喝口水吧~', '下午茶时间到了吗？'
+                ],
+                evening: [
+                    '晚上好！', '今天辛苦了~', '晚安，好梦~',
+                    '夜深了，注意休息哦~', '今天学得怎么样？', '星星出来了呢~',
+                    '晚上的时光也很美好~', '准备休息了吗？'
+                ],
+                general: [
+                    // 学习鼓励
+                    '今天也要加油哦！', '你是最棒的！', '一起努力吧~', 
+                    '学习使我快乐！', '我会一直陪着你的~', '主人最棒了！',
+                    '每一分努力都有意义~', '坚持就是胜利！', '知识就是力量！',
+                    
+                    // 生活化内容
+                    '今天吃得好饱呀~', '感觉自己变聪明了！', '心情真不错~',
+                    '和主人在一起最开心了~', '我想和主人一起看星星',
+                    '主人的笑容最治愈了', '今天学会了新技能呢！',
+                    '阳光真舒服，让人想打盹~', '主人陪我玩真开心！',
+                    
+                    // 情感支持
+                    '遇到困难不要怕，我在这里', '你已经做得很好了',
+                    '相信自己，你比想象中更强大', '我会永远支持你的！',
+                    '失败是成功之母，不要气馁', '每个人都有低谷期，会过去的',
+                    
+                    // 休息提醒
+                    '休息一下吧~', '累了就休息，我陪着你', '劳逸结合最重要啦！',
+                    '喝口水，休息一下吧~', '眼睛累了就看看远方', '深呼吸，放松一下心情',
+                    
+                    // 互动回应
+                    '主人今天过得怎么样？', '我想听主人讲故事', '主人有什么烦恼吗？',
+                    '我们一起努力吧！', '主人的温柔让我很安心', '谢谢主人陪我玩~'
+                ]
+            },
+            play: [
+                '太好玩了！', '再来一次！', '哈哈哈~', '好开心！',
+                '和主人玩耍最开心了~', '我们再玩一会儿吧~',
+                '这个游戏真有趣！', '主人陪我玩我最开心了~',
+                '玩耍时间最快乐！', '我们下次还要一起玩哦~'
+            ],
+            click: [
+                '嗯？', '干嘛~', '(*^▽^*)', '喵~', '汪！', '有什么事吗？',
+                '主人叫我吗？', '怎么了呀~', '我在这里呢！', '需要我帮忙吗？'
+            ]
+        };
+
+        createApp({
+            setup() {
+                // 状态
+                const loading = ref(true);
+                const hasPet = ref(false);
+                const pet = reactive({
+                    name: '',
+                    type: 'cat',
+                    stage: 'egg',
+                    level: 1,
+                    exp: 0,
+                    mood: 100
+                });
+                const selectedType = ref('cat');
+                const petName = ref('');
+                const behaviorState = ref('idle');
+                const bubble = reactive({ show: false, text: '' });
+                const toast = reactive({ show: false, message: '' });
+                const cooldowns = reactive({ feed: 0, pet: 0, play: 0 });
+                const growthLogs = ref([]);
+
+                // 行为定时器
+                let behaviorTimer = null;
+                let cooldownTimer = null;
+                let moodDecayTimer = null;
+                let expUpdateTimer = null;
+
+                // 计算属性
+                const petEmoji = computed(() => {
+                    const emojis = PET_EMOJIS[pet.type] || PET_EMOJIS.cat;
+                    return emojis[pet.stage] || emojis.egg;
+                });
+
+                const stageName = computed(() => STAGE_NAMES[pet.stage] || '蛋');
+
+                const expInLevel = computed(() => pet.exp % 100);
+                const expPercent = computed(() => (pet.exp % 100));
+
+                const moodEmoji = computed(() => {
+                    if (pet.mood >= 70) return '😊';
+                    if (pet.mood >= 40) return '😐';
+                    return '😢';
+                });
+
+                // 方法
+                const loadPet = async () => {
+                    try {
+                        const res = await fetch('/api/pet');
+                        const data = await res.json();
+                        
+                        if (data.success && data.hasPet) {
+                            hasPet.value = true;
+                            Object.assign(pet, data.pet);
+                            loadGrowthLogs();
+                            startBehaviorLoop();
+                            startMoodDecay();
+                            startExpUpdate();
+                        }
+                    } catch (err) {
+                        console.error('加载宠物失败:', err);
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                const createPet = async () => {
+                    try {
+                        const res = await fetch('/api/pet/create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                petType: selectedType.value,
+                                petName: petName.value || null
+                            })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            hasPet.value = true;
+                            Object.assign(pet, data.pet);
+                            showBubble('你好呀！我是' + pet.name + '！');
+                            loadGrowthLogs();
+                            startBehaviorLoop();
+                        } else {
+                            showToast('孵化失败: ' + data.message);
+                        }
+                    } catch (err) {
+                        console.error('孵化失败:', err);
+                        showToast('网络错误，请重试');
+                    }
+                };
+
+                const loadGrowthLogs = async () => {
+                    // 模拟成长日志数据
+                    growthLogs.value = [
+                        { id: 1, icon: '🎉', text: '宠物诞生啦！', time: '刚刚' },
+                        { id: 2, icon: '⭐', text: '获得 10 经验值', time: '1分钟前' }
+                    ];
+                };
+
+                // 一键孵化（测试用）
+                const instantHatch = async () => {
+                    try {
+                        const res = await fetch('/api/pet/instant-hatch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            Object.assign(pet, data.pet);
+                            showBubble('破壳啦！我终于出来了~');
+                            showToast('孵化成功！');
+                            behaviorState.value = 'happy';
+                            setTimeout(() => behaviorState.value = 'idle', 2000);
+                        } else {
+                            showToast(data.message || '孵化失败');
+                        }
+                    } catch (err) {
+                        console.error('一键孵化失败:', err);
+                        showToast('网络错误，请重试');
+                    }
+                };
+
+                const interact = async (type) => {
+                    if (cooldowns[type] > 0 && type !== 'talk') return;
+
+                    try {
+                        let endpoint = '/api/pet/interact';
+                        let method = 'POST';
+                        let requestBody = { interactType: type };
+                        
+                        if (type === 'talk') {
+                            // 根据时间选择对话
+                            const hour = new Date().getHours();
+                            let timeDialogues;
+                            if (hour < 12) {
+                                timeDialogues = DIALOGUES.talk.morning;
+                            } else if (hour < 18) {
+                                timeDialogues = DIALOGUES.talk.afternoon;
+                            } else {
+                                timeDialogues = DIALOGUES.talk.evening;
+                            }
+                            
+                            // 混合时间相关和通用对话
+                            const allDialogues = [...timeDialogues, ...DIALOGUES.talk.general];
+                            const message = allDialogues[Math.floor(Math.random() * allDialogues.length)];
+                            showBubble(message);
+                            
+                            // 聊天增加少量心情
+                            pet.mood = Math.min(100, pet.mood + 5);
+                            return;
+                        }
+
+                        const res = await fetch(endpoint, { 
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        const data = await res.json();
+
+                        if (data.success) {
+                            // 显示对话
+                            const dialogues = DIALOGUES[type] || DIALOGUES.click;
+                            const message = data.message || dialogues[Math.floor(Math.random() * dialogues.length)];
+                            showBubble(message);
+
+                            // 更新心情和经验
+                            if (data.mood !== undefined) {
+                                pet.mood = data.mood;
+                            }
+                            if (data.exp !== undefined) {
+                                pet.exp = data.exp;
+                            }
+                            if (data.level !== undefined) {
+                                pet.level = data.level;
+                            }
+
+                            // 设置冷却
+                            if (type === 'feed') {
+                                cooldowns.feed = 30 * 60;
+                                pet.mood = Math.min(100, pet.mood + 20);
+                            }
+                            if (type === 'pet') {
+                                cooldowns.pet = 5 * 60;
+                                pet.mood = Math.min(100, pet.mood + 10);
+                            }
+                            if (type === 'play') {
+                                cooldowns.play = 15 * 60;
+                                pet.mood = Math.min(100, pet.mood + 15);
+                            }
+
+                            // 播放互动动画
+                            behaviorState.value = getInteractionAnimation(type);
+                            setTimeout(() => behaviorState.value = 'idle', 2000);
+                        }
+                    } catch (err) {
+                        console.error('互动失败:', err);
+                    }
+                };
+
+                const handlePetClick = () => {
+                    const dialogues = DIALOGUES.click;
+                    showBubble(dialogues[Math.floor(Math.random() * dialogues.length)]);
+                    
+                    behaviorState.value = 'interact';
+                    setTimeout(() => behaviorState.value = 'idle', 500);
+
+                    // 调用后端互动
+                    fetch('/api/pet/interact', { method: 'POST' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.mood !== undefined) {
+                                pet.mood = data.mood;
+                            }
+                        })
+                        .catch(err => console.error('互动失败:', err));
+                };
+
+                const showBubble = (text) => {
+                    bubble.text = text;
+                    bubble.show = true;
+                    setTimeout(() => bubble.show = false, 3000);
+                };
+
+                const showToast = (message) => {
+                    toast.message = message;
+                    toast.show = true;
+                    setTimeout(() => toast.show = false, 2000);
+                };
+
+                const formatCooldown = (seconds) => {
+                    const m = Math.floor(seconds / 60);
+                    const s = seconds % 60;
+                    return m > 0 ? `${m}分钟` : `${s}秒`;
+                };
+
+                // 获取互动动画
+                const getInteractionAnimation = (type) => {
+                    switch (type) {
+                        case 'feed': return 'eating';
+                        case 'pet': return 'happy';
+                        case 'play': return 'playing';
+                        default: return 'interact';
+                    }
+                };
+
+                // 心情值衰减
+                const startMoodDecay = () => {
+                    moodDecayTimer = setInterval(() => {
+                        if (pet.mood > 0) {
+                            pet.mood = Math.max(0, pet.mood - 1);
+                        }
+                    }, 5 * 60 * 1000); // 每5分钟减少1点心情
+                };
+
+                // 经验值实时更新
+                const startExpUpdate = () => {
+                    expUpdateTimer = setInterval(async () => {
+                        try {
+                            const res = await fetch('/api/pet');
+                            const data = await res.json();
+                            if (data.success && data.hasPet) {
+                                const oldExp = pet.exp;
+                                const oldLevel = pet.level;
+                                
+                                pet.exp = data.pet.exp;
+                                pet.level = data.pet.level;
+                                
+                                // 检查是否升级
+                                if (data.pet.level > oldLevel) {
+                                    showBubble(`恭喜！升级到 Lv.${data.pet.level}！`);
+                                    behaviorState.value = 'happy';
+                                    setTimeout(() => behaviorState.value = 'idle', 2000);
+                                }
+                            }
+                        } catch (err) {
+                            console.error('更新经验值失败:', err);
+                        }
+                    }, 10000); // 每10秒更新一次
+                };
+
+                // 自主行为循环
+                const startBehaviorLoop = () => {
+                    const behaviors = ['idle', 'idle', 'idle', 'playing', 'sleeping'];
+                    
+                    const tick = () => {
+                        if (behaviorState.value === 'interact') return;
+                        
+                        const mood = pet.mood || 100;
+                        if (mood > 70) {
+                            behaviorState.value = behaviors[Math.floor(Math.random() * behaviors.length)];
+                        } else {
+                            behaviorState.value = Math.random() < 0.7 ? 'idle' : 'sleeping';
+                        }
+                        
+                        const delay = 4000 + Math.random() * 4000;
+                        behaviorTimer = setTimeout(tick, delay);
+                    };
+                    tick();
+                };
+
+                // 冷却计时器
+                const startCooldownTimer = () => {
+                    cooldownTimer = setInterval(() => {
+                        if (cooldowns.feed > 0) cooldowns.feed--;
+                        if (cooldowns.pet > 0) cooldowns.pet--;
+                        if (cooldowns.play > 0) cooldowns.play--;
+                    }, 1000);
+                };
+
+                // 生命周期
+                onMounted(() => {
+                    loadPet();
+                    startCooldownTimer();
+                });
+
+                onUnmounted(() => {
+                    if (behaviorTimer) clearTimeout(behaviorTimer);
+                    if (cooldownTimer) clearInterval(cooldownTimer);
+                    if (moodDecayTimer) clearInterval(moodDecayTimer);
+                    if (expUpdateTimer) clearInterval(expUpdateTimer);
+                });
+
+                return {
+                    loading,
+                    hasPet,
+                    pet,
+                    selectedType,
+                    petName,
+                    behaviorState,
+                    bubble,
+                    toast,
+                    cooldowns,
+                    growthLogs,
+                    petEmoji,
+                    stageName,
+                    expInLevel,
+                    expPercent,
+                    moodEmoji,
+                    createPet,
+                    interact,
+                    handlePetClick,
+                    formatCooldown,
+                    instantHatch
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

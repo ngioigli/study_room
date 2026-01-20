@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>管理后台 - 云端自习室</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <style>
+        body {
+            background: var(--color-card-bg);
+        }
+
+        .page-container {
+            min-height: 100vh;
+            padding: var(--space-4);
+            padding-bottom: var(--space-6);
+        }
+
+        /* 顶部栏 */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+            padding: var(--space-4);
+            background: var(--gradient-primary);
+            border-radius: var(--radius-xl);
+            color: #fff;
+        }
+
+        .admin-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .admin-subtitle {
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+        }
+
+        /* Tab 导航 */
+        .tab-nav {
+            display: flex;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 4px;
+            margin-bottom: var(--space-5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-item {
+            flex: 1;
+            padding: var(--space-3);
+            text-align: center;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .tab-item.active {
+            background: var(--color-primary);
+            color: #fff;
+        }
+
+        /* 概览卡片 */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .overview-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .overview-icon {
+            font-size: 24px;
+            margin-bottom: var(--space-2);
+        }
+
+        .overview-value {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+        }
+
+        .overview-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 数据表格 */
+        .data-section {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-5);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-dark);
+        }
+
+        .refresh-btn {
+            background: var(--color-card-bg);
+            border: none;
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 用户/座位列表 */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-3);
+            border-bottom: 1px solid var(--color-divider);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--color-primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: var(--space-3);
+        }
+
+        .list-info {
+            flex: 1;
+        }
+
+        .list-name {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-dark);
+        }
+
+        .list-meta {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-top: 2px;
+        }
+
+        .list-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .action-btn-sm {
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-size: var(--font-size-xs);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .action-btn-sm.primary {
+            background: var(--color-primary-bg);
+            color: var(--color-primary);
+        }
+
+        .action-btn-sm.danger {
+            background: var(--color-error-bg);
+            color: var(--color-error);
+        }
+
+        .action-btn-sm.success {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .action-btn-sm.warning {
+            background: var(--color-warning-bg);
+            color: var(--color-warning);
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .status-badge.active {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .status-badge.disabled {
+            background: var(--color-error-bg);
+            color: var(--color-error);
+        }
+
+        .status-badge.admin {
+            background: var(--color-primary-bg);
+            color: var(--color-primary);
+        }
+
+        /* 排行榜 */
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-3);
+            border-bottom: 1px solid var(--color-divider);
+        }
+
+        .ranking-rank {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--color-card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-bold);
+            margin-right: var(--space-3);
+        }
+
+        .ranking-rank.top-1 { background: #FFD700; color: #fff; }
+        .ranking-rank.top-2 { background: #C0C0C0; color: #fff; }
+        .ranking-rank.top-3 { background: #CD7F32; color: #fff; }
+
+        .ranking-info {
+            flex: 1;
+        }
+
+        .ranking-duration {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-primary);
+        }
+
+        /* 无权限提示 */
+        .no-access {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+        }
+
+        .no-access-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+        }
+
+        .no-access-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+            margin-bottom: var(--space-2);
+        }
+
+        .no-access-desc {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-6);
+        }
+
+        /* Tab 内容 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: var(--space-10);
+            color: var(--color-text-secondary);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-sm);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            z-index: var(--z-toast);
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <!-- 无权限页面 -->
+    <div class="page-container" id="noAccessPage" style="display: none;">
+        <div class="no-access">
+            <div class="no-access-icon">🔒</div>
+            <h1 class="no-access-title">无访问权限</h1>
+            <p class="no-access-desc">您没有管理员权限，无法访问此页面</p>
+            <a href="/index.html" class="btn btn-primary">返回首页</a>
+        </div>
+    </div>
+
+    <!-- 管理后台主页面 -->
+    <div class="page-container" id="adminPage" style="display: none;">
+        <!-- 顶部栏 -->
+        <div class="admin-header">
+            <div>
+                <h1 class="admin-title">管理后台</h1>
+                <p class="admin-subtitle">欢迎，<span id="adminName">管理员</span></p>
+            </div>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+
+        <!-- Tab 导航 -->
+        <div class="tab-nav">
+            <div class="tab-item active" data-tab="overview" onclick="switchTab('overview')">概览</div>
+            <div class="tab-item" data-tab="seats" onclick="switchTab('seats')">座位</div>
+            <div class="tab-item" data-tab="users" onclick="switchTab('users')">用户</div>
+            <div class="tab-item" data-tab="ranking" onclick="switchTab('ranking')">排行</div>
+        </div>
+
+        <!-- 概览 Tab -->
+        <div class="tab-content active" id="tab-overview">
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <div class="overview-icon">👥</div>
+                    <div class="overview-value" id="todayActiveUsers">-</div>
+                    <div class="overview-label">今日活跃用户</div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-icon">⏱️</div>
+                    <div class="overview-value" id="todayTotalHours">-</div>
+                    <div class="overview-label">今日学习时长</div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-icon">🎯</div>
+                    <div class="overview-value" id="todayFocusCount">-</div>
+                    <div class="overview-label">今日专注次数</div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-icon">💺</div>
+                    <div class="overview-value" id="currentOccupied">-</div>
+                    <div class="overview-label">当前在座</div>
+                </div>
+            </div>
+
+            <!-- 快捷操作 -->
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">快捷操作</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3);">
+                    <button class="action-btn-sm primary" style="padding: var(--space-4);" onclick="switchTab('seats')">
+                        🪑 座位管理
+                    </button>
+                    <button class="action-btn-sm success" style="padding: var(--space-4);" onclick="switchTab('users')">
+                        👤 用户管理
+                    </button>
+                    <button class="action-btn-sm warning" style="padding: var(--space-4);" onclick="switchTab('ranking')">
+                        🏆 排行榜
+                    </button>
+                    <button class="action-btn-sm danger" style="padding: var(--space-4);" onclick="refreshAll()">
+                        🔄 刷新数据
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 座位管理 Tab -->
+        <div class="tab-content" id="tab-seats">
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">座位列表</h2>
+                    <button class="refresh-btn" onclick="loadSeats()">🔄 刷新</button>
+                </div>
+                <div id="seatsList" class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 用户管理 Tab -->
+        <div class="tab-content" id="tab-users">
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">用户列表</h2>
+                    <button class="refresh-btn" onclick="loadUsers()">🔄 刷新</button>
+                </div>
+                <div id="usersList" class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 排行榜 Tab -->
+        <div class="tab-content" id="tab-ranking">
+            <div class="data-section">
+                <div class="section-header">
+                    <h2 class="section-title">学习时长排行</h2>
+                    <button class="refresh-btn" onclick="loadRanking()">🔄 刷新</button>
+                </div>
+                <div id="rankingList" class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAccess();
+        });
+
+        // 检查管理员权限
+        async function checkAdminAccess() {
+            try {
+                const res = await fetch('/api/admin/check');
+                const data = await res.json();
+                
+                if (data.success && data.isAdmin) {
+                    document.getElementById('adminPage').style.display = 'block';
+                    document.getElementById('adminName').textContent = data.username;
+                    loadOverview();
+                    loadSeats();
+                    loadUsers();
+                    loadRanking();
+                } else {
+                    document.getElementById('noAccessPage').style.display = 'block';
+                }
+            } catch (err) {
+                console.error('权限检查失败:', err);
+                document.getElementById('noAccessPage').style.display = 'block';
+            }
+        }
+
+        // 切换 Tab
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            document.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // 加载概览数据
+        async function loadOverview() {
+            try {
+                const res = await fetch('/api/admin/stats/overview');
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('todayActiveUsers').textContent = data.activeUsers || 0;
+                    document.getElementById('todayTotalHours').textContent = formatHours(data.totalDuration || 0);
+                    document.getElementById('todayFocusCount').textContent = data.focusCount || 0;
+                    document.getElementById('currentOccupied').textContent = data.occupiedSeats || 0;
+                }
+            } catch (err) {
+                console.error('加载概览失败:', err);
+            }
+        }
+
+        // 加载座位列表
+        async function loadSeats() {
+            try {
+                const res = await fetch('/api/admin/seats');
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderSeats(data.seats);
+                } else {
+                    document.getElementById('seatsList').innerHTML = '<p>加载失败</p>';
+                }
+            } catch (err) {
+                console.error('加载座位失败:', err);
+                document.getElementById('seatsList').innerHTML = '<p>网络错误</p>';
+            }
+        }
+
+        // 渲染座位列表
+        function renderSeats(seats) {
+            if (!seats || seats.length === 0) {
+                document.getElementById('seatsList').innerHTML = '<p>暂无座位数据</p>';
+                return;
+            }
+
+            const statusMap = {
+                'available': { icon: '💺', text: '空闲', class: 'success' },
+                'occupied': { icon: '👤', text: '使用中', class: 'warning' },
+                'maintenance': { icon: '🔧', text: '维护中', class: 'danger' }
+            };
+
+            document.getElementById('seatsList').innerHTML = seats.map(item => {
+                // 后端返回格式: { seat: {...}, currentUser: "xxx" }
+                const seat = item.seat || item;
+                const currentUser = item.currentUser;
+                const status = seat.status || 'available';
+                const seatNumber = seat.seatNumber || seat.seat_number || '未知';
+                const powerOn = seat.powerOn === 1 || seat.powerOn === true || seat.power_on === 1;
+                const seatId = seat.id;
+                
+                const info = statusMap[status] || statusMap['available'];
+                return `
+                    <div class="list-item">
+                        <div class="list-avatar">${info.icon}</div>
+                        <div class="list-info">
+                            <div class="list-name">${seatNumber}</div>
+                            <div class="list-meta">
+                                电源: ${powerOn ? '🟢 已通电' : '⚪ 已断电'}
+                                ${currentUser ? ` | 用户: ${currentUser}` : ''}
+                            </div>
+                        </div>
+                        <div class="list-actions">
+                            ${status === 'occupied' ? 
+                                `<button class="action-btn-sm danger" onclick="releaseSeat(${seatId})">强制释放</button>` : 
+                                ''}
+                            ${status === 'maintenance' ?
+                                `<button class="action-btn-sm success" onclick="setMaintenance(${seatId}, false)">恢复正常</button>` :
+                                `<button class="action-btn-sm warning" onclick="setMaintenance(${seatId}, true)">设为维护</button>`}
+                            <button class="action-btn-sm ${powerOn ? 'danger' : 'primary'}" onclick="togglePower(${seatId}, ${!powerOn})">
+                                ${powerOn ? '断电' : '通电'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderUsers(data.users);
+                } else {
+                    document.getElementById('usersList').innerHTML = '<p>加载失败</p>';
+                }
+            } catch (err) {
+                console.error('加载用户失败:', err);
+                document.getElementById('usersList').innerHTML = '<p>网络错误</p>';
+            }
+        }
+
+        // 渲染用户列表
+        function renderUsers(users) {
+            if (!users || users.length === 0) {
+                document.getElementById('usersList').innerHTML = '<p>暂无用户数据</p>';
+                return;
+            }
+
+            document.getElementById('usersList').innerHTML = users.map(user => `
+                <div class="list-item">
+                    <div class="list-avatar">👤</div>
+                    <div class="list-info">
+                        <div class="list-name">
+                            ${user.username}
+                            ${user.role === 'admin' ? '<span class="status-badge admin">管理员</span>' : ''}
+                        </div>
+                        <div class="list-meta">
+                            创建时间: ${formatDate(user.createdAt)}
+                        </div>
+                    </div>
+                    <div class="list-actions">
+                        ${user.status === 1 ?
+                            `<button class="action-btn-sm danger" onclick="toggleUserStatus(${user.id}, 0)">禁用</button>` :
+                            `<button class="action-btn-sm success" onclick="toggleUserStatus(${user.id}, 1)">启用</button>`}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 加载排行榜
+        async function loadRanking() {
+            try {
+                const res = await fetch('/api/admin/stats/ranking?limit=10');
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderRanking(data.ranking);
+                } else {
+                    document.getElementById('rankingList').innerHTML = '<p>加载失败</p>';
+                }
+            } catch (err) {
+                console.error('加载排行榜失败:', err);
+                document.getElementById('rankingList').innerHTML = '<p>网络错误</p>';
+            }
+        }
+
+        // 渲染排行榜
+        function renderRanking(ranking) {
+            if (!ranking || ranking.length === 0) {
+                document.getElementById('rankingList').innerHTML = '<p>暂无排行数据</p>';
+                return;
+            }
+
+            document.getElementById('rankingList').innerHTML = ranking.map((item, index) => `
+                <div class="ranking-item">
+                    <div class="ranking-rank ${index < 3 ? 'top-' + (index + 1) : ''}">${index + 1}</div>
+                    <div class="ranking-info">
+                        <div class="list-name">${item.username}</div>
+                        <div class="list-meta">${item.focusCount || 0} 次专注</div>
+                    </div>
+                    <div class="ranking-duration">${formatHours(item.totalDuration || 0)}</div>
+                </div>
+            `).join('');
+        }
+
+        // 强制释放座位
+        async function releaseSeat(id) {
+            if (!confirm('确定要强制释放该座位吗？')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/seats/${id}/release`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('座位已释放');
+                    loadSeats();
+                    loadOverview();
+                } else {
+                    showToast(data.message || '操作失败');
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
+        }
+
+        // 设置维护状态
+        async function setMaintenance(id, maintenance) {
+            try {
+                const res = await fetch(`/api/admin/seats/${id}/maintenance`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maintenance })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(maintenance ? '已设为维护中' : '已恢复正常');
+                    loadSeats();
+                } else {
+                    showToast(data.message || '操作失败');
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
+        }
+
+        // 控制电源
+        async function togglePower(id, powerOn) {
+            try {
+                const res = await fetch(`/api/admin/seats/${id}/power`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ powerOn })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(powerOn ? '已通电' : '已断电');
+                    loadSeats();
+                } else {
+                    showToast(data.message || '操作失败');
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
+        }
+
+        // 切换用户状态
+        async function toggleUserStatus(id, status) {
+            try {
+                const res = await fetch(`/api/admin/users/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(status === 1 ? '用户已启用' : '用户已禁用');
+                    loadUsers();
+                } else {
+                    showToast(data.message || '操作失败');
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
+        }
+
+        // 刷新所有数据
+        function refreshAll() {
+            loadOverview();
+            loadSeats();
+            loadUsers();
+            loadRanking();
+            showToast('数据已刷新');
+        }
+
+        // 退出登录
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login.html';
+            } catch (err) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        // 格式化时长
+        function formatHours(seconds) {
+            if (!seconds) return '0h';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) {
+                return `${hours}h${minutes > 0 ? minutes + 'm' : ''}`;
+            }
+            return `${minutes}m`;
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+        }
+
+        // 显示 Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

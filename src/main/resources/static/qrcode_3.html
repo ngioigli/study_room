@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 关键：移动端适配的核心 viewport 设置 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习小屋 - 扫码进入</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --refresh-interval: 3s; /* 定义CSS变量，方便和JS同步修改刷新时间 */
+        }
+
+        /* 基础样式与动态背景 */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            animation: gradient-animation 20s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 主内容容器，默认为垂直布局 */
+        .main-container {
+            display: flex;
+            flex-direction: column; /* 手机端默认为垂直排列 */
+            align-items: center;
+            gap: 25px; /* 模块之间的间距 */
+            padding: 20px 0; /* 上下留白，左右不留 */
+            width: 100%;
+            min-height: 100vh;
+            box-sizing: border-box; /* 让padding不影响宽度计算 */
+        }
+
+        /* 二维码模块样式 - 移动端优化 */
+        #qrcode-container {
+            width: 90vw; /* 占屏幕宽度的90% */
+            max-width: 400px; /* PC端最大宽度限制 */
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .header-text {
+            font-size: 20px; /* 字体缩小以适应手机 */
+            font-weight: 700;
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+
+        /* 二维码图片容器，用于放置刷新指示器 */
+        .qrcode-image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* 关键：保持1:1的宽高比 */
+            height: 0;
+        }
+
+        #qrcode-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0, 123, 255, 0.4);
+            border: 2px solid white;
+        }
+
+        /* 刷新进度条 */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            width: 100%;
+            background-color: rgba(102, 166, 255, 0.5);
+            border-radius: 0 0 12px 12px;
+            transform-origin: left;
+            animation: countdown var(--refresh-interval) linear infinite;
+        }
+
+        @keyframes countdown {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+
+
+        /* 留言小黑板模块 - 移动端优化 */
+        .blackboard {
+            width: 90vw; /* 占屏幕宽度的90% */
+            max-width: 400px; /* PC端最大宽度限制 */
+            box-sizing: border-box;
+            background: #333;
+            border: 10px solid #8B4513;
+            border-radius: 10px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            padding: 15px;
+            color: white;
+            font-family: 'Comic Sans MS', 'Chalkduster', 'Bradley Hand', cursive;
+        }
+
+        .blackboard h4 {
+            font-size: 18px; /* 字体缩小 */
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 1px dashed #777;
+            padding-bottom: 10px;
+        }
+
+        .blackboard p {
+            font-size: 14px; /* 字体缩小 */
+            line-height: 1.7;
+        }
+
+        /* 媒体查询：当屏幕宽度大于768px时（平板或PC），恢复PC端布局 */
+        @media (min-width: 768px) {
+            .main-container {
+                flex-direction: row; /* 恢复水平布局 */
+                justify-content: center;
+                gap: 50px;
+            }
+            #qrcode-container, .blackboard {
+                width: auto; /* 取消宽度限制 */
+                max-width: none;
+                margin-top: 0;
+            }
+            /* 可以为PC端恢复原有尺寸 */
+            #qrcode-container {
+                padding: 25px;
+            }
+            .qrcode-image-wrapper {
+                width: 320px;
+                height: 320px;
+                padding-bottom: 0;
+            }
+            .blackboard {
+                width: 300px;
+                height: 350px;
+                padding: 20px;
+            }
+            .header-text { font-size: 24px; }
+            .blackboard h4 { font-size: 22px; }
+            .blackboard p { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+<!-- 退出按钮 -->
+<button id="logoutBtn" style="position: absolute; top: 20px; right: 20px; padding: 8px 15px; background: rgba(255,255,255,0.6); border: 1px solid #fff; border-radius: 20px; color: #555; cursor: pointer; font-family: inherit; font-size: 14px; transition: all 0.3s;">
+    离座休息
+</button>
+
+<div class="main-container">
+    <!-- 二维码模块 -->
+    <div id="qrcode-container">
+        <h3 class="header-text">✨ 请扫码进入学习小屋 ✨</h3>
+        <div class="qrcode-image-wrapper">
+            <img id="qrcode-image" src="/images/dynamic_qrcode.jpg" alt="二维码加载中...">
+            <!-- 刷新指示器 -->
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- 留言小黑板模块 -->
+    <div class="blackboard">
+        <h4>留言板</h4>
+        <p style="white-space: pre-line;">时光不负赶路人，亦不负你
+            学长学姐，愿你们得偿所愿～
+            🌸🌸🌸
+
+            网站现在正处于试运行,现在在主包自己电脑上跑的
+            可能会不太稳定,出问题了vx我
+            后续得在买台电脑和租个服务器让网站稳定运行⭐⭐⭐
+            主包是在读大学生(没有团队,纯个人爱鼓捣)
+            努力攒攒钱争取给学长学姐提供更好的服务
+
+            二维码显示失效,请耐心等待3s刷新页面再试试
+        </p>
+    </div>
+</div>
+
+<script>
+    const REFRESH_INTERVAL_MS = 3000; // 3秒
+
+    function refreshQRCode() {
+        const imgElement = document.getElementById('qrcode-image');
+        if (imgElement) {
+            // 时间戳强制浏览器不使用缓存
+            const imageUrl = '/images/dynamic_qrcode.jpg?t=' + new Date().getTime();
+            imgElement.src = imageUrl;
+        }
+    }
+
+    // 设置定时器，立即执行一次，然后每隔3秒执行一次
+    refreshQRCode();
+    setInterval(refreshQRCode, REFRESH_INTERVAL_MS);
+
+    // 退出登录逻辑
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if(confirm('学累了吗？确定要离座休息一下？')) {
+            fetch('/api/logout')
+                .then(() => {
+                    // 退出后跳转回登录页
+                    window.location.href = '/login.html';
+                });
+        }
+    });
+</script>
+
+</body>
+</html>

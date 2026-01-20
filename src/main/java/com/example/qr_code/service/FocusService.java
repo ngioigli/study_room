@@ -1,0 +1,132 @@
+package com.example.qr_code.service;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.qr_code.entity.FocusRecord;
+import com.example.qr_code.entity.LearningStats;
+import com.example.qr_code.entity.UserPet;
+import com.example.qr_code.mapper.FocusRecordMapper;
+import com.example.qr_code.mapper.LearningStatsMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Service
+public class FocusService {
+
+    @Autowired
+    private FocusRecordMapper focusRecordMapper;
+
+    @Autowired
+    private LearningStatsMapper learningStatsMapper;
+
+    @Autowired
+    @Lazy
+    private PetService petService;
+
+    /**
+     * 保存专注记录并更新学习统计
+     * @param userId 用户ID
+     * @param duration 专注时长（秒）
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 保存的记录
+     */
+    @Transactional
+    public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime) {
+        // 1. 保存专注记录
+        FocusRecord record = new FocusRecord();
+        record.setUserId(userId);
+        record.setDuration(duration);
+        record.setFocusDate(LocalDate.now());
+        record.setStartTime(startTime);
+        record.setEndTime(endTime);
+        focusRecordMapper.insert(record);
+
+        // 2. 计算经验值（带心情加成）
+        int baseExp = calculateExp(duration);
+        int finalExp = baseExp;
+        
+        // 获取宠物心情值并计算加成
+        try {
+            UserPet pet = petService.getPet(userId);
+            if (pet != null) {
+                finalExp = petService.calculateExpWithMoodBonus(baseExp, pet.getMood());
+            }
+        } catch (Exception e) {
+            // 如果获取宠物失败，使用基础经验值
+            System.err.println("获取宠物心情失败: " + e.getMessage());
+        }
+
+        // 3. 更新当日学习统计
+        updateLearningStats(userId, duration, finalExp);
+
+        // 4. 给宠物增加经验值
+        petService.addExp(userId, finalExp);
+
+        return record;
+    }
+
+    /**
+     * 更新用户当日学习统计
+     */
+    private void updateLearningStats(Long userId, Integer duration, Integer expEarned) {
+        LocalDate today = LocalDate.now();
+        
+        // 查找今日统计记录
+        QueryWrapper<LearningStats> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId).eq("stat_date", today);
+        LearningStats stats = learningStatsMapper.selectOne(wrapper);
+
+        if (stats == null) {
+            // 新建今日统计
+            stats = new LearningStats();
+            stats.setUserId(userId);
+            stats.setStatDate(today);
+            stats.setTotalDuration(duration);
+            stats.setFocusCount(1);
+            stats.setAvgDuration(duration);
+            stats.setMaxDuration(duration);
+            stats.setExpEarned(expEarned);
+            learningStatsMapper.insert(stats);
+        } else {
+            // 更新今日统计
+            int newTotal = stats.getTotalDuration() + duration;
+            int newCount = stats.getFocusCount() + 1;
+            int newAvg = newTotal / newCount;
+            int newMax = Math.max(stats.getMaxDuration(), duration);
+            int newExp = stats.getExpEarned() + expEarned;
+
+            stats.setTotalDuration(newTotal);
+            stats.setFocusCount(newCount);
+            stats.setAvgDuration(newAvg);
+            stats.setMaxDuration(newMax);
+            stats.setExpEarned(newExp);
+            learningStatsMapper.updateById(stats);
+        }
+    }
+
+    /**
+     * 根据专注时长计算经验值
+     * 规则：每分钟1点经验，超过30分钟额外奖励50%
+     */
+    private int calculateExp(int durationSeconds) {
+        int minutes = durationSeconds / 60;
+        if (minutes >= 30) {
+            return (int) (minutes * 1.5);
+        }
+        return minutes;
+    }
+
+    /**
+     * 获取用户今日学习统计
+     */
+    public LearningStats getTodayStats(Long userId) {
+        QueryWrapper<LearningStats> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId).eq("stat_date", LocalDate.now());
+        return learningStatsMapper.selectOne(wrapper);
+    }
+}

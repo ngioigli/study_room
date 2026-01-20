@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>坏情绪粉碎机 - 自习室</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                        hand: ['"ZCOOL KuaiLe"', 'cursive'],
+                        cute: ['"ZCOOL KuaiLe"', 'cursive'],
+                    },
+                    colors: {
+                        'cream': '#FFFDF5',
+                        'pastel-yellow': '#FEF9C3',
+                        'pastel-pink': '#FCE7F3',
+                        'pastel-blue': '#E0F2FE',
+                        'pastel-green': '#DCFCE7',
+                        'soft-text': '#57534E',
+                        'accent': '#F472B6',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'breathe': 'breathe 4s ease-in-out infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-glow': 'pulse-glow 2s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        breathe: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.05)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(244, 114, 182, 0.4)' },
+                            '50%': { boxShadow: '0 0 40px rgba(244, 114, 182, 0.8)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FFFDF5;
+            overscroll-behavior: none;
+            min-height: 100vh;
+        }
+        
+        /* Custom scrollbar */
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+        
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes paper-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
+        }
+        
+        @keyframes mascot-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fire-flicker {
+            0%, 100% { height: 60px; opacity: 0.6; }
+            50% { height: 100px; opacity: 1; }
+        }
+        
+        @keyframes star-twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes bubble-float {
+            0% { transform: translate(0, 0) scale(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(var(--tx), -500px) scale(1); opacity: 0; }
+        }
+        
+        @keyframes black-hole-grow {
+            0% { width: 0; height: 0; opacity: 0; }
+            20% { width: 250px; height: 250px; opacity: 1; }
+            80% { width: 250px; height: 250px; opacity: 1; }
+            100% { width: 0; height: 0; opacity: 0; }
+        }
+        
+        @keyframes paper-suck {
+            0% { transform: scale(1) rotate(1deg); opacity: 1; filter: blur(0px); }
+            50% { transform: scale(0.8) rotate(10deg); opacity: 0.8; filter: blur(2px); }
+            100% { transform: scale(0) rotate(720deg); opacity: 0; filter: blur(10px); }
+        }
+        
+        @keyframes rocket-launch {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-1200px) scale(0.2); opacity: 0; }
+        }
+        
+        @keyframes shred-strip {
+            0% { transform: translateY(0) rotateX(0) rotateY(0); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(500px) rotateX(720deg) rotateY(360deg); opacity: 0; }
+        }
+        
+        .mascot-processing {
+            animation: mascot-bounce 2s ease-in-out infinite;
+        }
+        
+        .fire-trail {
+            animation: fire-flicker 0.15s infinite;
+        }
+        
+        .star {
+            animation: star-twinkle 2s infinite;
+        }
+        
+        .bubble {
+            animation: bubble-float 5s ease-out forwards;
+        }
+        
+        .black-hole {
+            animation: black-hole-grow 3.5s ease-in-out forwards;
+        }
+        
+        .paper-suck {
+            animation: paper-suck 1.5s ease-in forwards;
+            animation-delay: 0.8s;
+        }
+        
+        .rocket-launch {
+            animation: rocket-launch 3s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+            animation-delay: 0.5s;
+        }
+        
+        .shred-strip {
+            animation: shred-strip 2.5s ease-in forwards;
+        }
+        
+        /* Modal backdrop */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Transition classes */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        
+        /* Tool button hover effect */
+        .tool-btn:hover:not(:disabled) .tool-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .tool-tooltip {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        /* Washi tape pattern */
+        .washi-tape {
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 4px,
+                rgba(255,255,255,0.3) 4px,
+                rgba(255,255,255,0.3) 8px
+            );
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-cream text-soft-text overflow-x-hidden font-sans">
+    <!-- Background Decor -->
+    <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div class="absolute top-[-5%] left-[-5%] w-80 h-80 bg-pastel-pink/40 rounded-full blur-3xl animate-float" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-pastel-blue/40 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute top-[40%] right-[15%] w-40 h-40 bg-yellow-200/50 rounded-full blur-2xl animate-breathe"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full p-4 md:p-6 flex justify-between items-center z-30">
+        <div class="flex items-center gap-2">
+            <a href="study.html" class="w-10 h-10 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center text-slate-500 hover:bg-white transition-colors shadow-sm">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm border border-slate-50">🍬</div>
+                <h1 class="font-cute text-xl md:text-2xl tracking-wide text-slate-600">坏情绪粉碎机</h1>
+            </div>
+        </div>
+        
+        <div class="flex gap-2 md:gap-3">
+            <button id="muteBtn" class="w-10 h-10 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center text-slate-500 hover:bg-white transition-colors shadow-sm" title="切换声音">
+                <i data-lucide="volume-2" class="w-5 h-5" id="volumeIcon"></i>
+            </button>
+            <button id="historyBtn" class="px-3 md:px-4 h-10 bg-white/60 backdrop-blur-md rounded-full flex items-center gap-2 text-slate-600 hover:bg-white transition-colors shadow-sm font-cute text-sm">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                <span class="hidden md:inline">治愈旅程</span>
+            </button>
+            <button id="settingsBtn" class="w-10 h-10 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center text-slate-500 hover:bg-white transition-colors shadow-sm" title="设置">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Stage -->
+    <main id="mainStage" class="flex flex-col items-center justify-center min-h-screen p-4 pt-20 pb-8 relative w-full max-w-4xl mx-auto z-10">
+        <!-- Mascot (治愈团子) -->
+        <div id="mascot" class="w-20 h-20 md:w-24 md:h-24 mb-4 relative">
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg" id="mascotSvg">
+                <!-- Body -->
+                <circle cx="50" cy="55" r="40" fill="#FCE7F3" />
+                <!-- IDLE Face -->
+                <g id="faceIdle">
+                    <circle cx="35" cy="50" r="4" fill="#4B5563" />
+                    <circle cx="65" cy="50" r="4" fill="#4B5563" />
+                    <path d="M 45 60 Q 50 65 55 60" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <circle cx="30" cy="58" r="3" fill="#F472B6" opacity="0.6" />
+                    <circle cx="70" cy="58" r="3" fill="#F472B6" opacity="0.6" />
+                </g>
+                <!-- PROCESSING Face -->
+                <g id="faceProcessing" style="display: none;">
+                    <path d="M 32 50 Q 36 46 40 50" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <path d="M 60 50 Q 64 46 68 50" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <circle cx="50" cy="62" r="3" fill="#4B5563" />
+                    <path d="M 15 55 Q 5 45 15 35" stroke="#FCE7F3" stroke-width="8" stroke-linecap="round" />
+                    <path d="M 85 55 Q 95 45 85 35" stroke="#FCE7F3" stroke-width="8" stroke-linecap="round" />
+                </g>
+                <!-- RESULT Face -->
+                <g id="faceResult" style="display: none;">
+                    <path d="M 32 52 Q 36 45 40 52" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <path d="M 60 52 Q 64 45 68 52" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <path d="M 42 60 Q 50 68 58 60" stroke="#4B5563" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <path d="M 50 30 L 55 20 L 60 28" fill="#FCD34D" />
+                    <circle cx="30" cy="58" r="4" fill="#F472B6" opacity="0.8" />
+                    <circle cx="70" cy="58" r="4" fill="#F472B6" opacity="0.8" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- IDLE STATE: Input Stage -->
+        <div id="inputStage" class="flex flex-col items-center w-full fade-in">
+            <div class="mb-6 md:mb-8 text-center max-w-md">
+                <h2 class="text-lg md:text-2xl font-bold mb-2 text-slate-700 font-cute">有什么不开心的事吗？</h2>
+                <p class="text-slate-500 text-sm md:text-base">写下来，我们一起把它消灭掉。</p>
+            </div>
+
+            <!-- Mood Paper -->
+            <div class="relative w-64 h-64 md:w-80 md:h-80 shadow-xl transform rotate-1 flex flex-col p-4 md:p-6 rounded-sm mb-6 md:mb-8"
+                 style="background: linear-gradient(135deg, #FEF9C3 0%, #FDE047 100%); box-shadow: 10px 10px 30px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);">
+                <!-- Washi Tape -->
+                <div class="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 w-20 md:w-24 h-6 md:h-8 bg-pink-200/80 backdrop-blur-sm rotate-[-2deg] shadow-sm z-10 flex items-center justify-center overflow-hidden rounded-sm washi-tape"></div>
+                
+                <textarea id="moodText" 
+                    placeholder="把那些烦人的、不开心的事，都写在这里吧..."
+                    class="flex-1 w-full h-full bg-transparent resize-none border-none outline-none font-hand text-lg md:text-2xl text-slate-700 placeholder-slate-400/60 leading-relaxed tracking-wide"
+                    spellcheck="false"></textarea>
+                
+                <!-- Heart doodle -->
+                <div class="absolute bottom-3 md:bottom-4 right-3 md:right-4 opacity-40">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Tool Bar -->
+            <div class="flex flex-col items-center gap-4 md:gap-6 w-full max-w-2xl px-4">
+                <p id="toolHint" class="text-soft-text font-cute text-base md:text-lg mb-2 h-6 flex items-center gap-2 opacity-0 transition-opacity duration-300">
+                    👇 选择一种方式消灭它：
+                </p>
+
+                <div class="flex justify-center gap-4 md:gap-8 flex-wrap">
+                    <!-- Shredder -->
+                    <button class="tool-btn relative group flex flex-col items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-3xl transition-all duration-300 bg-blue-100 text-blue-500 hover:bg-blue-200 opacity-40 cursor-not-allowed shadow-lg"
+                            data-tool="SHREDDER" disabled>
+                        <i data-lucide="scissors" class="w-6 h-6 md:w-8 md:h-8"></i>
+                        <span class="hidden md:block text-xs md:text-sm font-bold font-cute mt-1">强力粉碎</span>
+                        <div class="tool-tooltip absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white text-soft-text text-xs py-2 px-3 rounded-xl shadow-md whitespace-nowrap pointer-events-none border border-gray-100">
+                            咔嚓咔嚓碎掉
+                            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+                        </div>
+                    </button>
+
+                    <!-- Rocket -->
+                    <button class="tool-btn relative group flex flex-col items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-3xl transition-all duration-300 bg-red-100 text-red-500 hover:bg-red-200 opacity-40 cursor-not-allowed shadow-lg"
+                            data-tool="ROCKET" disabled>
+                        <i data-lucide="rocket" class="w-6 h-6 md:w-8 md:h-8"></i>
+                        <span class="hidden md:block text-xs md:text-sm font-bold font-cute mt-1">发射太空</span>
+                        <div class="tool-tooltip absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white text-soft-text text-xs py-2 px-3 rounded-xl shadow-md whitespace-nowrap pointer-events-none border border-gray-100">
+                            再也见不到了
+                            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+                        </div>
+                    </button>
+
+                    <!-- Bubble -->
+                    <button class="tool-btn relative group flex flex-col items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-3xl transition-all duration-300 bg-purple-100 text-purple-500 hover:bg-purple-200 opacity-40 cursor-not-allowed shadow-lg"
+                            data-tool="BUBBLE" disabled>
+                        <i data-lucide="wind" class="w-6 h-6 md:w-8 md:h-8"></i>
+                        <span class="hidden md:block text-xs md:text-sm font-bold font-cute mt-1">吹成泡泡</span>
+                        <div class="tool-tooltip absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white text-soft-text text-xs py-2 px-3 rounded-xl shadow-md whitespace-nowrap pointer-events-none border border-gray-100">
+                            噗噗随风飘走
+                            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+                        </div>
+                    </button>
+
+                    <!-- Black Hole -->
+                    <button class="tool-btn relative group flex flex-col items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-3xl transition-all duration-300 bg-slate-800 text-slate-200 hover:bg-slate-700 opacity-40 cursor-not-allowed shadow-lg"
+                            data-tool="BLACK_HOLE" disabled>
+                        <i data-lucide="circle-dashed" class="w-6 h-6 md:w-8 md:h-8"></i>
+                        <span class="hidden md:block text-xs md:text-sm font-bold font-cute mt-1">丢进黑洞</span>
+                        <div class="tool-tooltip absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white text-soft-text text-xs py-2 px-3 rounded-xl shadow-md whitespace-nowrap pointer-events-none border border-gray-100">
+                            吸入异次元
+                            <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROCESSING STATE: Animation Stage -->
+        <div id="processingStage" class="w-full flex flex-col items-center justify-center hidden">
+            <h3 id="processingText" class="text-lg md:text-xl font-cute text-slate-500 mb-6 md:mb-8 animate-pulse"></h3>
+            <div id="animationContainer" class="relative w-full h-[400px] md:h-[600px] flex items-center justify-center overflow-hidden"></div>
+        </div>
+
+        <!-- RESULT STATE: Comfort Message -->
+        <div id="resultStage" class="flex flex-col items-center justify-center max-w-md text-center px-4 md:px-6 hidden">
+            <div class="w-20 h-20 md:w-24 md:h-24 bg-white rounded-full flex items-center justify-center mb-4 md:mb-6 shadow-md border-4 border-pastel-green transform scale-0" id="heartIcon" style="transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                <i data-lucide="heart" class="w-10 h-10 md:w-12 md:h-12 text-green-400 fill-green-400"></i>
+            </div>
+            
+            <h3 class="text-xl md:text-2xl font-cute text-slate-700 mb-4 md:mb-6">全都消失啦！</h3>
+            
+            <div class="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-xl border border-white relative mb-8 md:mb-10 w-full transform hover:scale-105 transition-transform duration-500">
+                <div class="absolute -top-4 -left-2 text-5xl md:text-6xl text-pastel-pink opacity-40 font-serif">"</div>
+                <p id="comfortMessage" class="text-lg md:text-xl font-hand text-slate-600 leading-loose tracking-wide">
+                    正在接收来自宇宙的信号...
+                </p>
+                <div class="absolute -bottom-6 md:-bottom-8 -right-2 text-5xl md:text-6xl text-pastel-pink opacity-40 font-serif rotate-180">"</div>
+            </div>
+
+            <button id="resetBtn" class="group flex items-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-slate-800 text-white rounded-full font-bold shadow-lg hover:bg-slate-700 hover:shadow-xl transition-all">
+                <i data-lucide="refresh-ccw" class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500"></i>
+                <span>心情好点了吗？再试一次</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" id="historyBackdrop"></div>
+        <div class="absolute inset-0 md:inset-10 flex items-center justify-center pointer-events-none">
+            <div class="bg-cream w-full max-w-lg h-full md:h-auto md:max-h-[80vh] flex flex-col rounded-none md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto border-0 md:border-4 border-white fade-in">
+                <!-- Header -->
+                <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-white/50">
+                    <h2 class="text-lg md:text-xl font-cute text-slate-700">📜 治愈旅程</h2>
+                    <div class="flex gap-2 items-center">
+                        <button id="clearHistoryBtn" class="text-xs text-red-400 hover:text-red-600 underline mr-2 md:mr-4 hidden">
+                            清空记录
+                        </button>
+                        <button id="closeHistoryBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <i data-lucide="x" class="w-5 h-5 md:w-6 md:h-6"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div id="historyContent" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-slate-50/50">
+                    <!-- History items will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" id="settingsBackdrop"></div>
+        <div class="absolute inset-0 md:inset-10 flex items-center justify-center pointer-events-none">
+            <div class="bg-cream w-full max-w-md h-auto max-h-[90vh] flex flex-col rounded-none md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto border-0 md:border-4 border-white fade-in m-4">
+                <!-- Header -->
+                <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-white/50">
+                    <h2 class="text-lg md:text-xl font-cute text-slate-700">⚙️ 设置</h2>
+                    <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i data-lucide="x" class="w-5 h-5 md:w-6 md:h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+                    <!-- Gemini API Key -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-purple-500"></i>
+                            <h3 class="font-cute text-slate-700">AI 安慰话语</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-3">配置 Google Gemini API Key 以获取 AI 生成的个性化安慰话语</p>
+                        <input type="password" id="apiKeyInput" placeholder="输入 Gemini API Key..."
+                               class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent">
+                        <div class="flex gap-2 mt-3">
+                            <button id="saveApiKeyBtn" class="flex-1 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-bold hover:bg-purple-600 transition-colors">
+                                保存
+                            </button>
+                            <button id="clearApiKeyBtn" class="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300 transition-colors">
+                                清除
+                            </button>
+                        </div>
+                        <p id="apiKeyStatus" class="text-xs mt-2 text-slate-400"></p>
+                    </div>
+
+                    <!-- Sound Settings -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="volume-2" class="w-5 h-5 text-blue-500"></i>
+                            <h3 class="font-cute text-slate-700">声音设置</h3>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600">音效开关</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="soundToggle" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 状态管理
+        // ============================================
+        const AppState = {
+            IDLE: 'IDLE',
+            PROCESSING: 'PROCESSING',
+            SHOW_RESULT: 'SHOW_RESULT'
+        };
+
+        const ToolType = {
+            ROCKET: 'ROCKET',
+            SHREDDER: 'SHREDDER',
+            BUBBLE: 'BUBBLE',
+            BLACK_HOLE: 'BLACK_HOLE'
+        };
+
+        let state = {
+            appState: AppState.IDLE,
+            moodText: '',
+            selectedTool: null,
+            comfortMessage: '',
+            history: [],
+            isMuted: false,
+            apiKey: ''
+        };
+
+        // ============================================
+        // 音效引擎
+        // ============================================
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = false;
+                this.masterGain = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContextClass();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.connect(this.ctx.destination);
+                    this.masterGain.gain.value = 0.4;
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute(muted) {
+                this.isMuted = muted;
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setValueAtTime(muted ? 0 : 0.4, this.ctx.currentTime);
+                }
+            }
+
+            playToolSound(tool) {
+                if (this.isMuted || !this.ctx) return;
+                switch (tool) {
+                    case ToolType.ROCKET: this.playRocketSound(); break;
+                    case ToolType.SHREDDER: this.playShredderSound(); break;
+                    case ToolType.BUBBLE: this.playBubbleSound(); break;
+                    case ToolType.BLACK_HOLE: this.playBlackHoleSound(); break;
+                }
+            }
+
+            playHealSound() {
+                if (this.isMuted || !this.ctx) return;
+                this.playChime();
+            }
+
+            createNoiseBuffer() {
+                if (!this.ctx) return null;
+                const bufferSize = this.ctx.sampleRate * 2;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                return buffer;
+            }
+
+            playRocketSound() {
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+
+                const noiseBuffer = this.createNoiseBuffer();
+                if (!noiseBuffer) return;
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                noise.loop = true;
+
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.setValueAtTime(200, t);
+                noiseFilter.frequency.exponentialRampToValueAtTime(1000, t + 2);
+
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(0, t);
+                noiseGain.gain.linearRampToValueAtTime(0.8, t + 0.2);
+                noiseGain.gain.linearRampToValueAtTime(0, t + 3);
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(this.masterGain);
+                noise.start(t);
+                noise.stop(t + 3.1);
+
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, t);
+                osc.frequency.exponentialRampToValueAtTime(600, t + 3);
+
+                const oscGain = this.ctx.createGain();
+                oscGain.gain.setValueAtTime(0.1, t);
+                oscGain.gain.linearRampToValueAtTime(0, t + 3);
+
+                osc.connect(oscGain);
+                oscGain.connect(this.masterGain);
+                osc.start(t);
+                osc.stop(t + 3.1);
+            }
+
+            playShredderSound() {
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+                const duration = 2.5;
+
+                const noiseBuffer = this.createNoiseBuffer();
+                if (!noiseBuffer) return;
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                noise.loop = true;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 400;
+                filter.Q.value = 1;
+
+                const lfo = this.ctx.createOscillator();
+                lfo.type = 'sawtooth';
+                lfo.frequency.value = 15;
+
+                const lfoGain = this.ctx.createGain();
+                lfoGain.gain.value = 500;
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(filter.frequency);
+                lfo.start(t);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.5, t + 0.1);
+                gain.gain.setValueAtTime(0.5, t + duration - 0.1);
+                gain.gain.linearRampToValueAtTime(0, t + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                noise.start(t);
+                noise.stop(t + duration);
+                lfo.stop(t + duration);
+            }
+
+            playBubbleSound() {
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+
+                for (let i = 0; i < 8; i++) {
+                    const offset = i * 0.3 + Math.random() * 0.1;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.frequency.setValueAtTime(400 + Math.random() * 400, t + offset);
+                    osc.frequency.exponentialRampToValueAtTime(1200 + Math.random() * 400, t + offset + 0.1);
+
+                    gain.gain.setValueAtTime(0, t + offset);
+                    gain.gain.linearRampToValueAtTime(0.3, t + offset + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.15);
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    osc.start(t + offset);
+                    osc.stop(t + offset + 0.2);
+                }
+            }
+
+            playBlackHoleSound() {
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+                const duration = 3;
+
+                const osc = this.ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, t);
+                osc.frequency.exponentialRampToValueAtTime(30, t + duration);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.6, t + 0.5);
+                gain.gain.linearRampToValueAtTime(0, t + duration);
+
+                const lfo = this.ctx.createOscillator();
+                lfo.frequency.value = 8;
+                const lfoGain = this.ctx.createGain();
+                lfoGain.gain.value = 0.3;
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(gain.gain);
+                lfo.start(t);
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(t);
+                osc.stop(t + duration);
+                lfo.stop(t + duration);
+            }
+
+            playChime() {
+                if (!this.ctx || !this.masterGain) return;
+                const t = this.ctx.currentTime;
+                const freqs = [523.25, 659.25, 783.99, 1046.50];
+
+                freqs.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(0.15, t + 0.1 + (i * 0.05));
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 3);
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(t);
+                    osc.stop(t + 3.1);
+                });
+            }
+        }
+
+        const soundEngine = new SoundEngine();
+
+        // ============================================
+        // Gemini API 服务
+        // ============================================
+        const fallbackMessages = [
+            "深呼吸，一切都会好起来的。",
+            "烦恼已经飞走啦，你是最棒的！",
+            "今天的不开心就留给昨天吧，明天是新的开始。",
+            "抱抱你，没关系的，慢慢来。",
+            "像小猫晒太阳一样，放松一下吧。",
+            "坏情绪已经被打包送走啦，心情会变晴朗的！",
+            "你很勇敢，深呼吸，世界依然爱你。",
+            "烦恼变成星星碎片啦，今晚会做一个好梦。",
+            "生活有时候很难，但你已经做得很好了。",
+            "每一个小困难都是成长的养料。",
+            "此刻的不开心，只是暂时的小插曲。",
+            "你值得被温柔以待，包括你自己。"
+        ];
+
+        // 默认 API Key
+        const DEFAULT_GEMINI_API_KEY = 'AIzaSyDKi_BRyAKb5xC38Z9F1dTpL7xTZgHg600';
+
+        async function getComfortingMessage(badMood) {
+            // 优先使用用户配置的 Key，否则使用默认 Key
+            const apiKey = localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
+
+            console.log('[Gemini] Calling API with key:', apiKey.substring(0, 10) + '...');
+
+            try {
+                // 使用 gemini-pro 模型（更稳定）
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `用户写下了这个坏心情："${badMood}"。他们刚刚通过交互动画销毁了这张便签。
+请写一句简短、温暖、治愈的中文（30字以内），用温柔、可爱或略带哲理的语气安抚他们。
+不要说教，只要陪伴和鼓励。例如："烦恼变成星星碎片啦，今晚会做一个好梦。"
+只输出安慰的话，不要有任何其他内容。`
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.9,
+                            maxOutputTokens: 100
+                        }
+                    })
+                });
+
+                console.log('[Gemini] Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('[Gemini] API error:', errorData);
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('[Gemini] Response data:', data);
+                
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    console.log('[Gemini] Generated message:', text.trim());
+                    return text.trim();
+                }
+                
+                console.log('[Gemini] No text in response, using fallback');
+                return fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+            } catch (error) {
+                console.error("[Gemini] Error fetching comfort message:", error);
+                return fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+            }
+        }
+
+        // ============================================
+        // DOM 元素
+        // ============================================
+        const elements = {
+            moodText: document.getElementById('moodText'),
+            toolHint: document.getElementById('toolHint'),
+            toolBtns: document.querySelectorAll('.tool-btn'),
+            inputStage: document.getElementById('inputStage'),
+            processingStage: document.getElementById('processingStage'),
+            processingText: document.getElementById('processingText'),
+            animationContainer: document.getElementById('animationContainer'),
+            resultStage: document.getElementById('resultStage'),
+            comfortMessage: document.getElementById('comfortMessage'),
+            heartIcon: document.getElementById('heartIcon'),
+            resetBtn: document.getElementById('resetBtn'),
+            mascot: document.getElementById('mascot'),
+            faceIdle: document.getElementById('faceIdle'),
+            faceProcessing: document.getElementById('faceProcessing'),
+            faceResult: document.getElementById('faceResult'),
+            muteBtn: document.getElementById('muteBtn'),
+            volumeIcon: document.getElementById('volumeIcon'),
+            historyBtn: document.getElementById('historyBtn'),
+            historyModal: document.getElementById('historyModal'),
+            historyBackdrop: document.getElementById('historyBackdrop'),
+            historyContent: document.getElementById('historyContent'),
+            closeHistoryBtn: document.getElementById('closeHistoryBtn'),
+            clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            settingsBackdrop: document.getElementById('settingsBackdrop'),
+            closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+            apiKeyInput: document.getElementById('apiKeyInput'),
+            saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
+            clearApiKeyBtn: document.getElementById('clearApiKeyBtn'),
+            apiKeyStatus: document.getElementById('apiKeyStatus'),
+            soundToggle: document.getElementById('soundToggle')
+        };
+
+        // ============================================
+        // 初始化
+        // ============================================
+        function init() {
+            // 初始化 Lucide 图标
+            lucide.createIcons();
+
+            // 加载历史记录
+            loadHistory();
+
+            // 加载设置
+            loadSettings();
+
+            // 绑定事件
+            bindEvents();
+
+            // 更新 API Key 状态
+            updateApiKeyStatus();
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('crushHistory');
+            if (saved) {
+                try {
+                    state.history = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to parse history");
+                    state.history = [];
+                }
+            }
+        }
+
+        function loadSettings() {
+            const muted = localStorage.getItem('soundMuted') === 'true';
+            state.isMuted = muted;
+            soundEngine.toggleMute(muted);
+            updateMuteButton();
+
+            const apiKey = localStorage.getItem('geminiApiKey');
+            if (apiKey) {
+                state.apiKey = apiKey;
+                elements.apiKeyInput.value = '••••••••••••••••';
+            }
+
+            elements.soundToggle.checked = !muted;
+        }
+
+        function bindEvents() {
+            // 文本输入
+            elements.moodText.addEventListener('input', handleTextInput);
+
+            // 工具按钮
+            elements.toolBtns.forEach(btn => {
+                btn.addEventListener('click', () => handleToolSelect(btn.dataset.tool));
+            });
+
+            // 重置按钮
+            elements.resetBtn.addEventListener('click', handleReset);
+
+            // 静音按钮
+            elements.muteBtn.addEventListener('click', toggleMute);
+
+            // 历史记录
+            elements.historyBtn.addEventListener('click', openHistory);
+            elements.closeHistoryBtn.addEventListener('click', closeHistory);
+            elements.historyBackdrop.addEventListener('click', closeHistory);
+            elements.clearHistoryBtn.addEventListener('click', clearHistory);
+
+            // 设置
+            elements.settingsBtn.addEventListener('click', openSettings);
+            elements.closeSettingsBtn.addEventListener('click', closeSettings);
+            elements.settingsBackdrop.addEventListener('click', closeSettings);
+            elements.saveApiKeyBtn.addEventListener('click', saveApiKey);
+            elements.clearApiKeyBtn.addEventListener('click', clearApiKey);
+            elements.soundToggle.addEventListener('change', handleSoundToggle);
+        }
+
+        // ============================================
+        // 事件处理
+        // ============================================
+        function handleTextInput() {
+            state.moodText = elements.moodText.value;
+            const hasText = state.moodText.trim().length > 0;
+
+            // 更新工具提示
+            elements.toolHint.style.opacity = hasText ? '1' : '0';
+
+            // 更新工具按钮状态
+            elements.toolBtns.forEach(btn => {
+                if (hasText) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btn.classList.add('cursor-pointer', 'hover:shadow-xl', 'hover:scale-110', 'hover:-translate-y-1');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                    btn.classList.remove('cursor-pointer', 'hover:shadow-xl', 'hover:scale-110', 'hover:-translate-y-1');
+                }
+            });
+        }
+
+        async function handleToolSelect(tool) {
+            // 初始化音频
+            soundEngine.init();
+
+            state.selectedTool = tool;
+            state.appState = AppState.PROCESSING;
+
+            // 更新 UI
+            updateMascotFace('processing');
+            elements.mascot.classList.add('mascot-processing');
+
+            // 隐藏输入阶段，显示处理阶段
+            elements.inputStage.classList.add('hidden');
+            elements.processingStage.classList.remove('hidden');
+
+            // 设置处理文本
+            const processingTexts = {
+                [ToolType.ROCKET]: "正在装填火箭燃料...",
+                [ToolType.SHREDDER]: "强力粉碎中...",
+                [ToolType.BUBBLE]: "变身魔法泡泡...",
+                [ToolType.BLACK_HOLE]: "正在打开虫洞..."
+            };
+            elements.processingText.textContent = processingTexts[tool];
+
+            // 播放音效
+            soundEngine.playToolSound(tool);
+
+            // 渲染动画
+            renderAnimation(tool);
+
+            // 获取安慰消息
+            state.comfortMessage = await getComfortingMessage(state.moodText);
+
+            // 动画完成后显示结果
+            setTimeout(() => {
+                handleAnimationComplete();
+            }, 4500);
+        }
+
+        function handleAnimationComplete() {
+            state.appState = AppState.SHOW_RESULT;
+
+            // 更新 UI
+            updateMascotFace('result');
+            elements.mascot.classList.remove('mascot-processing');
+
+            // 隐藏处理阶段，显示结果阶段
+            elements.processingStage.classList.add('hidden');
+            elements.animationContainer.innerHTML = '';
+            elements.resultStage.classList.remove('hidden');
+            elements.resultStage.classList.add('fade-in');
+
+            // 显示安慰消息
+            elements.comfortMessage.textContent = state.comfortMessage || "正在接收来自宇宙的信号...";
+
+            // 心形图标动画
+            setTimeout(() => {
+                elements.heartIcon.style.transform = 'scale(1)';
+            }, 200);
+
+            // 播放治愈音效
+            soundEngine.playHealSound();
+
+            // 添加到历史记录
+            if (state.selectedTool && state.moodText) {
+                addToHistory(state.moodText, state.selectedTool, state.comfortMessage);
+            }
+
+            // 重新初始化图标
+            lucide.createIcons();
+        }
+
+        function handleReset() {
+            state.moodText = '';
+            state.comfortMessage = '';
+            state.selectedTool = null;
+            state.appState = AppState.IDLE;
+
+            // 重置 UI
+            elements.moodText.value = '';
+            elements.toolHint.style.opacity = '0';
+            elements.heartIcon.style.transform = 'scale(0)';
+
+            // 重置工具按钮
+            elements.toolBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-40', 'cursor-not-allowed');
+                btn.classList.remove('cursor-pointer', 'hover:shadow-xl', 'hover:scale-110', 'hover:-translate-y-1');
+            });
+
+            // 更新吉祥物
+            updateMascotFace('idle');
+
+            // 切换阶段
+            elements.resultStage.classList.add('hidden');
+            elements.resultStage.classList.remove('fade-in');
+            elements.inputStage.classList.remove('hidden');
+            elements.inputStage.classList.add('fade-in');
+        }
+
+        function toggleMute() {
+            state.isMuted = !state.isMuted;
+            soundEngine.toggleMute(state.isMuted);
+            localStorage.setItem('soundMuted', state.isMuted);
+            updateMuteButton();
+            elements.soundToggle.checked = !state.isMuted;
+        }
+
+        function handleSoundToggle() {
+            state.isMuted = !elements.soundToggle.checked;
+            soundEngine.toggleMute(state.isMuted);
+            localStorage.setItem('soundMuted', state.isMuted);
+            updateMuteButton();
+        }
+
+        function updateMuteButton() {
+            const icon = state.isMuted ? 'volume-x' : 'volume-2';
+            // 直接替换整个按钮内的图标
+            const muteBtn = elements.muteBtn;
+            muteBtn.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i>`;
+            lucide.createIcons({ nodes: [muteBtn] });
+        }
+
+        // ============================================
+        // 吉祥物
+        // ============================================
+        function updateMascotFace(face) {
+            elements.faceIdle.style.display = face === 'idle' ? 'block' : 'none';
+            elements.faceProcessing.style.display = face === 'processing' ? 'block' : 'none';
+            elements.faceResult.style.display = face === 'result' ? 'block' : 'none';
+        }
+
+        // ============================================
+        // 动画渲染
+        // ============================================
+        function renderAnimation(tool) {
+            elements.animationContainer.innerHTML = '';
+
+            switch (tool) {
+                case ToolType.ROCKET:
+                    renderRocketAnimation();
+                    break;
+                case ToolType.SHREDDER:
+                    renderShredderAnimation();
+                    break;
+                case ToolType.BUBBLE:
+                    renderBubbleAnimation();
+                    break;
+                case ToolType.BLACK_HOLE:
+                    renderBlackHoleAnimation();
+                    break;
+            }
+        }
+
+        function renderRocketAnimation() {
+            const container = elements.animationContainer;
+            
+            // Stars background
+            for (let i = 0; i < 20; i++) {
+                const star = document.createElement('div');
+                star.className = 'absolute bg-yellow-200 rounded-full star';
+                star.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    width: ${Math.random() * 4 + 2}px;
+                    height: ${Math.random() * 4 + 2}px;
+                    animation-delay: ${Math.random() * 2}s;
+                `;
+                container.appendChild(star);
+            }
+
+            // Rocket with paper
+            const rocketGroup = document.createElement('div');
+            rocketGroup.className = 'relative flex flex-col items-center z-10 rocket-launch';
+            rocketGroup.innerHTML = `
+                <!-- Paper -->
+                <div class="w-12 h-12 md:w-16 md:h-16 bg-pastel-yellow shadow-inner flex items-center justify-center p-1 mb-[-10px] z-10 rounded-full border border-yellow-500/30">
+                    <div class="w-full h-full bg-yellow-300/50 rounded-full"></div>
+                </div>
+                <!-- Rocket -->
+                <div class="text-red-500 relative z-20" style="animation: shake 0.2s infinite;">
+                    <svg class="w-16 h-16 md:w-20 md:h-20 transform -rotate-45 drop-shadow-lg" viewBox="0 0 24 24" fill="#f87171" stroke="#f87171" stroke-width="1">
+                        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+                        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+                    </svg>
+                    <div class="absolute top-1/2 left-1/2 w-3 h-3 md:w-4 md:h-4 bg-blue-200 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2"></div>
+                </div>
+                <!-- Fire -->
+                <div class="w-6 h-16 md:w-8 md:h-24 bg-gradient-to-t from-transparent via-orange-400 to-yellow-300 rounded-full blur-sm mt-[-20px] relative z-0 fire-trail"></div>
+            `;
+            container.appendChild(rocketGroup);
+
+            // Smoke particles
+            for (let i = 0; i < 5; i++) {
+                const smoke = document.createElement('div');
+                smoke.className = 'absolute w-4 h-4 md:w-6 md:h-6 bg-white rounded-full opacity-60 blur-md';
+                smoke.style.cssText = `
+                    bottom: 20%;
+                    left: 50%;
+                    animation: smokeRise 1s infinite;
+                    animation-delay: ${i * 0.1}s;
+                    --tx: ${(i - 2) * 40}px;
+                `;
+                container.appendChild(smoke);
+            }
+
+            // Add smoke animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes smokeRise {
+                    0% { transform: translateY(0) translateX(0); opacity: 0.6; }
+                    100% { transform: translateY(200px) translateX(var(--tx)); opacity: 0; scale: 2; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function renderShredderAnimation() {
+            const container = elements.animationContainer;
+            
+            container.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <!-- Machine Head -->
+                    <div class="relative z-20 bg-slate-100 w-56 md:w-72 h-16 md:h-20 rounded-t-2xl shadow-md flex items-center justify-center border-b-8 border-slate-200">
+                        <div class="w-44 md:w-56 h-2 md:h-3 bg-slate-800 rounded-full opacity-10"></div>
+                        <div class="absolute right-4 top-4 w-2 h-2 md:w-3 md:h-3 bg-green-400 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.8)] animate-pulse"></div>
+                    </div>
+
+                    <div class="relative w-56 md:w-72 flex justify-center" style="perspective: 1000px;">
+                        <!-- Paper feeding in -->
+                        <div class="absolute -top-56 md:-top-72 bg-pastel-yellow w-44 md:w-56 h-56 md:h-72 p-4 md:p-6 shadow-md overflow-hidden text-slate-400 text-xs md:text-sm font-hand"
+                             style="animation: paperFeed 2s linear forwards;">
+                            <div class="w-full h-full border-2 border-dashed border-yellow-300 p-2">
+                                ${state.moodText}
+                            </div>
+                        </div>
+
+                        <!-- Shredded strips -->
+                        <div class="absolute top-0 w-52 md:w-64 flex justify-between overflow-hidden h-[350px] md:h-[450px] px-2" id="shreddedStrips">
+                        </div>
+                    </div>
+
+                    <!-- Machine Body -->
+                    <div class="relative z-20 bg-slate-100 w-56 md:w-72 h-24 md:h-32 rounded-b-2xl shadow-xl flex items-center justify-center flex-col gap-2">
+                        <div class="text-slate-300 text-xs md:text-sm font-bold tracking-widest font-cute">MOOD SHREDDER 3000</div>
+                        <div class="flex gap-2">
+                            <div class="w-12 md:w-16 h-1 bg-slate-200 rounded"></div>
+                            <div class="w-12 md:w-16 h-1 bg-slate-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add paper feed animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes paperFeed {
+                    0% { transform: translateY(-200px); }
+                    100% { transform: translateY(100px); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Add shredded strips after delay
+            setTimeout(() => {
+                const stripsContainer = document.getElementById('shreddedStrips');
+                if (stripsContainer) {
+                    for (let i = 0; i < 12; i++) {
+                        const strip = document.createElement('div');
+                        strip.className = 'w-3 md:w-4 bg-pastel-yellow shadow-sm shred-strip';
+                        strip.style.cssText = `
+                            height: 60px;
+                            animation-delay: ${2 + Math.random() * 0.5}s;
+                            --tx: ${(Math.random() - 0.5) * 80}px;
+                        `;
+                        strip.innerHTML = '<div class="w-full h-full bg-yellow-300/20"></div>';
+                        stripsContainer.appendChild(strip);
+                    }
+                }
+            }, 100);
+        }
+
+        function renderBubbleAnimation() {
+            const container = elements.animationContainer;
+            
+            // Wand
+            const wand = document.createElement('div');
+            wand.className = 'absolute bottom-[-20px] left-[10%] w-4 md:w-6 h-32 md:h-40 bg-pink-300 rounded-full origin-bottom z-10';
+            wand.style.cssText = 'animation: wandWave 2s ease-in-out;';
+            wand.innerHTML = '<div class="absolute -top-8 md:-top-10 -left-5 md:-left-6 w-12 md:w-16 h-12 md:h-16 border-4 border-pink-300 rounded-full"></div>';
+            container.appendChild(wand);
+
+            // Add wand animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes wandWave {
+                    0% { transform: rotate(-45deg) translateY(100px); }
+                    50% { transform: rotate(-20deg) translateY(0); }
+                    100% { transform: rotate(-45deg) translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Split text into bubbles
+            const chunks = state.moodText.match(/.{1,4}/g) || ["..."];
+            const bubbles = chunks.slice(0, 15);
+
+            bubbles.forEach((chunk, i) => {
+                const bubble = document.createElement('div');
+                const size = Math.max(40, chunk.length * 12);
+                bubble.className = 'bubble absolute flex items-center justify-center bg-gradient-to-tr from-blue-100/40 to-pink-100/40 backdrop-blur-sm border border-white/60 rounded-full shadow-sm text-slate-500 text-xs px-2 text-center break-all leading-tight font-hand';
+                bubble.style.cssText = `
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: 50%;
+                    top: 60%;
+                    --tx: ${(Math.random() - 0.5) * 400}px;
+                    animation-duration: ${4 + Math.random() * 2}s;
+                    animation-delay: ${0.5 + i * 0.3}s;
+                `;
+                bubble.innerHTML = `
+                    <div class="absolute top-[15%] left-[15%] w-[20%] h-[20%] bg-white rounded-full opacity-80 blur-[1px]"></div>
+                    <div class="absolute bottom-[15%] right-[15%] w-[10%] h-[10%] bg-white rounded-full opacity-60 blur-[1px]"></div>
+                    <span class="opacity-70">${chunk}</span>
+                `;
+                container.appendChild(bubble);
+            });
+        }
+
+        function renderBlackHoleAnimation() {
+            const container = elements.animationContainer;
+            
+            // Black hole
+            const blackHole = document.createElement('div');
+            blackHole.className = 'black-hole absolute rounded-full flex items-center justify-center z-10 bg-slate-900';
+            blackHole.innerHTML = `
+                <div class="absolute inset-0 rounded-full border-4 border-indigo-500/20 animate-spin-slow"></div>
+                <div class="absolute inset-2 rounded-full border-4 border-purple-500/20" style="animation: spin 2s linear infinite reverse;"></div>
+                <div class="w-full h-full rounded-full shadow-[inset_0_0_50px_rgba(0,0,0,1)]" style="background: radial-gradient(circle at center, #312e81 0%, #000 70%);"></div>
+            `;
+            container.appendChild(blackHole);
+
+            // Paper getting sucked in
+            const paper = document.createElement('div');
+            paper.className = 'paper-suck relative bg-pastel-yellow w-48 md:w-64 h-48 md:h-64 flex items-center justify-center p-4 md:p-6 shadow-xl';
+            paper.innerHTML = `<p class="text-xs md:text-sm text-slate-400 font-hand line-through opacity-50">${state.moodText}</p>`;
+            container.appendChild(paper);
+        }
+
+        // ============================================
+        // 历史记录
+        // ============================================
+        function addToHistory(text, tool, msg) {
+            const newItem = {
+                id: Date.now().toString(),
+                timestamp: Date.now(),
+                moodText: text,
+                toolType: tool,
+                comfortMessage: msg
+            };
+            state.history = [newItem, ...state.history];
+            localStorage.setItem('crushHistory', JSON.stringify(state.history));
+        }
+
+        function openHistory() {
+            elements.historyModal.classList.remove('hidden');
+            renderHistoryContent();
+        }
+
+        function closeHistory() {
+            elements.historyModal.classList.add('hidden');
+        }
+
+        function clearHistory() {
+            if (confirm('确定要清空所有治愈记录吗？')) {
+                state.history = [];
+                localStorage.removeItem('crushHistory');
+                renderHistoryContent();
+            }
+        }
+
+        function renderHistoryContent() {
+            const container = elements.historyContent;
+            
+            if (state.history.length === 0) {
+                container.innerHTML = `
+                    <div class="h-40 flex flex-col items-center justify-center text-slate-400">
+                        <p class="font-cute text-lg">还没有记录哦</p>
+                        <p class="text-xs mt-2">快去粉碎你的第一个坏情绪吧！</p>
+                    </div>
+                `;
+                elements.clearHistoryBtn.classList.add('hidden');
+                return;
+            }
+
+            elements.clearHistoryBtn.classList.remove('hidden');
+
+            const toolIcons = {
+                [ToolType.ROCKET]: '<i data-lucide="rocket" class="w-4 h-4"></i>',
+                [ToolType.SHREDDER]: '<i data-lucide="scissors" class="w-4 h-4"></i>',
+                [ToolType.BUBBLE]: '<i data-lucide="wind" class="w-4 h-4"></i>',
+                [ToolType.BLACK_HOLE]: '<i data-lucide="circle-dashed" class="w-4 h-4"></i>'
+            };
+
+            const toolColors = {
+                [ToolType.ROCKET]: 'bg-red-100 text-red-500',
+                [ToolType.SHREDDER]: 'bg-blue-100 text-blue-500',
+                [ToolType.BUBBLE]: 'bg-purple-100 text-purple-500',
+                [ToolType.BLACK_HOLE]: 'bg-slate-200 text-slate-700'
+            };
+
+            container.innerHTML = state.history.map(item => `
+                <div class="bg-white p-4 md:p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-gray-50 to-transparent pointer-events-none"></div>
+                    
+                    <!-- Top Row -->
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-2 px-2 py-1 rounded-lg text-xs font-bold ${toolColors[item.toolType]}">
+                            ${toolIcons[item.toolType]}
+                            <span>已粉碎</span>
+                        </div>
+                        <div class="flex items-center text-xs text-slate-300 font-mono">
+                            <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                            ${new Date(item.timestamp).toLocaleDateString()}
+                        </div>
+                    </div>
+
+                    <!-- Comfort Message -->
+                    <p class="text-slate-600 font-hand text-base md:text-lg mb-4 leading-relaxed">
+                        ${item.comfortMessage}
+                    </p>
+
+                    <!-- Crushed Mood -->
+                    <div class="pt-3 border-t border-dashed border-gray-100">
+                        <p class="text-xs text-slate-400 line-through truncate opacity-60 group-hover:opacity-100 transition-opacity">
+                            ${item.moodText}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // ============================================
+        // 设置
+        // ============================================
+        function openSettings() {
+            elements.settingsModal.classList.remove('hidden');
+            updateApiKeyStatus();
+            lucide.createIcons();
+        }
+
+        function closeSettings() {
+            elements.settingsModal.classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const apiKey = elements.apiKeyInput.value.trim();
+            if (apiKey && !apiKey.startsWith('••')) {
+                localStorage.setItem('geminiApiKey', apiKey);
+                state.apiKey = apiKey;
+                elements.apiKeyInput.value = '••••••••••••••••';
+                updateApiKeyStatus();
+                alert('API Key 已保存！');
+            }
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('geminiApiKey');
+            state.apiKey = '';
+            elements.apiKeyInput.value = '';
+            updateApiKeyStatus();
+        }
+
+        function updateApiKeyStatus() {
+            const hasKey = !!localStorage.getItem('geminiApiKey');
+            if (hasKey) {
+                elements.apiKeyStatus.textContent = '✅ 已配置 - AI 安慰话语已启用';
+                elements.apiKeyStatus.className = 'text-xs mt-2 text-green-500';
+            } else {
+                elements.apiKeyStatus.textContent = '⚠️ 未配置 - 将使用预设安慰话语';
+                elements.apiKeyStatus.className = 'text-xs mt-2 text-amber-500';
+            }
+        }
+
+        // ============================================
+        // 启动
+        // ============================================
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

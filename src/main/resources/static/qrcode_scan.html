@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>扫码开门 - 云端自习室</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            padding: 0 var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius-full);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .nav-placeholder {
+            width: 80px;
+        }
+
+        /* 主容器 */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px var(--space-4) var(--space-6);
+        }
+
+        /* 二维码卡片 */
+        .qrcode-card {
+            background: white;
+            border-radius: var(--radius-2xl);
+            padding: var(--space-6);
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .qrcode-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .qrcode-subtitle {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-5);
+        }
+
+        /* 二维码容器 - 大尺寸 */
+        .qrcode-container {
+            width: 100%;
+            aspect-ratio: 1;
+            max-width: 300px;
+            margin: 0 auto var(--space-5);
+            background: var(--color-card-bg);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid var(--color-border);
+        }
+
+        .qrcode-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(8px);
+            transition: filter 0.3s;
+        }
+
+        .qrcode-container.unlocked img {
+            filter: none;
+        }
+
+        .qrcode-placeholder {
+            font-size: 80px;
+            color: var(--color-text-tertiary);
+        }
+
+        .qrcode-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border-radius: var(--radius-xl);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .qrcode-overlay:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .qrcode-overlay.hidden {
+            display: none;
+        }
+
+        .qrcode-overlay-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+        }
+
+        .qrcode-overlay-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* 倒计时 */
+        .countdown {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--space-4);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown.warning {
+            color: var(--color-warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 状态文字 */
+        .status-text {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-5);
+        }
+
+        .status-text.locked {
+            color: var(--color-warning);
+        }
+
+        .status-text.success {
+            color: var(--color-success);
+        }
+
+        /* 锁定按钮 */
+        .lock-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            color: white;
+            border: none;
+            border-radius: var(--radius-xl);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+        }
+
+        .lock-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(124, 58, 237, 0.4);
+        }
+
+        .lock-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .lock-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .lock-btn.occupied {
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            box-shadow: 0 8px 24px rgba(255, 149, 0, 0.3);
+        }
+
+        /* 提示信息 */
+        .tips {
+            margin-top: var(--space-6);
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            max-width: 360px;
+            width: 100%;
+        }
+
+        .tips-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: var(--space-2);
+        }
+
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tips-list li {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tips-list li::before {
+            content: '•';
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 二维码放大弹窗 */
+        .qrcode-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: var(--space-4);
+        }
+
+        .qrcode-modal.visible {
+            display: flex;
+        }
+
+        .qrcode-modal-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .qrcode-modal-img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .qrcode-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .qrcode-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .qrcode-modal-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-top: var(--space-4);
+        }
+
+        /* 二维码容器点击提示 */
+        .qrcode-container.unlocked {
+            cursor: zoom-in;
+        }
+
+        .zoom-hint {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: var(--radius-md);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .qrcode-container.unlocked:hover .zoom-hint {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <a href="/index.html" class="back-btn">
+            <span>←</span> 返回
+        </a>
+        <span class="nav-title">扫码开门</span>
+        <div class="nav-placeholder"></div>
+    </nav>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 二维码放大弹窗 -->
+    <div class="qrcode-modal" id="qrcodeModal">
+        <div class="qrcode-modal-content">
+            <button class="qrcode-modal-close" id="modalClose">×</button>
+            <img class="qrcode-modal-img" id="modalImg" src="" alt="放大二维码">
+            <div class="qrcode-modal-hint">点击任意位置关闭</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 二维码卡片 -->
+        <div class="qrcode-card">
+            <div class="qrcode-title">请扫描二维码</div>
+            <div class="qrcode-subtitle">将手机对准下方二维码进入自习室</div>
+            
+            <div class="qrcode-container" id="qrcodeContainer">
+                <img id="qrcodeImg" src="" alt="二维码" style="display: none;">
+                <div class="qrcode-placeholder" id="qrcodePlaceholder">📱</div>
+                <div class="qrcode-overlay" id="qrcodeOverlay">
+                    <div class="qrcode-overlay-icon">🔒</div>
+                    <div class="qrcode-overlay-text">点击解锁二维码</div>
+                </div>
+                <div class="zoom-hint">🔍 点击放大</div>
+            </div>
+
+            <div class="countdown" id="countdown" style="display: none;">03:00</div>
+            <div class="status-text" id="statusText">点击二维码区域开始扫码开门</div>
+            
+            <button class="lock-btn" id="lockBtn">解锁二维码</button>
+        </div>
+
+        <!-- 使用提示 -->
+        <div class="tips">
+            <div class="tips-title">📝 使用说明</div>
+            <ul class="tips-list">
+                <li>点击"解锁二维码"获取3分钟扫码时间</li>
+                <li>使用自习室门禁扫描器扫描二维码</li>
+                <li>扫码成功后门禁自动开启，请进入自习室</li>
+                <li>进入后在座位管理页面选择座位入座</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 状态
+        let isLocked = false;
+        let isMyLock = false;
+        let lockEndTime = 0;
+        let countdownTimer = null;
+        let pollTimer = null;
+
+        const LOCK_DURATION = 3 * 60 * 1000; // 3分钟
+
+        // DOM 元素
+        const qrcodeContainer = document.getElementById('qrcodeContainer');
+        const qrcodeImg = document.getElementById('qrcodeImg');
+        const qrcodePlaceholder = document.getElementById('qrcodePlaceholder');
+        const qrcodeOverlay = document.getElementById('qrcodeOverlay');
+        const statusText = document.getElementById('statusText');
+        const countdownEl = document.getElementById('countdown');
+        const lockBtn = document.getElementById('lockBtn');
+        const toast = document.getElementById('toast');
+        const qrcodeModal = document.getElementById('qrcodeModal');
+        const modalImg = document.getElementById('modalImg');
+        const modalClose = document.getElementById('modalClose');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLockStatus();
+            startPolling();
+        });
+
+        // 检查锁定状态
+        async function checkLockStatus() {
+            try {
+                const res = await fetch('/api/qr-status/check');
+                const data = await res.json();
+
+                isLocked = data.status === 'LOCKED';
+                lockEndTime = data.endTime || 0;
+
+                // 检查是否是自己的锁
+                const myLockEnd = localStorage.getItem('myLockEndTime');
+                isMyLock = myLockEnd && parseInt(myLockEnd) === lockEndTime;
+
+                updateUI();
+            } catch (err) {
+                console.error('检查状态失败:', err);
+            }
+        }
+
+        // 更新 UI
+        function updateUI() {
+            if (isLocked) {
+                if (isMyLock) {
+                    // 自己锁定 - 显示清晰二维码
+                    qrcodeContainer.classList.add('unlocked');
+                    qrcodeOverlay.classList.add('hidden');
+                    statusText.textContent = '请在倒计时结束前扫码开门';
+                    statusText.className = 'status-text success';
+                    lockBtn.textContent = '已锁定';
+                    lockBtn.disabled = true;
+                    lockBtn.classList.remove('occupied');
+                    countdownEl.style.display = 'block';
+                    startCountdown();
+                } else {
+                    // 别人锁定
+                    qrcodeContainer.classList.remove('unlocked');
+                    qrcodeOverlay.classList.remove('hidden');
+                    qrcodeOverlay.querySelector('.qrcode-overlay-text').textContent = '通道占用中';
+                    statusText.textContent = '请等待当前用户完成扫码';
+                    statusText.className = 'status-text locked';
+                    lockBtn.textContent = '通道占用中';
+                    lockBtn.disabled = true;
+                    lockBtn.classList.add('occupied');
+                    countdownEl.style.display = 'block';
+                    startCountdown();
+                }
+            } else {
+                // 未锁定
+                qrcodeContainer.classList.remove('unlocked');
+                qrcodeOverlay.classList.remove('hidden');
+                qrcodeOverlay.querySelector('.qrcode-overlay-text').textContent = '点击解锁二维码';
+                statusText.textContent = '点击二维码区域开始扫码开门';
+                statusText.className = 'status-text';
+                lockBtn.textContent = '解锁二维码';
+                lockBtn.disabled = false;
+                lockBtn.classList.remove('occupied');
+                countdownEl.style.display = 'none';
+                clearInterval(countdownTimer);
+            }
+
+            loadQRCode();
+        }
+
+        // 加载二维码图片
+        async function loadQRCode() {
+            try {
+                const timestamp = Date.now();
+                qrcodeImg.src = `/images/dynamic_qrcode.jpg?t=${timestamp}`;
+                qrcodeImg.style.display = 'block';
+                qrcodePlaceholder.style.display = 'none';
+            } catch (err) {
+                qrcodeImg.style.display = 'none';
+                qrcodePlaceholder.style.display = 'block';
+            }
+        }
+
+        // 锁定操作
+        async function doLock() {
+            if (isLocked) return;
+
+            try {
+                const res = await fetch('/api/qr-status/lock', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    isLocked = true;
+                    isMyLock = true;
+                    lockEndTime = data.endTime;
+                    localStorage.setItem('myLockEndTime', lockEndTime);
+                    updateUI();
+                    showToast('锁定成功，请在3分钟内扫码');
+                } else {
+                    showToast(data.message || '锁定失败');
+                    checkLockStatus();
+                }
+            } catch (err) {
+                console.error('锁定失败:', err);
+                showToast('网络错误，请重试');
+            }
+        }
+
+        // 倒计时
+        function startCountdown() {
+            clearInterval(countdownTimer);
+
+            const update = () => {
+                const remaining = Math.max(0, lockEndTime - Date.now());
+                if (remaining <= 0) {
+                    clearInterval(countdownTimer);
+                    isLocked = false;
+                    isMyLock = false;
+                    localStorage.removeItem('myLockEndTime');
+                    updateUI();
+                    return;
+                }
+
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                // 最后30秒警告
+                if (remaining < 30000) {
+                    countdownEl.classList.add('warning');
+                } else {
+                    countdownEl.classList.remove('warning');
+                }
+            };
+
+            update();
+            countdownTimer = setInterval(update, 1000);
+        }
+
+        // 轮询
+        function startPolling() {
+            pollTimer = setInterval(() => {
+                checkLockStatus();
+                loadQRCode();
+            }, 5000);
+        }
+
+        // Toast
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2000);
+        }
+
+        // 事件绑定
+        lockBtn.addEventListener('click', doLock);
+        qrcodeOverlay.addEventListener('click', doLock);
+
+        // 二维码放大功能
+        qrcodeImg.addEventListener('click', (e) => {
+            // 只有解锁状态下才能放大
+            if (isMyLock && qrcodeContainer.classList.contains('unlocked')) {
+                e.stopPropagation();
+                showQRCodeModal();
+            }
+        });
+
+        // 显示放大弹窗
+        function showQRCodeModal() {
+            modalImg.src = qrcodeImg.src;
+            qrcodeModal.classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭放大弹窗
+        function closeQRCodeModal() {
+            qrcodeModal.classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+
+        modalClose.addEventListener('click', closeQRCodeModal);
+        qrcodeModal.addEventListener('click', (e) => {
+            if (e.target === qrcodeModal) {
+                closeQRCodeModal();
+            }
+        });
+
+        // ESC 键关闭弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && qrcodeModal.classList.contains('visible')) {
+                closeQRCodeModal();
+            }
+        });
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            clearInterval(countdownTimer);
+            clearInterval(pollTimer);
+        });
+    </script>
+</body>
+</html>

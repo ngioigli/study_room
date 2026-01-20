@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>座位管理 - 云端自习室</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <style>
+        body {
+            background: var(--color-bg);
+        }
+
+        .page-container {
+            min-height: 100vh;
+            padding: var(--space-4);
+            padding-bottom: calc(var(--nav-height) + var(--space-6));
+        }
+
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: var(--space-5);
+        }
+
+        .page-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-value {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: 4px;
+        }
+
+        .stat-value.total { color: var(--color-primary); }
+        .stat-value.available { color: var(--color-success); }
+        .stat-value.occupied { color: var(--color-warning); }
+        .stat-value.maintenance { color: var(--color-error); }
+
+        .stat-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        /* 座位网格 */
+        .seats-section {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-dark);
+        }
+
+        .legend {
+            display: flex;
+            gap: var(--space-4);
+            font-size: var(--font-size-xs);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.available { background: var(--color-success); }
+        .legend-dot.occupied { background: var(--color-warning); }
+        .legend-dot.maintenance { background: var(--color-error); }
+
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+        }
+
+        .seat-card {
+            aspect-ratio: 1;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .seat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .seat-card.available {
+            background: var(--color-success-bg);
+            border-color: var(--color-success);
+        }
+
+        .seat-card.occupied {
+            background: var(--color-warning-bg);
+            border-color: var(--color-warning);
+        }
+
+        .seat-card.maintenance {
+            background: var(--color-error-bg);
+            border-color: var(--color-error);
+        }
+
+        .seat-card.selected {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-bg);
+        }
+
+        .seat-icon {
+            font-size: 24px;
+        }
+
+        .seat-number {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-dark);
+        }
+
+        .seat-status {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        .power-indicator {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .power-indicator.on {
+            background: #10B981;
+            box-shadow: 0 0 6px #10B981;
+        }
+
+        /* 座位详情面板 */
+        .detail-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            box-shadow: var(--shadow-xl);
+            padding: var(--space-6);
+            padding-bottom: calc(var(--space-6) + var(--safe-area-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: var(--z-modal);
+        }
+
+        .detail-panel.show {
+            transform: translateY(0);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .panel-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-card-bg);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-5);
+        }
+
+        .info-item {
+            background: var(--color-card-bg);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+        }
+
+        .info-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-dark);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            border: none;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .action-btn.primary {
+            background: var(--color-primary);
+            color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .action-btn.secondary {
+            background: var(--color-card-bg);
+            color: var(--color-text-primary);
+        }
+
+        .action-btn.danger {
+            background: var(--color-error);
+            color: #fff;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 遮罩层 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            z-index: calc(var(--z-modal) - 1);
+        }
+
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-sm);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            z-index: var(--z-toast);
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-10);
+            color: var(--color-text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: var(--space-4);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container page-with-nav">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">座位管理</h1>
+            <p class="page-subtitle">选择座位入座或查看座位状态</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value total" id="statTotal">-</div>
+                <div class="stat-label">总座位</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value available" id="statAvailable">-</div>
+                <div class="stat-label">可用</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value occupied" id="statOccupied">-</div>
+                <div class="stat-label">使用中</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value maintenance" id="statMaintenance">-</div>
+                <div class="stat-label">维护中</div>
+            </div>
+        </div>
+
+        <!-- 座位网格 -->
+        <div class="seats-section">
+            <div class="section-header">
+                <h2 class="section-title">选择座位</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="legend-dot available"></span>
+                        <span>可用</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot occupied"></span>
+                        <span>使用中</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot maintenance"></span>
+                        <span>维护中</span>
+                    </div>
+                </div>
+            </div>
+            <div class="seats-grid" id="seatsGrid">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 座位详情面板 -->
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+    <div class="detail-panel" id="detailPanel">
+        <div class="panel-header">
+            <h3 class="panel-title" id="panelTitle">座位详情</h3>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="detail-info">
+            <div class="info-item">
+                <div class="info-label">座位编号</div>
+                <div class="info-value" id="seatNumber">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">当前状态</div>
+                <div class="info-value" id="seatStatus">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">电源状态</div>
+                <div class="info-value" id="powerStatus">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">当前用户</div>
+                <div class="info-value" id="currentUser">-</div>
+            </div>
+        </div>
+        <div class="action-buttons" id="actionButtons">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <a href="/index.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">自习室</span>
+        </a>
+        <a href="/study.html" class="nav-item">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">学习小屋</span>
+        </a>
+        <a href="/member.html" class="nav-item">
+            <span class="nav-icon">👑</span>
+            <span class="nav-label">会员</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">我的</span>
+        </a>
+    </nav>
+
+    <script src="/js/nav.js"></script>
+    <script>
+        // 状态
+        let seats = [];
+        let selectedSeat = null;
+        let currentOrder = null;
+
+        // DOM 元素
+        const seatsGrid = document.getElementById('seatsGrid');
+        const detailPanel = document.getElementById('detailPanel');
+        const overlay = document.getElementById('overlay');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSeats();
+            loadCurrentOrder();
+        });
+
+        // 加载座位数据
+        async function loadSeats() {
+            try {
+                const res = await fetch('/api/seats');
+                const data = await res.json();
+                
+                if (data.success) {
+                    seats = data.seats;
+                    renderSeats();
+                    updateStats(data.stats);
+                } else {
+                    showToast(data.message || '加载失败');
+                }
+            } catch (err) {
+                console.error('加载座位失败:', err);
+                showToast('网络错误，请稍后重试');
+            }
+        }
+
+        // 加载当前订单
+        async function loadCurrentOrder() {
+            try {
+                const res = await fetch('/api/orders/current');
+                const data = await res.json();
+                if (data.success && data.order) {
+                    currentOrder = data.order;
+                }
+            } catch (err) {
+                console.error('加载当前订单失败:', err);
+            }
+        }
+
+        // 渲染座位
+        function renderSeats() {
+            if (seats.length === 0) {
+                seatsGrid.innerHTML = '<div class="loading"><span>暂无座位数据</span></div>';
+                return;
+            }
+
+            seatsGrid.innerHTML = seats.map(seat => {
+                const statusMap = {
+                    'available': { icon: '💺', text: '可用' },
+                    'occupied': { icon: '👤', text: '使用中' },
+                    'reserved': { icon: '🔒', text: '已预约' },
+                    'maintenance': { icon: '🔧', text: '维护中' }
+                };
+                const info = statusMap[seat.status] || statusMap['available'];
+
+                return `
+                    <div class="seat-card ${seat.status}" onclick="selectSeat(${seat.id})" data-id="${seat.id}">
+                        <div class="power-indicator ${seat.powerOn ? 'on' : ''}"></div>
+                        <span class="seat-icon">${info.icon}</span>
+                        <span class="seat-number">${seat.seatNumber}</span>
+                        <span class="seat-status">${info.text}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 更新统计
+        function updateStats(stats) {
+            if (!stats) return;
+            document.getElementById('statTotal').textContent = stats.total || 0;
+            document.getElementById('statAvailable').textContent = stats.available || 0;
+            document.getElementById('statOccupied').textContent = stats.occupied || 0;
+            document.getElementById('statMaintenance').textContent = stats.maintenance || 0;
+        }
+
+        // 选择座位
+        function selectSeat(id) {
+            selectedSeat = seats.find(s => s.id === id);
+            if (!selectedSeat) return;
+
+            // 更新选中状态
+            document.querySelectorAll('.seat-card').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.seat-card[data-id="${id}"]`)?.classList.add('selected');
+
+            // 显示详情面板
+            showPanel();
+        }
+
+        // 显示面板
+        function showPanel() {
+            if (!selectedSeat) return;
+
+            const statusMap = {
+                'available': '可用',
+                'occupied': '使用中',
+                'reserved': '已预约',
+                'maintenance': '维护中'
+            };
+
+            document.getElementById('panelTitle').textContent = `座位 ${selectedSeat.seatNumber}`;
+            document.getElementById('seatNumber').textContent = selectedSeat.seatNumber;
+            document.getElementById('seatStatus').textContent = statusMap[selectedSeat.status] || '-';
+            document.getElementById('powerStatus').textContent = selectedSeat.powerOn ? '已通电 🟢' : '已断电 ⚪';
+            document.getElementById('currentUser').textContent = selectedSeat.currentUser || '无';
+
+            // 生成操作按钮
+            const buttons = [];
+            
+            if (selectedSeat.status === 'available') {
+                // 可入座并通电
+                if (!currentOrder) {
+                    buttons.push(`<button class="action-btn primary" onclick="checkIn(${selectedSeat.id})">占座通电</button>`);
+                } else {
+                    buttons.push(`<button class="action-btn secondary" disabled>您已有进行中的订单</button>`);
+                }
+            } else if (selectedSeat.status === 'occupied') {
+                // 检查是否是当前用户的座位
+                if (currentOrder && currentOrder.seatId === selectedSeat.id) {
+                    buttons.push(`<button class="action-btn danger" onclick="checkOut()">离座断电</button>`);
+                } else {
+                    buttons.push(`<button class="action-btn secondary" disabled>该座位已被占用</button>`);
+                }
+            } else if (selectedSeat.status === 'maintenance') {
+                buttons.push(`<button class="action-btn secondary" disabled>该座位维护中</button>`);
+            }
+
+            document.getElementById('actionButtons').innerHTML = buttons.join('');
+
+            // 显示面板和遮罩
+            overlay.classList.add('show');
+            detailPanel.classList.add('show');
+        }
+
+        // 关闭面板
+        function closePanel() {
+            overlay.classList.remove('show');
+            detailPanel.classList.remove('show');
+            document.querySelectorAll('.seat-card').forEach(el => el.classList.remove('selected'));
+            selectedSeat = null;
+        }
+
+        // 入座
+        async function checkIn(seatId) {
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seatId })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('占座成功！座位已通电');
+                    currentOrder = data.order;
+                    closePanel();
+                    loadSeats();
+                } else {
+                    showToast(data.message || '占座失败');
+                }
+            } catch (err) {
+                console.error('入座失败:', err);
+                showToast('网络错误，请稍后重试');
+            }
+        }
+
+        // 离座
+        async function checkOut() {
+            if (!currentOrder) return;
+
+            try {
+                const res = await fetch(`/api/orders/${currentOrder.id}/end`, {
+                    method: 'PUT'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('已离座，座位已断电');
+                    currentOrder = null;
+                    closePanel();
+                    loadSeats();
+                } else {
+                    showToast(data.message || '离座失败');
+                }
+            } catch (err) {
+                console.error('离座失败:', err);
+                showToast('网络错误，请稍后重试');
+            }
+        }
+
+        // 显示 Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

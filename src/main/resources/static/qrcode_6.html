@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 移动端适配核心配置 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>云端自习室 - 扫码入座</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 引入圆润字体(正文) 和 手写字体(黑板) -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Zeyada&display=swap" rel="stylesheet">
+    <style>
+        :root { --refresh-interval: 3s; }
+
+        /* --- 1. 全局基础样式 --- */
+        body, html {
+            height: 100%; margin: 0; font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: #e0f7fa; overflow-x: hidden;
+            user-select: none; -webkit-user-select: none; /* 禁止选中文本，更有App感 */
+        }
+
+        /* 动态背景容器 */
+        .background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+            z-index: -1;
+        }
+
+        /* 云朵动画 */
+        .cloud {
+            position: absolute; background: #fff; border-radius: 50%; opacity: 0.6;
+            animation: float 35s infinite linear; pointer-events: none;
+        }
+        .cloud::after, .cloud::before { content: ''; position: absolute; background: inherit; border-radius: inherit; }
+        .c1 { width: 100px; height: 40px; top: 10%; left: -10%; }
+        .c1::after { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .c1::before { width: 40px; height: 40px; top: -15px; left: 45px; }
+        .c2 { width: 120px; height: 50px; top: 80%; left: -20%; animation-duration: 45s; transform: scale(1.5); opacity: 0.4;}
+        .c2::after { width: 60px; height: 60px; top: -30px; left: 20px; }
+        .c2::before { width: 50px; height: 50px; top: -20px; left: 60px; }
+        @keyframes float { from { left: -20%; } to { left: 120%; } }
+
+        /* --- 2. 顶部控制栏 (白噪音 + 退出) --- */
+        .top-bar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            z-index: 100; pointer-events: none; /* 布局层穿透，让下面能点 */
+        }
+
+        /* 退出按钮 */
+        #logoutBtn {
+            pointer-events: auto; padding: 8px 16px; background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 20px;
+            color: #57606f; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
+            backdrop-filter: blur(4px); transition: all 0.3s;
+        }
+        #logoutBtn:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-2px); }
+
+        /* 白噪音控制台 */
+        .noise-player {
+            pointer-events: auto; background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 10px 15px; border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: flex; flex-direction: column; gap: 8px; width: 140px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: width 0.3s ease;
+        }
+        .player-header { font-size: 12px; color: #57606f; font-weight: bold; display: flex; align-items: center; gap: 5px; opacity: 0.8; }
+        .player-controls { display: flex; justify-content: space-between; }
+        .sound-btn {
+            width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+            background: rgba(255, 255, 255, 0.4); font-size: 16px;
+            display: flex; justify-content: center; align-items: center; transition: all 0.2s; position: relative;
+        }
+        .sound-btn.active { background: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); transform: scale(1.1); }
+        .sound-btn.active::after {
+            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+        .volume-control { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+        .volume-slider { width: 100%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(255,255,255,0.5); }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #fff; border-radius: 50%; cursor: pointer; }
+
+        /* --- 3. 主内容区域 --- */
+        .main-container {
+            display: flex; flex-direction: column; align-items: center; gap: 30px;
+            padding-top: 100px; /* 避开顶部栏 */
+            width: 100%; min-height: 100vh; box-sizing: border-box;
+        }
+
+        /* 二维码卡片 */
+        #qrcode-container {
+            width: 100%; max-width: 360px; padding: 25px;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 24px; text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(137, 196, 244, 0.3);
+            position: relative;
+        }
+        .header-text { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 20px; }
+
+        .qrcode-image-wrapper {
+            position: relative; width: 100%; padding-bottom: 100%; height: 0;
+            border-radius: 16px; overflow: hidden; border: 4px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        #qrcode-image {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+            transition: filter 0.5s ease;
+        }
+
+        /* 模糊遮罩 */
+        .blur-mask { filter: blur(12px); }
+
+        /* 锁定/解锁 覆盖层 */
+        .lock-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; backdrop-filter: blur(2px); border-radius: 16px;
+        }
+
+        /* 抢占按钮 */
+        .unlock-btn {
+            background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%);
+            border: none; padding: 12px 28px; border-radius: 25px;
+            color: white; font-weight: bold; font-size: 16px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(102, 166, 255, 0.4);
+            transition: transform 0.2s; animation: pulse-btn 2s infinite;
+        }
+        .unlock-btn:active { transform: scale(0.95); }
+        .unlock-btn:disabled { background: #bdc3c7; box-shadow: none; cursor: not-allowed; animation: none; }
+        @keyframes pulse-btn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* 倒计时样式 */
+        .countdown-text { font-size: 36px; font-weight: bold; color: #e74c3c; margin-bottom: 5px; font-family: monospace; }
+        .status-tip { font-size: 14px; color: #57606f; margin-top: 5px; max-width: 80%; line-height: 1.5; }
+
+        /* 温馨提示黑板 */
+        .blackboard {
+            width: 100%; max-width: 360px; background: #404b69;
+            border: 8px solid #a67c52; border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 20px; color: #f1f2f6;
+        }
+        .blackboard h4 { font-size: 20px; margin-top: 0; text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 12px; margin-bottom: 15px; font-weight: normal; letter-spacing: 2px; }
+        .blackboard p { font-size: 14px; line-height: 1.8; white-space: pre-line; margin: 0; opacity: 0.9; }
+
+        /* --- 4. PC端适配 --- */
+        @media (min-width: 768px) {
+            .main-container { flex-direction: row; justify-content: center; align-items: flex-start; gap: 60px; padding-top: 0; height: 100vh; }
+            #qrcode-container { transform: rotate(-2deg); margin-top: 100px; }
+            #qrcode-container:hover { transform: rotate(0) scale(1.02); }
+            .blackboard { width: 340px; transform: rotate(2deg); margin-top: 120px; }
+            .noise-player { width: 180px; padding: 15px 20px; }
+            .sound-btn { width: 36px; height: 36px; font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 动态背景 -->
+<div class="background"><div class="cloud c1"></div><div class="cloud c2"></div></div>
+
+<!-- 顶部栏 -->
+<div class="top-bar">
+    <div class="noise-player">
+        <div class="player-header"><span>☁️ 沉浸白噪音</span></div>
+        <div class="player-controls">
+            <button class="sound-btn" data-sound="rain" title="雨落屋檐">🌧️</button>
+            <button class="sound-btn" data-sound="fire" title="围炉夜话">🔥</button>
+            <button class="sound-btn" data-sound="forest" title="清晨森林">🌲</button>
+            <button class="sound-btn" data-sound="ocean" title="远方海浪">🌊</button>
+        </div>
+        <div class="volume-control"><input type="range" class="volume-slider" min="0" max="1" step="0.05" value="0.3"></div>
+    </div>
+    <button id="logoutBtn">离座休息</button>
+</div>
+
+<!-- 主内容 -->
+<div class="main-container">
+    <div id="qrcode-container">
+        <h3 class="header-text">✨ 扫码进入学习小屋 ✨</h3>
+
+        <div class="qrcode-image-wrapper">
+            <img id="qrcode-image" src="/images/dynamic_qrcode.jpg" alt="二维码加载中...">
+
+            <!-- 遮罩层 (包含解锁按钮 和 倒计时) -->
+            <div id="lockOverlay" class="lock-overlay">
+                <!-- 状态A: 解锁按钮 -->
+                <button id="unlockBtn" class="unlock-btn">点击扫码入座</button>
+                <!-- 状态B: 倒计时 -->
+                <div id="countdownBox" style="display: none; text-align: center;">
+                    <div class="status-tip">正在被其他同学使用<br>请稍候...</div>
+                    <div id="timer" class="countdown-text">03:00</div>
+                </div>
+            </div>
+        </div>
+        <p id="footerTip" style="font-size: 12px; color: #999; margin-top: 15px;">
+            为防拥堵，每人扫码后通道锁定3分钟
+        </p>
+    </div>
+
+    <div class="blackboard">
+        <h4>温馨提示</h4>
+        <p>时光不负赶路人，亦不负你
+            学长学姐，愿你们得偿所愿～
+            🌸🌸🌸
+
+            ⚠️ 注意事项：
+            点击“扫码入座”后，通道将锁定3分钟
+            请务必尽快扫描，避免浪费资源哦~
+
+            二维码如显示失效,请耐心等待3s自动刷新</p>
+    </div>
+</div>
+
+<script>
+    // --- 全局变量 ---
+    const qrImage = document.getElementById('qrcode-image');
+    const lockOverlay = document.getElementById('lockOverlay');
+    const unlockBtn = document.getElementById('unlockBtn');
+    const countdownBox = document.getElementById('countdownBox');
+    const timerText = document.getElementById('timer');
+    const footerTip = document.getElementById('footerTip');
+
+    // 定时器变量
+    let pollTimer = null;      // 轮询定时器
+    let countdownTimer = null; // 本地倒计时定时器
+    let isCountingDown = false; // 标记位
+
+    // --- 1. 核心状态同步逻辑 (Smart Polling) ---
+
+    // 页面加载立即检查一次
+    checkServerStatus();
+
+    function checkServerStatus() {
+        // 如果本地正在倒计时，就不请求服务器了（省流量）
+        if (isCountingDown) return;
+
+        fetch('/api/qr-status/check')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'LOCKED') {
+                    // 发现锁定，开启本地倒计时
+                    handleLocked(data.endTime);
+                } else {
+                    // 发现空闲，开启低频轮询
+                    handleFree();
+                }
+            })
+            .catch(err => console.error("状态同步失败:", err));
+    }
+
+    // 处理空闲状态
+    function handleFree() {
+        // UI更新
+        qrImage.classList.add('blur-mask');
+        lockOverlay.style.display = 'flex';
+        unlockBtn.style.display = 'block';
+        countdownBox.style.display = 'none';
+        footerTip.innerText = "通道空闲中，点击上方按钮开始扫码";
+
+        // 逻辑处理
+        if (countdownTimer) clearInterval(countdownTimer);
+        isCountingDown = false;
+
+        // 启动低频轮询 (3秒查一次)
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(checkServerStatus, 3000);
+    }
+
+    // 处理锁定状态
+    function handleLocked(endTimeStamp) {
+        // 停止轮询，改用本地计算
+        if (pollTimer) clearInterval(pollTimer);
+        isCountingDown = true;
+
+        // UI更新
+        qrImage.classList.remove('blur-mask'); // 图片变清晰(或保持模糊，看需求，这里设为清晰方便查看)
+        lockOverlay.style.display = 'flex';
+        unlockBtn.style.display = 'none';
+        countdownBox.style.display = 'block';
+        footerTip.innerText = "通道冷却中...";
+
+        // 启动本地倒计时
+        startLocalTimer(endTimeStamp);
+    }
+
+    // 本地纯JS倒计时
+    function startLocalTimer(endTime) {
+        if (countdownTimer) clearInterval(countdownTimer);
+
+        // 立即执行一次
+        updateTimerUI();
+
+        countdownTimer = setInterval(updateTimerUI, 1000);
+
+        function updateTimerUI() {
+            const now = new Date().getTime();
+            const distance = endTime - now;
+
+            if (distance < 0) {
+                // 倒计时结束
+                clearInterval(countdownTimer);
+                isCountingDown = false;
+                timerText.innerText = "00:00";
+                // 再次请求服务器确认是否释放
+                checkServerStatus();
+                return;
+            }
+
+            // 格式化 mm:ss
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const s = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            timerText.innerText = `${m}:${s}`;
+        }
+    }
+
+    // --- 2. 交互逻辑 ---
+
+    // 点击“扫码入座”
+    unlockBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerText = "正在锁定...";
+
+        fetch('/api/qr-status/lock', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // 锁定成功，拿到结束时间，直接开始本地倒计时
+                    handleLocked(data.endTime);
+                } else {
+                    // 锁定失败（被抢），刷新状态
+                    alert(data.message);
+                    checkServerStatus();
+                }
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerText = "点击扫码入座";
+            });
+    });
+
+    // 图片持续刷新 (不受锁定影响，保证图片是最新的)
+    function refreshQRCode() {
+        const imageUrl = '/images/dynamic_qrcode.jpg?t=' + new Date().getTime();
+        qrImage.src = imageUrl;
+    }
+    setInterval(refreshQRCode, 3000);
+
+    // --- 3. 退出 & 白噪音逻辑 ---
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if(confirm('学累了吗？确定要离座休息一下吗？\n位置会一直为你留着哒~')) {
+            fetch('/api/logout').then(() => { window.location.href = '/login.html'; });
+        }
+    });
+
+    const sounds = {
+        rain: new Audio('/audio/rain.mp3'),
+        fire: new Audio('/audio/fire.mp3'),
+        forest: new Audio('/audio/forest.mp3'),
+        ocean: new Audio('/audio/ocean.mp3')
+    };
+    Object.values(sounds).forEach(audio => { audio.loop = true; audio.volume = 0.3; });
+    const volumeSlider = document.querySelector('.volume-slider');
+
+    document.querySelectorAll('.sound-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const audio = sounds[this.dataset.sound];
+            if (audio.paused) {
+                audio.play().catch(e=>{console.log("需交互")}); this.classList.add('active'); fadeIn(audio, volumeSlider.value);
+            } else {
+                audio.pause(); this.classList.remove('active');
+            }
+        });
+    });
+    volumeSlider.addEventListener('input', function() {
+        const vol = this.value; Object.values(sounds).forEach(audio => { audio.volume = vol; });
+    });
+    function fadeIn(audio, target) {
+        audio.volume = 0; let vol = 0;
+        const t = setInterval(() => { if(vol<target){vol+=0.02;if(vol>target)vol=target;audio.volume=vol;}else{clearInterval(t)}}, 50);
+    }
+</script>
+</body>
+</html>

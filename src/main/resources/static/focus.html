@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>深度专注 - 云端自习室</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pet-sprites.css">
+    <style>
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            background: var(--gradient-focus);
+        }
+
+        /* 动态背景 */
+        .focus-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            transition: filter 1s ease;
+        }
+
+        body.focus-mode .focus-background {
+            filter: brightness(0.92);
+        }
+
+        /* 云朵 */
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: cloud-float 60s infinite linear;
+            pointer-events: none;
+        }
+
+        .cloud::after, .cloud::before {
+            content: '';
+            position: absolute;
+            background: inherit;
+            border-radius: inherit;
+        }
+
+        .cloud-1 {
+            width: 100px;
+            height: 40px;
+            top: 15%;
+            left: -10%;
+        }
+        .cloud-1::after { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .cloud-1::before { width: 40px; height: 40px; top: -15px; left: 45px; }
+
+        .cloud-2 {
+            width: 150px;
+            height: 60px;
+            top: 65%;
+            left: -20%;
+            animation-duration: 80s;
+            opacity: 0.4;
+        }
+        .cloud-2::after { width: 70px; height: 70px; top: -35px; left: 25px; }
+        .cloud-2::before { width: 60px; height: 60px; top: -25px; left: 70px; }
+
+        @keyframes cloud-float {
+            from { left: -20%; }
+            to { left: 120%; }
+        }
+
+        /* 顶部状态栏 */
+        .top-status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: var(--space-4);
+            padding-top: calc(var(--safe-area-top) + var(--space-4));
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 50;
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: var(--radius-xl);
+            padding: var(--space-3) var(--space-5);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-top: 2px;
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 36px;
+            background: linear-gradient(to bottom, transparent, var(--color-border), transparent);
+        }
+
+        /* 经验进度条 */
+        .exp-bar-section {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            z-index: 40;
+        }
+
+        .exp-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding: 0 4px;
+        }
+
+        .exp-level {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-bold);
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .exp-text {
+            font-size: var(--font-size-xs);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .exp-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .exp-bar-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+        }
+
+        /* 中央计时器 */
+        .timer-container {
+            position: fixed;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+            z-index: 30;
+        }
+
+        .timer-display {
+            font-size: min(22vw, 140px);
+            font-weight: var(--font-weight-bold);
+            font-variant-numeric: tabular-nums;
+            color: #fff;
+            text-shadow: 0 10px 40px rgba(102, 166, 255, 0.4);
+            cursor: pointer;
+            transition: transform 0.3s;
+            line-height: 1;
+        }
+
+        .timer-display:hover {
+            transform: scale(1.02);
+        }
+
+        .status-text {
+            font-size: var(--font-size-lg);
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: var(--space-3);
+            letter-spacing: 2px;
+            min-height: 28px;
+        }
+
+        /* 实时经验预览 */
+        .exp-preview {
+            margin-top: var(--space-4);
+            font-size: var(--font-size-sm);
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--space-2);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .exp-preview.visible {
+            opacity: 1;
+        }
+
+        .exp-preview .exp-icon {
+            font-size: 18px;
+            animation: pulse 2s infinite;
+        }
+
+        /* 控制按钮 */
+        .timer-controls {
+            margin-top: var(--space-8);
+            display: flex;
+            gap: var(--space-5);
+            justify-content: center;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            padding: var(--space-3) var(--space-6);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            background: #fff;
+            color: var(--color-primary);
+            border-color: #fff;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.98);
+        }
+
+        .ctrl-btn.primary {
+            background: #fff;
+            color: var(--color-primary);
+            border-color: #fff;
+        }
+
+        .ctrl-btn.primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 白噪音 Dock */
+        .sound-dock {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-3) var(--space-5);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            box-shadow: var(--shadow-lg);
+            z-index: 50;
+            transition: opacity 0.5s;
+            max-width: 90%;
+        }
+
+        body.focus-mode .sound-dock {
+            opacity: 0.4;
+        }
+
+        body.focus-mode .sound-dock:hover {
+            opacity: 1;
+        }
+
+        .sound-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s;
+            padding: var(--space-2);
+        }
+
+        .sound-item:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .sound-item.active {
+            opacity: 1;
+        }
+
+        .sound-item.active .sound-icon {
+            background: #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+
+        .sound-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            transition: all 0.3s;
+        }
+
+        .dock-divider {
+            width: 1px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .volume-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .volume-icon {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .volume-slider {
+            width: 70px;
+            height: 4px;
+            border-radius: 2px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.4);
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 设置按钮 */
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: var(--radius-xl);
+            padding: var(--space-3);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-card);
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-xl);
+            z-index: 100;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .settings-panel.visible {
+            right: 0;
+        }
+
+        .settings-header {
+            padding: var(--space-6) var(--space-5);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--color-background-secondary);
+            color: var(--color-text-primary);
+        }
+
+        .settings-content {
+            padding: var(--space-5);
+        }
+
+        .setting-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .setting-label {
+            display: block;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-3);
+        }
+
+        /* 主题选项 */
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        .theme-option {
+            height: 80px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-option span {
+            color: white;
+            font-weight: var(--font-weight-semibold);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .theme-option.active {
+            border-color: var(--color-primary);
+            transform: scale(1.05);
+        }
+
+        .theme-option:hover {
+            transform: scale(1.02);
+        }
+
+        /* 宠物快捷操作 */
+        .pet-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        .action-btn {
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: white;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            border-color: var(--color-primary);
+            background: var(--color-primary-light);
+            transform: translateY(-2px);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .no-pet-hint {
+            text-align: center;
+            padding: var(--space-4);
+            color: var(--color-text-secondary);
+        }
+
+        .no-pet-hint a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .no-pet-hint a:hover {
+            text-decoration: underline;
+        }
+
+        /* Toast 样式覆盖 */
+        .focus-toast {
+            position: fixed;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--color-text-primary);
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s forwards;
+        }
+
+        /* 返回确认弹窗 */
+        .back-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: var(--space-4);
+        }
+
+        .back-modal-overlay.visible {
+            display: flex;
+        }
+
+        .back-modal {
+            background: white;
+            border-radius: var(--radius-2xl);
+            padding: var(--space-6);
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modal-in 0.3s ease;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .back-modal-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-4);
+        }
+
+        .back-modal-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .back-modal-desc {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-4);
+            line-height: 1.6;
+        }
+
+        .back-modal-exp {
+            background: var(--color-primary-light);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .back-modal-exp-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .back-modal-exp-value {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary);
+        }
+
+        .back-modal-actions {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .back-modal-btn {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-xl);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .back-modal-btn.cancel {
+            background: var(--color-background-secondary);
+            color: var(--color-text-secondary);
+        }
+
+        .back-modal-btn.cancel:hover {
+            background: var(--color-border);
+        }
+
+        .back-modal-btn.confirm {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .back-modal-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 背景 -->
+        <div class="focus-background">
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+        </div>
+
+        <!-- 顶部状态栏 -->
+        <div class="top-status-bar">
+            <a href="javascript:void(0)" class="back-btn" @click="showBackModal">
+                <span>←</span> 返回小屋
+            </a>
+            
+            <div class="stats-card">
+                <div class="stat-item">
+                    <div class="stat-value">{{ formatDuration(todayStats.totalDuration) }}</div>
+                    <div class="stat-label">今日学习</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ todayStats.focusCount }}</div>
+                    <div class="stat-label">专注次数</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ todayStats.expEarned }}</div>
+                    <div class="stat-label">今日经验</div>
+                </div>
+            </div>
+
+            <button class="settings-btn" @click="showSettings = !showSettings">
+                <span>⚙️</span>
+            </button>
+        </div>
+
+        <!-- 经验进度条 -->
+        <div class="exp-bar-section">
+            <div class="exp-info">
+                <span class="exp-level">Lv.{{ petInfo.level || 1 }}</span>
+                <span class="exp-text">{{ expInLevel }} / {{ expToNext }} EXP</span>
+            </div>
+            <div class="exp-bar">
+                <div class="exp-bar-fill" :style="{ width: expPercent + '%' }"></div>
+            </div>
+        </div>
+
+        <!-- 中央计时器 -->
+        <div class="timer-container">
+            <div class="timer-display" @click="toggleTimer">{{ formatTime(secondsElapsed) }}</div>
+            <p class="status-text">{{ statusText }}</p>
+            
+            <div class="exp-preview" :class="{ visible: isRunning || secondsElapsed > 0 }">
+                <span class="exp-icon">⭐</span>
+                <span>本次预计获得 <strong>{{ previewExp }}</strong> 经验值</span>
+            </div>
+
+            <div class="timer-controls">
+                <button class="ctrl-btn" :class="{ primary: !isRunning }" @click="toggleTimer">
+                    {{ isRunning ? '暂停' : (secondsElapsed > 0 ? '继续' : '开始计时') }}
+                </button>
+                <button class="ctrl-btn" v-show="secondsElapsed > 0" @click="stopTimer">停止</button>
+            </div>
+        </div>
+
+        <!-- 浮动宠物 -->
+        <div 
+            class="floating-pet" 
+            :class="[petState, petDirection]"
+            ref="petElement"
+            @click="handlePetClick"
+        >
+            <div class="pet-bubble" :class="{ visible: showBubble }">{{ bubbleText }}</div>
+            <div class="pet-sprite">{{ petEmoji }}</div>
+            <div class="pet-shadow"></div>
+        </div>
+
+
+        <!-- 设置面板 -->
+        <div class="settings-panel" :class="{ visible: showSettings }">
+            <div class="settings-header">
+                <h3>专注设置</h3>
+                <button class="close-btn" @click="showSettings = false">×</button>
+            </div>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label class="setting-label">背景主题</label>
+                    <div class="theme-options">
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'default' }"
+                            @click="changeTheme('default')"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                        >
+                            <span>默认</span>
+                        </div>
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'sunset' }"
+                            @click="changeTheme('sunset')"
+                            style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)"
+                        >
+                            <span>日落</span>
+                        </div>
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'forest' }"
+                            @click="changeTheme('forest')"
+                            style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+                        >
+                            <span>森林</span>
+                        </div>
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'ocean' }"
+                            @click="changeTheme('ocean')"
+                            style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)"
+                        >
+                            <span>海洋</span>
+                        </div>
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'night' }"
+                            @click="changeTheme('night')"
+                            style="background: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%)"
+                        >
+                            <span>夜晚</span>
+                        </div>
+                        <div 
+                            class="theme-option" 
+                            :class="{ active: currentTheme === 'cherry' }"
+                            @click="changeTheme('cherry')"
+                            style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
+                        >
+                            <span>樱花</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">宠物快捷互动</label>
+                    <div class="pet-actions" v-if="hasPet">
+                        <button class="action-btn" @click="quickInteract('feed')" :disabled="cooldowns.feed > 0">
+                            🍎 喂食 <span v-if="cooldowns.feed > 0">({{ formatCooldown(cooldowns.feed) }})</span>
+                        </button>
+                        <button class="action-btn" @click="quickInteract('pet')" :disabled="cooldowns.pet > 0">
+                            🤗 抚摸 <span v-if="cooldowns.pet > 0">({{ formatCooldown(cooldowns.pet) }})</span>
+                        </button>
+                        <button class="action-btn" @click="quickInteract('play')" :disabled="cooldowns.play > 0">
+                            🎾 玩耍 <span v-if="cooldowns.play > 0">({{ formatCooldown(cooldowns.play) }})</span>
+                        </button>
+                        <button class="action-btn" @click="quickInteract('talk')">
+                            💬 聊天
+                        </button>
+                    </div>
+                    <div v-else class="no-pet-hint">
+                        <p>还没有宠物，<a href="/pet.html">去孵化一只吧！</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 白噪音 Dock -->
+        <div class="sound-dock">
+            <div 
+                class="sound-item" 
+                :class="{ active: activeSounds.rain }"
+                @click="toggleSound('rain')"
+            >
+                <div class="sound-icon">🌧️</div>
+            </div>
+            <div 
+                class="sound-item" 
+                :class="{ active: activeSounds.fire }"
+                @click="toggleSound('fire')"
+            >
+                <div class="sound-icon">🔥</div>
+            </div>
+            <div 
+                class="sound-item" 
+                :class="{ active: activeSounds.forest }"
+                @click="toggleSound('forest')"
+            >
+                <div class="sound-icon">🌲</div>
+            </div>
+            <div 
+                class="sound-item" 
+                :class="{ active: activeSounds.ocean }"
+                @click="toggleSound('ocean')"
+            >
+                <div class="sound-icon">🌊</div>
+            </div>
+            <div class="dock-divider"></div>
+            <div class="volume-wrapper">
+                <span class="volume-icon">🔈</span>
+                <input 
+                    type="range" 
+                    class="volume-slider" 
+                    min="0" 
+                    max="1" 
+                    step="0.05" 
+                    v-model="masterVolume"
+                    @input="updateVolume"
+                >
+            </div>
+        </div>
+
+        <!-- 返回确认弹窗 -->
+        <div class="back-modal-overlay" :class="{ visible: showBackConfirm }">
+            <div class="back-modal">
+                <div class="back-modal-icon">🏠</div>
+                <div class="back-modal-title">确定要返回小屋吗？</div>
+                <div class="back-modal-desc" v-if="secondsElapsed > 0">
+                    当前专注将被保存
+                </div>
+                <div class="back-modal-desc" v-else>
+                    你还没有开始专注哦~
+                </div>
+                <div class="back-modal-exp" v-if="secondsElapsed >= 60">
+                    <div class="back-modal-exp-label">本次将获得经验</div>
+                    <div class="back-modal-exp-value">+{{ previewExp }} EXP</div>
+                </div>
+                <div class="back-modal-exp" v-else-if="secondsElapsed > 0">
+                    <div class="back-modal-exp-label">专注不足1分钟</div>
+                    <div class="back-modal-exp-value">无经验</div>
+                </div>
+                <div class="back-modal-actions">
+                    <button class="back-modal-btn cancel" @click="showBackConfirm = false">继续专注</button>
+                    <button class="back-modal-btn confirm" @click="confirmBack">确定返回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="/js/pet-ai.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, onUnmounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // ==================== 状态 ====================
+                const secondsElapsed = ref(0);
+                const isRunning = ref(false);
+                const statusText = ref('准备好了吗？');
+                
+                const todayStats = reactive({
+                    totalDuration: 0,
+                    focusCount: 0,
+                    expEarned: 0
+                });
+                
+                const petInfo = reactive({
+                    type: 'cat',
+                    stage: 'baby',
+                    level: 1,
+                    exp: 0,
+                    mood: 100,
+                    name: '小蛋蛋'
+                });
+                
+                // 宠物状态
+                const petElement = ref(null);
+                const petState = ref('idle');
+                const petDirection = ref('right');
+                const showBubble = ref(false);
+                const bubbleText = ref('');
+                
+                // 白噪音
+                const activeSounds = reactive({
+                    rain: false,
+                    fire: false,
+                    forest: false,
+                    ocean: false
+                });
+                const masterVolume = ref(0.4);
+                
+                // 设置面板
+                const showSettings = ref(false);
+                const currentTheme = ref('default');
+                const hasPet = ref(false);
+                const cooldowns = reactive({ feed: 0, pet: 0, play: 0 });
+                
+                // 返回确认弹窗
+                const showBackConfirm = ref(false);
+                
+                // 音频对象
+                const sounds = {};
+                
+                // 计时器
+                let timerId = null;
+                let behaviorTimer = null;
+                let milestoneChecker = null;
+                
+                // 宠物 AI
+                const petAI = new PetBehaviorAI();
+                let dragHandler = null;
+                
+                // ==================== 计算属性 ====================
+                const previewExp = computed(() => {
+                    const minutes = Math.floor(secondsElapsed.value / 60);
+                    if (minutes >= 30) {
+                        return Math.floor(minutes * 1.5);
+                    }
+                    return minutes;
+                });
+                
+                const petEmoji = computed(() => {
+                    return petAI.getPetEmoji(petInfo.type, petInfo.stage);
+                });
+                
+                const expInLevel = computed(() => {
+                    return petInfo.exp % 100;
+                });
+                
+                const expToNext = computed(() => {
+                    return 100;
+                });
+                
+                const expPercent = computed(() => {
+                    return (expInLevel.value / expToNext.value) * 100;
+                });
+                
+                // ==================== 方法 ====================
+                function formatTime(totalSeconds) {
+                    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    const s = (totalSeconds % 60).toString().padStart(2, '0');
+                    return `${m}:${s}`;
+                }
+                
+                function formatDuration(seconds) {
+                    if (!seconds || seconds < 60) return seconds ? `${seconds}秒` : '--';
+                    const h = Math.floor(seconds / 3600);
+                    const m = Math.floor((seconds % 3600) / 60);
+                    if (h > 0) return `${h}h${m}m`;
+                    return `${m}分钟`;
+                }
+                
+                function toggleTimer() {
+                    if (isRunning.value) {
+                        pauseTimer();
+                    } else {
+                        startTimer();
+                    }
+                }
+                
+                function startTimer() {
+                    isRunning.value = true;
+                    document.body.classList.add('focus-mode');
+                    statusText.value = '专注进行中...';
+                    
+                    // 开始时宠物说话
+                    if (secondsElapsed.value === 0) {
+                        showPetBubble(petAI.getRandomDialogue('focus_start'));
+                        petAI.resetMilestone();
+                    }
+                    
+                    timerId = setInterval(() => {
+                        secondsElapsed.value++;
+                        document.title = `(${formatTime(secondsElapsed.value)}) 专注中`;
+                        
+                        // 检查里程碑
+                        const milestoneMsg = petAI.checkMilestone(secondsElapsed.value);
+                        if (milestoneMsg) {
+                            showPetBubble(milestoneMsg);
+                            petState.value = 'interact';
+                            setTimeout(() => {
+                                if (isRunning.value) petState.value = 'idle';
+                            }, 1000);
+                        }
+                    }, 1000);
+                }
+                
+                function pauseTimer() {
+                    clearInterval(timerId);
+                    isRunning.value = false;
+                    document.body.classList.remove('focus-mode');
+                    statusText.value = '暂停中';
+                    document.title = '深度专注 - 云端自习室';
+                }
+                
+                function stopTimer() {
+                    clearInterval(timerId);
+                    isRunning.value = false;
+                    document.body.classList.remove('focus-mode');
+                    
+                    // 保存记录
+                    if (secondsElapsed.value > 0) {
+                        saveFocusRecord(secondsElapsed.value);
+                    }
+                    
+                    secondsElapsed.value = 0;
+                    statusText.value = '准备好了吗？';
+                    document.title = '深度专注 - 云端自习室';
+                    petAI.resetMilestone();
+                }
+                
+                async function saveFocusRecord(duration) {
+                    try {
+                        const res = await fetch('/api/focus/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ duration })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            showToast(`专注 ${formatTime(duration)} 已记录！获得 ${data.expEarned} 经验值`);
+                            todayStats.totalDuration += duration;
+                            todayStats.focusCount += 1;
+                            todayStats.expEarned += data.expEarned;
+                            petInfo.exp += data.expEarned;
+                            
+                            // 宠物开心
+                            showPetBubble('太棒了！又获得经验啦~');
+                            petState.value = 'playing';
+                            setTimeout(() => petState.value = 'idle', 2000);
+                        }
+                    } catch (err) {
+                        console.error('保存失败:', err);
+                        showToast('保存失败，请重试');
+                    }
+                }
+                
+                async function loadTodayStats() {
+                    try {
+                        const res = await fetch('/api/focus/today');
+                        const data = await res.json();
+                        if (data.success) {
+                            todayStats.totalDuration = data.totalDuration || 0;
+                            todayStats.focusCount = data.focusCount || 0;
+                            todayStats.expEarned = data.expEarned || 0;
+                        }
+                    } catch (err) {
+                        console.error('获取统计失败:', err);
+                    }
+                }
+                
+                async function loadPetInfo() {
+                    try {
+                        const res = await fetch('/api/pet');
+                        const data = await res.json();
+                        if (data.success && data.hasPet) {
+                            hasPet.value = true;
+                            const pet = data.pet;
+                            petInfo.type = pet.type || 'cat';
+                            petInfo.stage = pet.stage || 'baby';
+                            petInfo.level = pet.level || 1;
+                            petInfo.exp = pet.exp || 0;
+                            petInfo.mood = pet.mood || 100;
+                            petInfo.name = pet.name || '小蛋蛋';
+                        } else {
+                            hasPet.value = false;
+                        }
+                    } catch (err) {
+                        console.error('获取宠物信息失败:', err);
+                        hasPet.value = false;
+                    }
+                }
+                
+                // 宠物相关
+                function showPetBubble(text) {
+                    bubbleText.value = text;
+                    showBubble.value = true;
+                    setTimeout(() => showBubble.value = false, 3000);
+                }
+                
+                function handlePetClick() {
+                    if (dragHandler && dragHandler.isDragging) return;
+                    
+                    petState.value = 'interact';
+                    showPetBubble(petAI.getRandomDialogue('interact'));
+                    
+                    setTimeout(() => {
+                        petState.value = isRunning.value ? 'idle' : petAI.decide({
+                            isFocusing: isRunning.value,
+                            focusDuration: secondsElapsed.value,
+                            mood: petInfo.mood
+                        });
+                    }, 500);
+                }
+                
+                function startPetBehavior() {
+                    const tick = () => {
+                        if (dragHandler && dragHandler.isDragging) {
+                            behaviorTimer = setTimeout(tick, 1000);
+                            return;
+                        }
+                        
+                        const nextState = petAI.decide({
+                            isFocusing: isRunning.value,
+                            focusDuration: secondsElapsed.value,
+                            mood: petInfo.mood
+                        });
+                        
+                        petState.value = nextState;
+                        
+                        // 走动时移动位置
+                        if (nextState === 'walking' && dragHandler) {
+                            petDirection.value = dragHandler.randomMove();
+                        }
+                        
+                        const delay = petAI.getNextDelay(nextState);
+                        behaviorTimer = setTimeout(tick, delay);
+                    };
+                    
+                    tick();
+                }
+                
+                // 白噪音
+                function initSounds() {
+                    const soundFiles = {
+                        rain: '/audio/rain.mp3',
+                        fire: '/audio/fire.mp3',
+                        forest: '/audio/forest.mp3',
+                        ocean: '/audio/ocean.mp3'
+                    };
+                    
+                    for (const [name, src] of Object.entries(soundFiles)) {
+                        const audio = new Audio(src);
+                        audio.loop = true;
+                        audio.volume = masterVolume.value;
+                        sounds[name] = audio;
+                    }
+                }
+                
+                function toggleSound(name) {
+                    const audio = sounds[name];
+                    if (!audio) return;
+                    
+                    if (audio.paused) {
+                        audio.play();
+                        activeSounds[name] = true;
+                        // 淡入
+                        audio.volume = 0;
+                        let vol = 0;
+                        const fadeIn = setInterval(() => {
+                            if (vol < masterVolume.value) {
+                                vol += 0.05;
+                                if (vol > masterVolume.value) vol = masterVolume.value;
+                                audio.volume = vol;
+                            } else {
+                                clearInterval(fadeIn);
+                            }
+                        }, 50);
+                    } else {
+                        audio.pause();
+                        activeSounds[name] = false;
+                    }
+                }
+                
+                function updateVolume() {
+                    for (const [name, audio] of Object.entries(sounds)) {
+                        if (!audio.paused) {
+                            audio.volume = masterVolume.value;
+                        }
+                    }
+                }
+
+                // ==================== 新增功能 ====================
+                
+                // 主题切换
+                function changeTheme(theme) {
+                    currentTheme.value = theme;
+                    localStorage.setItem('focusTheme', theme);
+                    
+                    const themes = {
+                        default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        sunset: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
+                        forest: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        ocean: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+                        night: 'linear-gradient(135deg, #2c3e50 0%, #4a6741 100%)',
+                        cherry: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+                    };
+                    
+                    document.body.style.background = themes[theme] || themes.default;
+                    showToast(`已切换到${theme === 'default' ? '默认' : theme}主题`);
+                }
+
+                // 宠物快捷互动
+                async function quickInteract(type) {
+                    if (cooldowns[type] > 0 && type !== 'talk') return;
+
+                    try {
+                        let endpoint = '/api/pet/interact';
+                        let method = 'POST';
+                        let requestBody = { interactType: type };
+                        
+                        if (type === 'talk') {
+                            // 聊天直接显示对话
+                            const hour = new Date().getHours();
+                            let messages;
+                            if (hour < 12) {
+                                messages = ['早上好啊主人！', '新的一天开始啦~', '今天也要加油哦！'];
+                            } else if (hour < 18) {
+                                messages = ['下午好~', '学习累了吗？', '要不要休息一下？'];
+                            } else {
+                                messages = ['晚上好！', '今天辛苦了~', '晚安，好梦~'];
+                            }
+                            
+                            const message = messages[Math.floor(Math.random() * messages.length)];
+                            showPetBubble(message);
+                            petState.value = 'interact';
+                            setTimeout(() => petState.value = 'idle', 2000);
+                            return;
+                        }
+
+                        const res = await fetch(endpoint, { 
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        const data = await res.json();
+
+                        if (data.success) {
+                            showPetBubble(data.message || '互动成功！');
+                            
+                            // 更新宠物信息
+                            if (data.mood !== undefined) {
+                                petInfo.mood = data.mood;
+                            }
+                            if (data.exp !== undefined) {
+                                petInfo.exp = data.exp;
+                            }
+                            if (data.level !== undefined) {
+                                petInfo.level = data.level;
+                            }
+
+                            // 设置冷却时间
+                            if (type === 'feed') {
+                                cooldowns.feed = 30 * 60; // 30分钟
+                                petState.value = 'eating';
+                            } else if (type === 'pet') {
+                                cooldowns.pet = 5 * 60; // 5分钟
+                                petState.value = 'happy';
+                            } else if (type === 'play') {
+                                cooldowns.play = 15 * 60; // 15分钟
+                                petState.value = 'playing';
+                            }
+
+                            setTimeout(() => petState.value = 'idle', 2000);
+                            
+                            // 开始冷却倒计时
+                            startCooldownTimer();
+                        } else {
+                            showToast(data.message || '互动失败');
+                        }
+                    } catch (err) {
+                        console.error('互动失败:', err);
+                        showToast('网络错误，请重试');
+                    }
+                }
+
+                // 冷却时间倒计时
+                function startCooldownTimer() {
+                    setInterval(() => {
+                        if (cooldowns.feed > 0) cooldowns.feed--;
+                        if (cooldowns.pet > 0) cooldowns.pet--;
+                        if (cooldowns.play > 0) cooldowns.play--;
+                    }, 1000);
+                }
+
+                // 格式化冷却时间
+                function formatCooldown(seconds) {
+                    const m = Math.floor(seconds / 60);
+                    const s = seconds % 60;
+                    return m > 0 ? `${m}分钟` : `${s}秒`;
+                }
+
+                // 返回小屋弹窗
+                function showBackModal() {
+                    if (isRunning.value) {
+                        pauseTimer();
+                    }
+                    showBackConfirm.value = true;
+                }
+
+                async function confirmBack() {
+                    // 如果有专注记录，先保存
+                    if (secondsElapsed.value >= 60) {
+                        await saveFocusRecord(secondsElapsed.value);
+                    }
+                    
+                    // 停止所有音频
+                    for (const audio of Object.values(sounds)) {
+                        audio.pause();
+                    }
+                    
+                    // 跳转到学习小屋
+                    window.location.href = '/study.html';
+                }
+
+                // 页面离开提醒
+                function setupPageLeaveWarning() {
+                    window.addEventListener('beforeunload', (e) => {
+                        if (isRunning.value) {
+                            e.preventDefault();
+                            e.returnValue = '离开页面将暂停专注计时，确定要离开吗？';
+                            return e.returnValue;
+                        }
+                    });
+
+                    // 监听页面可见性变化
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.hidden && isRunning.value) {
+                            showToast('页面已隐藏，专注计时暂停');
+                            pauseTimer();
+                        }
+                    });
+                }
+                
+                function showToast(message) {
+                    const existing = document.querySelector('.focus-toast');
+                    if (existing) existing.remove();
+                    
+                    const toast = document.createElement('div');
+                    toast.className = 'focus-toast';
+                    toast.textContent = message;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                }
+                
+                // ==================== 生命周期 ====================
+                onMounted(() => {
+                    loadTodayStats();
+                    loadPetInfo();
+                    initSounds();
+                    
+                    // 初始化新功能
+                    setupPageLeaveWarning();
+                    startCooldownTimer();
+                    
+                    // 加载保存的主题
+                    const savedTheme = localStorage.getItem('focusTheme') || 'default';
+                    changeTheme(savedTheme);
+                    
+                    // 初始化宠物拖动
+                    setTimeout(() => {
+                        if (petElement.value) {
+                            dragHandler = new PetDragHandler(petElement.value, {
+                                initialX: window.innerWidth * 0.2,
+                                initialY: window.innerHeight * 0.55,
+                                onDragStart: () => {
+                                    petState.value = 'interact';
+                                },
+                                onDragEnd: () => {
+                                    showPetBubble(petAI.getRandomDialogue('drag'));
+                                    setTimeout(() => {
+                                        petState.value = 'idle';
+                                    }, 500);
+                                }
+                            });
+                        }
+                        
+                        startPetBehavior();
+                    }, 100);
+                });
+                
+                onUnmounted(() => {
+                    clearInterval(timerId);
+                    clearTimeout(behaviorTimer);
+                    
+                    // 停止所有音频
+                    for (const audio of Object.values(sounds)) {
+                        audio.pause();
+                    }
+                });
+                
+                return {
+                    secondsElapsed,
+                    isRunning,
+                    statusText,
+                    todayStats,
+                    petInfo,
+                    petElement,
+                    petState,
+                    petDirection,
+                    showBubble,
+                    bubbleText,
+                    petEmoji,
+                    previewExp,
+                    expInLevel,
+                    expToNext,
+                    expPercent,
+                    activeSounds,
+                    masterVolume,
+                    formatTime,
+                    formatDuration,
+                    toggleTimer,
+                    stopTimer,
+                    handlePetClick,
+                    toggleSound,
+                    updateVolume,
+                    // 新增功能
+                    showSettings,
+                    currentTheme,
+                    hasPet,
+                    cooldowns,
+                    changeTheme,
+                    quickInteract,
+                    formatCooldown,
+                    // 返回确认弹窗
+                    showBackConfirm,
+                    showBackModal,
+                    confirmBack
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

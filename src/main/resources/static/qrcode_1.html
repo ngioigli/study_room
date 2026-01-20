@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>动态二维码</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        #qrcode-container { padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #qrcode-image { width: 250px; height: 250px; }
+    </style>
+</head>
+<body>
+
+<div id="qrcode-container">
+    <h3>请扫描二维码</h3>
+    <img id="qrcode-image" src="/images/dynamic_qrcode.png" alt="正在加载二维码...">
+</div>
+
+<script>
+    function refreshQRCode() {
+        const imgElement = document.getElementById('qrcode-image');
+        // 关键：在URL后加上一个时间戳作为查询参数，以强制浏览器不使用缓存，每次都请求最新的图片
+        const imageUrl = '/images/dynamic_qrcode.png?t=' + new Date().getTime();
+        imgElement.src = imageUrl;
+    }
+
+    // 设置定时器，每隔2秒刷新一次图片（这个频率应与Python脚本的截图频率匹配）
+    setInterval(refreshQRCode, 2000);
+</script>
+
+</body>
+</html>

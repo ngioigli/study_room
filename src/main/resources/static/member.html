@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>会员中心 - 云端自习室</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* 顶部区域 */
+        .header {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 60px var(--space-5) var(--space-8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '👑';
+            position: absolute;
+            right: -20px;
+            top: 20px;
+            font-size: 120px;
+            opacity: 0.15;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        /* 会员卡片 */
+        .member-card {
+            position: relative;
+            z-index: 1;
+        }
+
+        .member-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+        }
+
+        .member-icon {
+            font-size: 48px;
+        }
+
+        .member-info h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .member-info p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 权益卡片 */
+        .benefits-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            margin: -30px var(--space-4) 0;
+            padding: var(--space-5);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 10;
+        }
+
+        .benefits-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+        }
+
+        .benefit-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: var(--space-3);
+        }
+
+        .benefit-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #FFF5E6, #FFE4CC);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .benefit-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-align: center;
+        }
+
+        /* 主容器 */
+        .container {
+            padding: var(--space-5) var(--space-4);
+        }
+
+        /* 套餐选择 */
+        .plans-section {
+            margin-bottom: var(--space-5);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-4);
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            text-align: center;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .plan-card.selected {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #FFFBEB, white);
+        }
+
+        .plan-card.popular::before {
+            content: '推荐';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #FF6B6B, #EE5A5A);
+            color: white;
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .plan-price {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFB800;
+            margin-bottom: 4px;
+        }
+
+        .plan-price span {
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .plan-original {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            text-decoration: line-through;
+        }
+
+        .plan-desc {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            margin-top: 8px;
+        }
+
+        /* 购买按钮 */
+        .purchase-btn {
+            width: 100%;
+            padding: var(--space-4);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            box-shadow: 0 8px 24px rgba(255, 165, 0, 0.3);
+            margin-bottom: var(--space-5);
+        }
+
+        .purchase-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 165, 0, 0.4);
+        }
+
+        .purchase-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 权益详情 */
+        .details-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-icon {
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .detail-content h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 4px;
+        }
+
+        .detail-content p {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 提示信息 */
+        .tips {
+            margin-top: var(--space-5);
+            padding: var(--space-4);
+            background: var(--color-card-bg);
+            border-radius: var(--radius-md);
+        }
+
+        .tips-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .tips-list {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            line-height: 1.8;
+        }
+
+        .tips-list li {
+            list-style: none;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .tips-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部区域 -->
+    <div class="header">
+        <div class="header-title">会员中心</div>
+        <div class="member-card">
+            <div class="member-status">
+                <div class="member-icon">👑</div>
+                <div class="member-info">
+                    <h2 id="memberTitle">开通会员</h2>
+                    <p id="memberDesc">解锁更多专属功能</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 权益卡片 -->
+    <div class="benefits-card">
+        <div class="benefits-title">
+            <span>✨</span> 会员专属权益
+        </div>
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <div class="benefit-icon">⏱️</div>
+                <div class="benefit-label">无限专注</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">🎵</div>
+                <div class="benefit-label">专属音效</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">🐱</div>
+                <div class="benefit-label">宠物皮肤</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">☁️</div>
+                <div class="benefit-label">云端同步</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 套餐选择 -->
+        <div class="plans-section">
+            <div class="section-title">选择套餐</div>
+            <div class="plans-grid">
+                <div class="plan-card" onclick="selectPlan('month')">
+                    <div class="plan-name">月卡</div>
+                    <div class="plan-price">¥29<span>/月</span></div>
+                    <div class="plan-original">¥39</div>
+                    <div class="plan-desc">首月特惠</div>
+                </div>
+                <div class="plan-card popular selected" onclick="selectPlan('quarter')">
+                    <div class="plan-name">季卡</div>
+                    <div class="plan-price">¥79<span>/季</span></div>
+                    <div class="plan-original">¥117</div>
+                    <div class="plan-desc">省38元</div>
+                </div>
+                <div class="plan-card" onclick="selectPlan('year')">
+                    <div class="plan-name">年卡</div>
+                    <div class="plan-price">¥199<span>/年</span></div>
+                    <div class="plan-original">¥468</div>
+                    <div class="plan-desc">省269元</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 购买按钮 -->
+        <button class="purchase-btn" onclick="purchase()">
+            立即开通 · ¥79
+        </button>
+
+        <!-- 权益详情 -->
+        <div class="details-section">
+            <div class="section-title">权益详情</div>
+            <div class="detail-item">
+                <span class="detail-icon">⏱️</span>
+                <div class="detail-content">
+                    <h4>无限专注时长</h4>
+                    <p>普通用户每日专注上限4小时，会员无限制</p>
+                </div>
+            </div>
+            <div class="detail-item">
+                <span class="detail-icon">🎵</span>
+                <div class="detail-content">
+                    <h4>专属白噪音</h4>
+                    <p>解锁20+专属白噪音音效，包括咖啡厅、图书馆等场景</p>
+                </div>
+            </div>
+            <div class="detail-item">
+                <span class="detail-icon">🐱</span>
+                <div class="detail-content">
+                    <h4>宠物皮肤</h4>
+                    <p>解锁稀有宠物皮肤，让你的学习伙伴更独特</p>
+                </div>
+            </div>
+            <div class="detail-item">
+                <span class="detail-icon">☁️</span>
+                <div class="detail-content">
+                    <h4>数据云同步</h4>
+                    <p>学习数据多端同步，换设备也不丢失记录</p>
+                </div>
+            </div>
+            <div class="detail-item">
+                <span class="detail-icon">🎁</span>
+                <div class="detail-content">
+                    <h4>专属徽章</h4>
+                    <p>获得会员专属徽章，彰显尊贵身份</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="tips">
+            <div class="tips-title">温馨提示</div>
+            <ul class="tips-list">
+                <li>会员服务开通后立即生效</li>
+                <li>会员期间可随时取消自动续费</li>
+                <li>如有问题请联系客服</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">自习室</span>
+        </a>
+        <a href="study.html" class="nav-item">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">学习小屋</span>
+        </a>
+        <a href="member.html" class="nav-item active">
+            <span class="nav-icon">👑</span>
+            <span class="nav-label">会员</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">我的</span>
+        </a>
+    </nav>
+
+    <script src="js/nav.js"></script>
+    <script>
+        let selectedPlan = 'quarter';
+        const prices = {
+            month: 29,
+            quarter: 79,
+            year: 199
+        };
+
+        // 页面加载时检查用户信息
+        document.addEventListener('DOMContentLoaded', loadUserMemberStatus);
+
+        async function loadUserMemberStatus() {
+            try {
+                const res = await fetch('/api/user/info');
+                const data = await res.json();
+                
+                if (data.success && data.user) {
+                    const user = data.user;
+                    // 检查会员状态（目前后端没有会员字段，可以根据role判断或后续扩展）
+                    if (user.role === 'admin') {
+                        document.getElementById('memberTitle').textContent = '管理员';
+                        document.getElementById('memberDesc').textContent = '您已拥有管理员权限';
+                    } else if (user.role === 'vip') {
+                        document.getElementById('memberTitle').textContent = '尊贵会员';
+                        document.getElementById('memberDesc').textContent = '感谢您的支持！';
+                    }
+                }
+            } catch (err) {
+                console.error('加载用户信息失败:', err);
+            }
+        }
+
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            
+            // 更新选中状态
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // 更新按钮价格
+            document.querySelector('.purchase-btn').textContent = `立即开通 · ¥${prices[plan]}`;
+        }
+
+        function purchase() {
+            alert('会员功能开发中，敬请期待！\n\n当前选择：' + 
+                (selectedPlan === 'month' ? '月卡' : selectedPlan === 'quarter' ? '季卡' : '年卡') + 
+                ' ¥' + prices[selectedPlan]);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习小屋 - 扫码入座</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Zeyada&display=swap" rel="stylesheet">
+    <style>
+        :root { --refresh-interval: 3s; }
+        body, html { height: 100%; margin: 0; font-family: 'M PLUS Rounded 1c', sans-serif; background: #e0f7fa; overflow-x: hidden; user-select: none; -webkit-user-select: none; }
+        .background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); z-index: -1; }
+        .cloud { position: absolute; background: #fff; border-radius: 50%; opacity: 0.6; animation: float 35s infinite linear; pointer-events: none; }
+        .cloud::after, .cloud::before { content: ''; position: absolute; background: inherit; border-radius: inherit; }
+        .c1 { width: 100px; height: 40px; top: 10%; left: -10%; } .c1::after { width: 50px; height: 50px; top: -25px; left: 15px; } .c1::before { width: 40px; height: 40px; top: -15px; left: 45px; }
+        .c2 { width: 120px; height: 50px; top: 80%; left: -20%; animation-duration: 45s; transform: scale(1.5); opacity: 0.4;} .c2::after { width: 60px; height: 60px; top: -30px; left: 20px; } .c2::before { width: 50px; height: 50px; top: -20px; left: 60px; }
+        @keyframes float { from { left: -20%; } to { left: 120%; } }
+
+        .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; box-sizing: border-box; display: flex; justify-content: flex-end; align-items: center; gap: 10px; z-index: 100; pointer-events: none; }
+        .top-btn { pointer-events: auto; text-decoration: none; padding: 8px 14px; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 20px; color: #57606f; cursor: pointer; font-size: 13px; font-weight: bold; backdrop-filter: blur(4px); transition: all 0.3s; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .top-btn:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-2px); }
+        .focus-link { background: rgba(255, 255, 255, 0.7); color: #66a6ff; border-color: #fff; }
+
+        .main-container { display: flex; flex-direction: column; align-items: center; gap: 25px; padding-top: 70px; padding-bottom: 40px; width: 100%; min-height: 100vh; box-sizing: border-box; }
+
+        #qrcode-container { width: 90%; max-width: 360px; padding: 20px; background-color: rgba(255, 255, 255, 0.85); border-radius: 20px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(137, 196, 244, 0.3); position: relative; transition: all 0.3s; }
+        #qrcode-container.locked-mode { box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.3); }
+
+        .header-text { font-size: 18px; font-weight: 700; color: #2c3e50; margin-bottom: 15px; letter-spacing: 1px; }
+
+        .qrcode-image-wrapper { position: relative; width: 100%; padding-bottom: 100%; height: 0; border-radius: 16px; overflow: hidden; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        #qrcode-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: filter 0.5s ease; }
+
+        /* 模糊类 */
+        .blur-mask { filter: blur(15px); }
+
+        /* 遮罩层 */
+        .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.3); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; backdrop-filter: blur(3px); border-radius: 16px; }
+
+        .unlock-btn { background: linear-gradient(135deg, #66a6ff 0%, #89f7fe 100%); border: none; padding: 10px 24px; border-radius: 25px; color: white; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 5px 15px rgba(102, 166, 255, 0.4); transition: transform 0.2s; animation: pulse-btn 2s infinite; }
+        .unlock-btn:active { transform: scale(0.95); }
+        @keyframes pulse-btn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* 被别人占用的提示 */
+        .occupied-msg { font-size: 16px; font-weight: bold; color: #57606f; text-align: center; line-height: 1.6; }
+        .occupied-sub { font-size: 12px; color: #999; margin-top: 5px; }
+
+        /* 状态区域 */
+        .status-area { margin-top: 15px; min-height: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .countdown-text { font-size: 32px; font-weight: bold; color: #ff6b6b; font-family: monospace; line-height: 1; margin-bottom: 5px; }
+        .status-tip { font-size: 12px; color: #999; }
+        .locked-tip { color: #ff6b6b; font-weight: bold; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        .blackboard { width: 90%; max-width: 360px; background: #404b69; border: 6px solid #a67c52; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 15px; color: #f1f2f6; box-sizing: border-box; }
+        .blackboard h4 { font-size: 18px; margin: 0 0 10px 0; text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 10px; font-weight: normal; letter-spacing: 2px; }
+        .blackboard p { font-size: 13px; line-height: 1.6; white-space: pre-line; margin: 0; opacity: 0.95; }
+
+        @media (min-width: 768px) { .main-container { flex-direction: row; justify-content: center; align-items: flex-start; gap: 60px; padding-top: 0; height: 100vh; } #qrcode-container { transform: rotate(-2deg); margin-top: 15vh; } .blackboard { width: 340px; transform: rotate(2deg); margin-top: calc(15vh + 20px); } }
+    </style>
+</head>
+<body>
+
+<div class="background"><div class="cloud c1"></div><div class="cloud c2"></div></div>
+
+<div class="top-bar">
+    <a href="/focus.html" class="top-btn focus-link"><span>⏱️</span> 专注模式</a>
+    <button id="logoutBtn" class="top-btn">离座休息</button>
+</div>
+
+<div class="main-container">
+    <div id="qrcode-container">
+        <h3 class="header-text">✨ 扫码进入学习小屋 ✨</h3>
+
+        <div class="qrcode-image-wrapper">
+            <img id="qrcode-image" src="/images/dynamic_qrcode.jpg" alt="二维码加载中...">
+
+            <!-- 遮罩层：包含两种情况 (点击按钮 OR 被占用提示) -->
+            <div id="lockOverlay" class="lock-overlay">
+                <!-- 情况1: 空闲时显示 -->
+                <button id="unlockBtn" class="unlock-btn">点击扫码入座</button>
+
+                <!-- 情况2: 被别人占用时显示 -->
+                <div id="occupiedBox" style="display: none; text-align: center;">
+                    <div class="occupied-msg">通道正在使用中<br>🔒</div>
+                    <div class="occupied-sub">请等待下方倒计时结束</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态区域 -->
+        <div class="status-area">
+            <div id="countdownBox" style="display: none; text-align: center;">
+                <div id="timer" class="countdown-text">03:00</div>
+                <div class="status-tip locked-tip">通道冷却中...</div>
+            </div>
+            <div id="freeTip" class="status-tip">通道空闲，点击上方按钮解锁</div>
+        </div>
+    </div>
+
+    <div class="blackboard">
+        <h4>温馨提示</h4>
+        <p>时光不负赶路人，亦不负你
+            学长学姐，愿你们得偿所愿～
+            🌸🌸🌸
+
+            ⚠️ 注意事项：
+            点击“扫码入座”后，通道将锁定3分钟
+            请务必尽快扫描，避免浪费资源哦~
+
+            二维码如显示失效,请耐心等待3s自动刷新</p>
+    </div>
+</div>
+
+<script>
+    // --- 变量定义 ---
+    const qrImage = document.getElementById('qrcode-image');
+    const lockOverlay = document.getElementById('lockOverlay');
+    const unlockBtn = document.getElementById('unlockBtn');
+    const occupiedBox = document.getElementById('occupiedBox'); // 新增：被占用提示
+    const qrcodeContainer = document.getElementById('qrcode-container');
+
+    const countdownBox = document.getElementById('countdownBox');
+    const freeTip = document.getElementById('freeTip');
+    const timerText = document.getElementById('timer');
+
+    let pollTimer = null;
+    let countdownTimer = null;
+    let isCountingDown = false;
+
+    // --- 状态同步 (智能轮询) ---
+    checkServerStatus();
+
+    function checkServerStatus() {
+        if (isCountingDown) return;
+        fetch('/api/qr-status/check')
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'LOCKED') {
+                    handleLocked(data.endTime);
+                } else {
+                    handleFree();
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // 空闲状态
+    function handleFree() {
+        qrImage.classList.add('blur-mask'); // 模糊
+        lockOverlay.style.display = 'flex'; // 显示遮罩
+        unlockBtn.style.display = 'block';  // 显示解锁按钮
+        occupiedBox.style.display = 'none'; // 隐藏占用提示
+
+        countdownBox.style.display = 'none';
+        freeTip.style.display = 'block';
+        qrcodeContainer.classList.remove('locked-mode');
+
+        if (countdownTimer) clearInterval(countdownTimer);
+        isCountingDown = false;
+
+        // 3秒轮询
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(checkServerStatus, 3000);
+    }
+
+    // 锁定状态 (核心逻辑区分：是我锁的？还是别人锁的？)
+    function handleLocked(endTimeStamp) {
+        if (pollTimer) clearInterval(pollTimer);
+        isCountingDown = true;
+
+        // 【关键判断】
+        // 获取本地存储的“我最后一次锁定的结束时间”
+        const myLockTime = localStorage.getItem('myLockEndTime');
+        // 如果服务器的结束时间 == 我本地记录的时间，说明是我锁的
+        const isOwner = (myLockTime && parseInt(myLockTime) === endTimeStamp);
+
+        if (isOwner) {
+            // --- 场景A：我是锁定者 ---
+            qrImage.classList.remove('blur-mask'); // 清晰
+            lockOverlay.style.display = 'none';    // 移除遮罩
+        } else {
+            // --- 场景B：别人是锁定者 ---
+            qrImage.classList.add('blur-mask');    // 模糊
+            lockOverlay.style.display = 'flex';    // 显示遮罩
+            unlockBtn.style.display = 'none';      // 隐藏按钮
+            occupiedBox.style.display = 'block';   // 显示“被占用”
+        }
+
+        // 无论谁锁的，都要显示倒计时
+        countdownBox.style.display = 'block';
+        freeTip.style.display = 'none';
+        qrcodeContainer.classList.add('locked-mode');
+
+        startLocalTimer(endTimeStamp);
+    }
+
+    function startLocalTimer(endTime) {
+        if (countdownTimer) clearInterval(countdownTimer);
+        updateTimerUI();
+        countdownTimer = setInterval(updateTimerUI, 1000);
+
+        function updateTimerUI() {
+            const now = new Date().getTime();
+            const distance = endTime - now;
+            if (distance < 0) {
+                clearInterval(countdownTimer);
+                isCountingDown = false;
+                timerText.innerText = "00:00";
+                // 倒计时结束，再次检查状态，并清除本地标记
+                localStorage.removeItem('myLockEndTime');
+                checkServerStatus();
+                return;
+            }
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const s = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            timerText.innerText = `${m}:${s}`;
+        }
+    }
+
+    // --- 交互逻辑 ---
+    unlockBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerText = "锁定中...";
+        fetch('/api/qr-status/lock', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // 【关键步骤】锁定成功，在本地盖章
+                    localStorage.setItem('myLockEndTime', data.endTime);
+                    handleLocked(data.endTime);
+                } else {
+                    alert(data.message);
+                    checkServerStatus();
+                }
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerText = "点击扫码入座";
+            });
+    });
+
+    setInterval(() => {
+        qrImage.src = '/images/dynamic_qrcode.jpg?t=' + new Date().getTime();
+    }, 3000);
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if(confirm('学累了吗？确定要离座休息一下吗？\n位置会一直为你留着哒~')) {
+            fetch('/api/logout').then(() => { window.location.href = '/login.html'; });
+        }
+    });
+</script>
+</body>
+</html>

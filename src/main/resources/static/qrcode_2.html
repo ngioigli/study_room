@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书馆 - 二维码</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式和动漫风格动态背景 */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .background-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            animation: gradient-animation 20s ease infinite;
+            background-size: 400% 400%;
+            z-index: -1;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 主内容容器，使用Flex布局让二维码和小黑板并排 */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap; /* 在小屏幕上换行 */
+            justify-content: center;
+            align-items: center;
+            gap: 50px; /* 模块之间的间距 */
+            padding: 20px;
+        }
+
+        /* 二维码模块样式 */
+        #qrcode-container {
+            padding: 25px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 10px rgba(255, 255, 255, 0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        #qrcode-container:hover {
+            transform: scale(1.05) rotate(1deg);
+        }
+
+        .header-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            animation: text-pop-in 1s ease;
+        }
+
+        @keyframes text-pop-in {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 增大的二维码图片样式 */
+        #qrcode-image {
+            width: 320px;  /* 尺寸增大 */
+            height: 320px; /* 尺寸增大 */
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 15px rgba(0, 123, 255, 0.5); /* 柔和的内发光 */
+            border: 2px solid white;
+        }
+
+        /* 留言小黑板模块样式 */
+        .blackboard {
+            width: 300px;
+            height: 350px;
+            background: #333;
+            border: 15px solid #8B4513; /* 木质边框 */
+            border-radius: 10px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            padding: 20px;
+            color: white;
+            font-family: 'Comic Sans MS', 'Chalkduster', 'Bradley Hand', cursive; /* 粉笔字体 */
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .blackboard h4 {
+            font-size: 22px;
+            margin-top: 0;
+            border-bottom: 1px dashed #777;
+            padding-bottom: 10px;
+        }
+
+        .blackboard p {
+            font-size: 18px;
+            line-height: 1.6;
+            flex-grow: 1; /* 让内容填充剩余空间 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="background-container"></div>
+
+<div class="main-container">
+    <!-- 二维码模块 -->
+    <div id="qrcode-container">
+        <h3 class="header-text">✨ 请扫码进入学习小屋 ✨</h3>
+        <img id="qrcode-image" src="/images/dynamic_qrcode.jpg" alt="二维码加载中...">
+    </div>
+
+    <!-- 留言小黑板模块 -->
+    <div class="blackboard">
+        <h4>留言板</h4>
+        <p>
+            时光不负赶路人，亦不负你<br>
+            学长学姐，愿你们得偿所愿～<br>
+            🌸<br><br>
+            网站现在正处于试运行,现在在主包自己电脑上跑的<br>
+            可能会不太稳定,出问题了vx我<br>
+            后续得在买台电脑和租个服务器让网站稳定运行⭐<br>
+            主包是在读大学生(没有团队,纯个人爱鼓捣)<br>
+            努力攒攒钱争取给学长学姐提供更好的服务<br><br>
+            二维码显示失效,请耐心等待3s刷新页面再试试<br>
+        </p>
+
+    </div>
+</div>
+
+<script>
+    function refreshQRCode() {
+        const imgElement = document.getElementById('qrcode-image');
+        if (imgElement) {
+            const imageUrl = '/images/dynamic_qrcode.jpg?t=' + new Date().getTime();
+            imgElement.src = imageUrl;
+        }
+    }
+    // 每3秒刷新一次二维码
+    setInterval(refreshQRCode, 3000);
+</script>
+
+</body>
+</html>

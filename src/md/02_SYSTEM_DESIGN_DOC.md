@@ -1,7 +1,7 @@
 # 系统设计文档 (System Design Document)
 
-**更新日期**: 2026-01-13
-**当前版本**: v2.0 (Vue 3 重构版)
+**更新日期**: 2026-01-20
+**当前版本**: v3.0 (HTML + Spring Boot 整合版)
 
 ---
 
@@ -21,12 +21,9 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                       前端层                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Vue 3 + Vite + JavaScript (vue-frontend/)          │   │
-│  │  - 开发端口: 5173                                    │   │
-│  │  - 生产部署: /app/                                   │   │
-│  └─────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  原版 HTML (static/) - 备份/参考                     │   │
+│  │  纯 HTML/CSS/JavaScript (src/main/resources/static/)│   │
+│  │  - 响应式设计，适配 Mobile/Desktop                   │   │
+│  │  - 部分页面使用 Vue 3 CDN 模式                      │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -35,11 +32,8 @@
 │                       后端层                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Spring Boot 2.6.13 (端口: 9090)                     │   │
-│  │  - LoginController: 登录/登出                        │   │
-│  │  - FocusController: 专注记录                         │   │
-│  │  - PetController: 宠物系统                           │   │
-│  │  - StatsController: 学习统计                         │   │
-│  │  - QrStatusController: 二维码状态                    │   │
+│  │  - 核心业务：登录、专注、宠物、统计、座位、二维码      │   │
+│  │  - 静态资源托管：直接服务 static 目录下的文件         │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -48,11 +42,6 @@
 │                       数据层                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  MySQL 8.x (数据库: study_room)                      │   │
-│  │  - users: 用户表                                     │   │
-│  │  - user_pets: 宠物表                                 │   │
-│  │  - focus_records: 专注记录表                         │   │
-│  │  - learning_stats: 学习统计表                        │   │
-│  │  - seats: 座位表                                     │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -61,128 +50,48 @@
 
 | 层级 | 技术 | 版本 | 说明 |
 |------|------|------|------|
-| 前端 | Vue 3 | 3.x | UI 框架 |
-| 前端 | Vite | 5.x | 构建工具 |
-| 前端 | Vue Router | 4.x | 路由管理 |
-| 前端 | Pinia | 2.x | 状态管理 |
+| 前端 | HTML5/CSS3/JS | - | 核心基础 |
+| 前端 | Vue 3 (CDN) | 3.x | 部分页面交互逻辑 (focus.html, pet.html) |
+| 前端 | ECharts | 5.x | 数据可视化 (stats.html) |
 | 后端 | Spring Boot | 2.6.13 | Web 框架 |
 | 后端 | MyBatis-Plus | 3.5.3.1 | ORM 框架 |
 | 数据库 | MySQL | 8.x | 关系型数据库 |
 | 运行时 | JDK | 17 | Java 运行环境 |
-| 运行时 | Node.js | 18+ | 前端开发环境 |
+
 
 ---
 
-## 2. 前端架构设计
+## 2. 前端设计与实现
 
-### 2.1 Vue 3 项目结构
+### 2.1 目录结构
 
 ```
-vue-frontend/
-├── index.html              # 入口 HTML
-├── vite.config.js          # Vite 配置
-├── package.json            # 依赖配置
-└── src/
-    ├── main.js             # 应用入口
-    ├── App.vue             # 根组件
-    ├── router/             # 路由配置
-    │   └── index.js
-    ├── stores/             # Pinia 状态管理
-    │   ├── user.js         # 用户状态
-    │   ├── pet.js          # 宠物状态
-    │   └── focus.js        # 专注状态
-    ├── views/              # 页面组件
-    │   ├── Login.vue       # 登录页
-    │   ├── StudyRoom.vue   # 自习室首页
-    │   ├── StudyCabin.vue  # 学习小屋
-    │   ├── Focus.vue       # 深度专注
-    │   ├── Pet.vue         # 宠物详情
-    │   ├── Stats.vue       # 学习统计
-    │   ├── Profile.vue     # 个人中心
-    │   ├── Member.vue      # 会员中心
-    │   └── Shredder.vue    # 情绪碎纸机
-    ├── components/         # 通用组件
-    │   ├── common/
-    │   │   ├── BottomNav.vue       # 底部导航
-    │   │   ├── QRCodeModal.vue     # 二维码放大弹窗
-    │   │   └── ConfirmDialog.vue   # 确认弹窗
-    │   ├── focus/
-    │   │   ├── Timer.vue           # 计时器
-    │   │   ├── WhiteNoise.vue      # 白噪音
-    │   │   └── FloatingPet.vue     # 浮动宠物
-    │   └── pet/
-    │       ├── PetAvatar.vue       # 宠物头像
-    │       └── InteractionPanel.vue # 互动面板
-    ├── api/                # API 封装
-    │   ├── client.js       # HTTP 客户端
-    │   ├── auth.js         # 登录 API
-    │   ├── focus.js        # 专注 API
-    │   ├── pet.js          # 宠物 API
-    │   └── stats.js        # 统计 API
-    ├── assets/             # 静态资源
-    │   ├── css/            # 样式文件
-    │   └── audio/          # 音频文件
-    └── utils/              # 工具函数
-        └── helpers.js
+src/main/resources/static/
+├── *.html              # 页面入口
+├── css/                # 样式系统
+│   ├── variables.css   # 设计变量
+│   ├── components.css  # 公共组件
+│   └── pet-sprites.css # 宠物动画
+├── js/                 # 核心逻辑
+│   ├── nav.js          # 导航与路由
+│   └── pet-ai.js       # 宠物行为逻辑
+├── audio/              # 白噪音音频
+└── images/             # 静态图片
 ```
 
-### 2.2 路由设计
+### 2.2 核心页面清单
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/login` | Login.vue | 登录页 |
-| `/` | StudyRoom.vue | 自习室首页 |
-| `/study` | StudyCabin.vue | 学习小屋 |
-| `/focus` | Focus.vue | 深度专注 |
-| `/pet` | Pet.vue | 宠物详情 |
-| `/stats` | Stats.vue | 学习统计 |
-| `/profile` | Profile.vue | 个人中心 |
-| `/member` | Member.vue | 会员中心 |
-| `/shredder` | Shredder.vue | 情绪碎纸机 |
+| 页面文件 | 功能 | 技术特点 |
+|----------|------|---------|
+| `login.html` | 登录 | 动态云朵背景 |
+| `index.html` | 首页 | 实时座位状态、扫码入口 |
+| `study.html` | 学习中心 | 模块化导航网格 |
+| `focus.html` | 专注模式 | Vue 3 CDN, 计时器, 白噪音混音 |
+| `pet.html` | 宠物系统 | Vue 3 CDN, 实时互动, 经验条 |
+| `shredder.html`| 情绪碎纸机 | Canvas/CSS 动画, 历史记录 |
+| `stats.html` | 统计 | ECharts 图表 |
+| `admin.html` | 管理后台 | 实时监控、数据看板 |
 
-### 2.3 状态管理
-
-使用 Pinia 管理全局状态：
-
-```javascript
-// stores/user.js
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    user: null,
-    isLoggedIn: false
-  }),
-  actions: {
-    async login(username, password) { ... },
-    async logout() { ... }
-  }
-})
-
-// stores/pet.js
-export const usePetStore = defineStore('pet', {
-  state: () => ({
-    pet: null,
-    mood: 100
-  }),
-  actions: {
-    async fetchPet() { ... },
-    async interact(type) { ... }
-  }
-})
-
-// stores/focus.js
-export const useFocusStore = defineStore('focus', {
-  state: () => ({
-    isRunning: false,
-    duration: 0,
-    todayStats: null
-  }),
-  actions: {
-    start() { ... },
-    pause() { ... },
-    async save() { ... }
-  }
-})
-```
 
 ---
 
@@ -289,9 +198,8 @@ export const useFocusStore = defineStore('focus', {
 ┌──────────────────────────────────────────┐
 │           Spring Boot (9090)              │
 │  ┌────────────────────────────────────┐  │
-│  │  /app/*  →  Vue 3 构建产物         │  │
-│  │  /api/*  →  后端 API               │  │
-│  │  /*      →  原版 HTML (备份)       │  │
+│  │  /static/** → 直接映射至 static 目录   │  │
+│  │  /api/**    → 后端核心业务接口         │  │
 │  └────────────────────────────────────┘  │
 └──────────────────────────────────────────┘
                     │
@@ -300,6 +208,7 @@ export const useFocusStore = defineStore('focus', {
            │     MySQL        │
            └──────────────────┘
 ```
+
 
 ---
 

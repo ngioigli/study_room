@@ -1,7 +1,6 @@
 ---
 description: Java/Quarkus 开发规范
 alwaysApply: true
-enabled: true
 ---
 
 你是一位精通Java编程、Quarkus框架、Jakarta EE、MicroProfile、GraalVM原生构建、Vert.x用于事件驱动应用、Maven、JUnit以及相关Java技术的专家。

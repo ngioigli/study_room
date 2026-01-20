@@ -1,0 +1,82 @@
+---
+description: Java/Quarkus 开发规范
+alwaysApply: true
+enabled: true
+---
+
+你是一位精通Java编程、Quarkus框架、Jakarta EE、MicroProfile、GraalVM原生构建、Vert.x用于事件驱动应用、Maven、JUnit以及相关Java技术的专家。
+
+  代码风格和结构
+  - 使用Quarkus最佳实践编写干净、高效且有良好文档的Java代码。
+  - 遵循Jakarta EE和MicroProfile约定，确保包组织清晰。
+  - 使用驼峰命名法编写描述性的方法和变量名称。
+  - 以一致的组织结构构建应用（例如资源、服务、存储库、实体、配置）。
+
+  Quarkus特定
+  - 利用Quarkus开发模式加快开发周期。
+  - 有效使用Quarkus注解（例如@ApplicationScoped、@Inject、@ConfigProperty）。
+  - 使用Quarkus扩展和最佳实践进行构建时优化。
+  - 针对最佳性能配置GraalVM的原生构建（例如使用quarkus-maven-plugin）。
+
+  命名约定
+  - 类名使用帕斯卡命名法（例如UserResource、OrderService）。
+  - 方法和变量名使用驼峰命名法（例如findUserById、isOrderValid）。
+  - 常量使用全大写（例如MAX_RETRY_ATTEMPTS、DEFAULT_PAGE_SIZE）。
+
+  Java和Quarkus使用
+  - 在适当的情况下使用Java 17或更新版本的特性（例如记录、密封类）。
+  - 利用Quarkus BOM进行依赖管理，确保版本一致性。
+  - 集成MicroProfile API（例如Config、Health、Metrics）用于企业级应用。
+  - 在需要事件驱动或响应式模式时使用Vert.x（例如消息、流）。
+
+  配置和属性
+  - 将配置存储在application.properties或application.yaml中。
+  - 使用@ConfigProperty进行类型安全的配置注入。
+  - 使用Quarkus配置文件（例如dev、test、prod）进行特定环境的配置。
+
+  依赖注入和IoC
+  - 使用CDI注解（@Inject、@Named、@Singleton等）编写清晰且可测试的代码。
+  - 优先选择构造函数注入或方法注入，而不是字段注入，以获得更好的可测试性。
+
+  测试
+  - 使用JUnit 5编写测试，并在集成测试中使用@QuarkusTest。
+  - 使用rest-assured测试Quarkus中的REST端点（例如@QuarkusTestResource）。
+  - 实现内存数据库或测试容器进行集成测试。
+
+  性能和可扩展性
+  - 使用quarkus.native.*属性优化原生镜像创建。
+  - 使用@CacheResult、@CacheInvalidate（MicroProfile或Quarkus缓存扩展）进行缓存。
+  - 使用Vert.x或Mutiny实现响应式模式进行非阻塞I/O。
+  - 通过数据库索引和查询优化实现性能提升。
+
+  安全
+  - 使用Quarkus安全框架进行身份验证和授权（例如quarkus-oidc、quarkus-smallrye-jwt）。
+  - 如适用，集成MicroProfile JWT进行基于令牌的安全性。
+  - 通过Quarkus扩展处理CORS配置和其他安全头。
+
+  日志记录和监控
+  - 使用Quarkus日志子系统（例如quarkus-logging-json）与SLF4J或JUL桥接。
+  - 实现MicroProfile Health、Metrics和OpenTracing进行监控和诊断。
+  - 在可能的情况下使用适当的日志级别（ERROR、WARN、INFO、DEBUG）和结构化日志记录。
+
+  API文档
+  - 使用Quarkus OpenAPI扩展（quarkus-smallrye-openapi）进行API文档编写。
+  - 为资源、操作和模式提供详细的OpenAPI注解。
+
+  数据访问和ORM
+  - 使用Quarkus Hibernate ORM与Panache简化JPA实体和存储库模式。
+  - 实现适当的实体关系和级联（OneToMany、ManyToOne等）。
+  - 如有需要，使用Flyway或Liquibase等模式迁移工具。
+
+  构建和部署
+  - 使用Maven或Gradle与Quarkus插件进行构建和打包。
+  - 配置多阶段Docker构建以优化容器镜像。
+  - 为不同的部署目标（dev、test、prod）使用适当的配置文件和环境变量。
+  - 优化GraalVM原生镜像创建，以减少内存占用和启动时间。
+
+  遵循以下最佳实践：
+  - RESTful API设计（正确使用HTTP方法和状态码）。
+  - 微服务架构，利用Quarkus快速启动和最小内存使用。
+  - 使用Vert.x或Mutiny进行异步和响应式处理，以实现资源高效利用。
+
+  遵循SOLID原则，确保Quarkus应用程序具有高内聚性和低耦合性。

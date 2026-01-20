@@ -1,0 +1,56 @@
+---
+description: 强制同步项目文档规范 - 每次请求必须检查并更新 src/md 目录下的文档
+alwaysApply: true
+---
+
+# 项目文档同步规范（强制执行）
+
+## 核心规则
+
+**每次收到用户请求时，必须执行以下操作：**
+
+1. **阅读文档**：在进行任何代码修改前，先阅读 `src/md/` 目录下的相关文档，了解项目当前状态
+2. **同步更新**：完成代码修改后，必须更新 `src/md/` 目录下的相关文档，保持文档与代码同步
+
+## 文档目录说明
+
+```
+src/md/
+├── 00_AI_DEVELOPER_RULES.md      # AI 开发规范
+├── 01_PRODUCT_REQUIREMENTS_DOC.md # 产品需求文档
+├── 02_SYSTEM_DESIGN_DOC.md       # 系统设计文档
+├── 03_CURRENT_STATUS_LOG.md      # 【重点】项目状态日志 - 记录每次变更
+├── 04_THESIS_OUTLINE.md          # 论文大纲
+├── 05_AI_HANDOVER_PROTOCOL.md    # AI 交接协议
+├── 07_FINAL_TASK_BOOK.md         # 最终任务书
+├── 08_ULTIMATE_DEV_GUIDE.md      # 终极开发指南
+├── 09_GAMIFICATION_MODULE_DESIGN.md # 游戏化模块设计
+├── 10_UI_DESIGN_SPECIFICATION.md # UI 设计规范
+└── 11_QUICK_DEPLOY_GUIDE.md      # 快速部署指南
+```
+
+## 更新优先级
+
+| 优先级 | 文档 | 更新时机 |
+|-------|------|---------|
+| **必须** | `03_CURRENT_STATUS_LOG.md` | 每次代码变更后立即更新 |
+| **按需** | `02_SYSTEM_DESIGN_DOC.md` | 架构、API、数据库变更时更新 |
+| **按需** | `01_PRODUCT_REQUIREMENTS_DOC.md` | 功能需求变更时更新 |
+| **按需** | `11_QUICK_DEPLOY_GUIDE.md` | 部署流程变更时更新 |
+| **按需** | 其他文档 | 涉及相关内容时更新 |
+
+## 更新格式规范
+
+更新 `03_CURRENT_STATUS_LOG.md` 时，在 `**最近更新**:` 下方添加新条目：
+
+```markdown
+- **🔧 变更简述**: 详细描述本次修改的内容
+```
+
+## 执行检查清单
+
+在每次任务结束前，确认：
+- [ ] 已阅读相关文档
+- [ ] 已更新 `03_CURRENT_STATUS_LOG.md`
+- [ ] 如涉及架构/API 变更，已更新 `02_SYSTEM_DESIGN_DOC.md`
+- [ ] 如涉及部署流程，已更新 `11_QUICK_DEPLOY_GUIDE.md`

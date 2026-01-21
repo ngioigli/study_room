@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习日历 - 云端自习室</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--space-4);
+            box-shadow: var(--shadow-sm);
+            z-index: 100;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--color-card-bg);
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .top-action {
+            width: 36px;
+        }
+
+        /* 内容区域 */
+        .content {
+            margin-top: 56px;
+            padding: var(--space-4);
+        }
+
+        /* 统计卡片 */
+        .stats-card {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            color: white;
+            margin-bottom: var(--space-4);
+        }
+
+        .stats-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: var(--space-3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+        }
+
+        .stats-item {
+            text-align: center;
+        }
+
+        .stats-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stats-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* 日历卡片 */
+        .calendar-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-4);
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+
+        .calendar-nav {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--color-card-bg);
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .weekday {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            padding: var(--space-2);
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--space-1);
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition-fast);
+        }
+
+        .calendar-day:hover {
+            background: var(--color-card-bg);
+        }
+
+        .calendar-day.other-month {
+            color: var(--color-text-tertiary);
+        }
+
+        .calendar-day.today {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .calendar-day.has-record::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 6px;
+            height: 6px;
+            background: var(--color-success);
+            border-radius: 50%;
+        }
+
+        .calendar-day.today.has-record::after {
+            background: white;
+        }
+
+        .day-number {
+            font-weight: 500;
+        }
+
+        /* 图例 */
+        .legend {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            padding: var(--space-3);
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.today {
+            background: var(--color-primary);
+        }
+
+        .legend-dot.studied {
+            background: var(--color-success);
+        }
+
+        /* 今日详情 */
+        .today-detail {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: var(--space-4);
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
+        .detail-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .detail-info {
+            flex: 1;
+        }
+
+        .detail-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .detail-subtitle {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .detail-records {
+            border-top: 1px solid var(--color-border);
+            padding-top: var(--space-3);
+        }
+
+        .record-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-time {
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+            width: 50px;
+        }
+
+        .record-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .record-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+            border-radius: var(--radius-full);
+        }
+
+        .record-duration {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            width: 50px;
+            text-align: right;
+        }
+
+        /* 连续学习卡片 */
+        .streak-card {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            text-align: center;
+        }
+
+        .streak-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+        }
+
+        .streak-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #92400E;
+        }
+
+        .streak-label {
+            font-size: 14px;
+            color: #B45309;
+        }
+
+        .streak-tip {
+            font-size: 12px;
+            color: #D97706;
+            margin-top: var(--space-2);
+        }
+
+        /* 空状态 */
+        .empty-records {
+            text-align: center;
+            padding: var(--space-6);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-3);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="top-bar">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <span class="top-title">学习日历 📅</span>
+        <div class="top-action"></div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 统计卡片 -->
+        <div class="stats-card">
+            <div class="stats-title">本月学习统计</div>
+            <div class="stats-grid">
+                <div class="stats-item">
+                    <div class="stats-value" id="monthDays">0</div>
+                    <div class="stats-label">学习天数</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="monthHours">0</div>
+                    <div class="stats-label">学习小时</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-value" id="monthSessions">0</div>
+                    <div class="stats-label">专注次数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日历卡片 -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button class="calendar-nav" onclick="prevMonth()">‹</button>
+                <span class="calendar-title" id="calendarTitle">2026年1月</span>
+                <button class="calendar-nav" onclick="nextMonth()">›</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div class="weekday">日</div>
+                <div class="weekday">一</div>
+                <div class="weekday">二</div>
+                <div class="weekday">三</div>
+                <div class="weekday">四</div>
+                <div class="weekday">五</div>
+                <div class="weekday">六</div>
+            </div>
+            <div class="calendar-days" id="calendarDays">
+                <!-- 由JS生成 -->
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot today"></div>
+                    <span>今天</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot studied"></div>
+                    <span>已学习</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 连续学习卡片 -->
+        <div class="streak-card">
+            <div class="streak-icon">🔥</div>
+            <div class="streak-value" id="streakDays">0</div>
+            <div class="streak-label">连续学习天数</div>
+            <div class="streak-tip" id="streakTip">今天还没学习哦，快去打卡吧！</div>
+        </div>
+
+        <!-- 今日详情 -->
+        <div class="today-detail" id="todayDetail">
+            <div class="detail-header">
+                <div class="detail-icon">📊</div>
+                <div class="detail-info">
+                    <div class="detail-title" id="detailTitle">今日学习</div>
+                    <div class="detail-subtitle" id="detailSubtitle">暂无学习记录</div>
+                </div>
+            </div>
+            <div class="detail-records" id="detailRecords">
+                <div class="empty-records">
+                    <div class="empty-icon">📚</div>
+                    <div>今天还没有学习记录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let studyData = {};
+        let selectedDate = new Date().toISOString().split('T')[0];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudyData();
+            renderCalendar();
+        });
+
+        async function loadStudyData() {
+            try {
+                // 获取月统计
+                const monthlyRes = await fetch('/api/stats/monthly');
+                const monthlyData = await monthlyRes.json();
+                
+                if (monthlyData.success) {
+                    document.getElementById('monthDays').textContent = monthlyData.studyDays || 0;
+                    document.getElementById('monthHours').textContent = Math.floor((monthlyData.totalMinutes || 0) / 60);
+                    document.getElementById('monthSessions').textContent = monthlyData.totalSessions || 0;
+                    
+                    // 存储每日数据
+                    if (monthlyData.dailyData) {
+                        monthlyData.dailyData.forEach(day => {
+                            if (day.date && day.minutes > 0) {
+                                studyData[day.date] = {
+                                    minutes: day.minutes,
+                                    sessions: day.sessions || 1
+                                };
+                            }
+                        });
+                    }
+                }
+                
+                // 获取连续学习天数
+                const profileRes = await fetch('/api/user/profile');
+                const profileData = await profileRes.json();
+                
+                if (profileData.success && profileData.stats) {
+                    const streak = profileData.stats.streakDays || 0;
+                    document.getElementById('streakDays').textContent = streak;
+                    
+                    if (streak > 0) {
+                        document.getElementById('streakTip').textContent = `太棒了！继续保持！`;
+                    } else {
+                        document.getElementById('streakTip').textContent = `今天还没学习哦，快去打卡吧！`;
+                    }
+                }
+                
+                renderCalendar();
+                loadDayDetail(selectedDate);
+            } catch (err) {
+                console.error('加载学习数据失败:', err);
+            }
+        }
+
+        function renderCalendar() {
+            const title = `${currentYear}年${currentMonth + 1}月`;
+            document.getElementById('calendarTitle').textContent = title;
+            
+            const container = document.getElementById('calendarDays');
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startDay = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            let html = '';
+            
+            // 上月补充天数
+            const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+            
+            // 本月天数
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = dateStr === todayStr;
+                const hasRecord = studyData[dateStr];
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (hasRecord) classes += ' has-record';
+                
+                html += `
+                    <div class="${classes}" onclick="selectDay('${dateStr}')">
+                        <span class="day-number">${day}</span>
+                    </div>
+                `;
+            }
+            
+            // 下月补充天数
+            const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
+            const nextDays = totalCells - startDay - daysInMonth;
+            for (let day = 1; day <= nextDays; day++) {
+                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function selectDay(dateStr) {
+            selectedDate = dateStr;
+            loadDayDetail(dateStr);
+        }
+
+        async function loadDayDetail(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date();
+            const isToday = dateStr === today.toISOString().split('T')[0];
+            
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const dateTitle = isToday ? '今日学习' : 
+                `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
+            
+            document.getElementById('detailTitle').textContent = dateTitle;
+            
+            const dayData = studyData[dateStr];
+            
+            if (dayData) {
+                document.getElementById('detailSubtitle').textContent = 
+                    `学习 ${dayData.minutes} 分钟，${dayData.sessions} 次专注`;
+                
+                // 模拟时间段数据
+                const records = generateTimeRecords(dayData.minutes);
+                document.getElementById('detailRecords').innerHTML = records.map(r => `
+                    <div class="record-item">
+                        <span class="record-time">${r.time}</span>
+                        <div class="record-bar">
+                            <div class="record-fill" style="width: ${r.percent}%"></div>
+                        </div>
+                        <span class="record-duration">${r.duration}分</span>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('detailSubtitle').textContent = '暂无学习记录';
+                document.getElementById('detailRecords').innerHTML = `
+                    <div class="empty-records">
+                        <div class="empty-icon">📚</div>
+                        <div>${isToday ? '今天还没有学习记录' : '当天没有学习记录'}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function generateTimeRecords(totalMinutes) {
+            // 模拟生成时间段数据
+            const records = [];
+            let remaining = totalMinutes;
+            const times = ['09:00', '10:30', '14:00', '15:30', '19:00', '20:30'];
+            
+            for (let i = 0; i < times.length && remaining > 0; i++) {
+                const duration = Math.min(remaining, Math.floor(Math.random() * 30) + 15);
+                records.push({
+                    time: times[i],
+                    duration: duration,
+                    percent: (duration / 60) * 100
+                });
+                remaining -= duration;
+            }
+            
+            return records;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/study.html';
+            }
+        }
+    </script>
+</body>
+</html>

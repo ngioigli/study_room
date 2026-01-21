@@ -195,6 +195,56 @@
         .seat-icon {
             font-size: 20px;
         }
+
+        /* 快捷入口 */
+        .quick-access {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+            overflow-x: auto;
+            padding-bottom: var(--space-2);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-access::-webkit-scrollbar {
+            display: none;
+        }
+
+        .quick-item {
+            flex-shrink: 0;
+            width: 72px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--color-text-primary);
+        }
+
+        .quick-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto var(--space-2);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: var(--transition-fast);
+        }
+
+        .quick-item:nth-child(1) .quick-icon { background: #FEF3C7; }
+        .quick-item:nth-child(2) .quick-icon { background: #DBEAFE; }
+        .quick-item:nth-child(3) .quick-icon { background: #FCE7F3; }
+        .quick-item:nth-child(4) .quick-icon { background: #D1FAE5; }
+        .quick-item:nth-child(5) .quick-icon { background: #FEE2E2; }
+        .quick-item:nth-child(6) .quick-icon { background: #E0E7FF; }
+
+        .quick-item:hover .quick-icon {
+            transform: scale(1.05);
+        }
+
+        .quick-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -233,6 +283,35 @@
             <div class="qrcode-countdown" id="countdown" style="display: none;">03:00</div>
             <div class="qrcode-status" id="qrcodeStatus">点击上方区域进入扫码页面</div>
             <a href="/qrcode_scan.html" class="btn btn-primary btn-large" style="display: block; text-decoration: none; text-align: center;">扫码开门</a>
+        </div>
+
+        <!-- 快捷入口 -->
+        <div class="section-title">常用功能</div>
+        <div class="quick-access">
+            <a href="/pomodoro.html" class="quick-item">
+                <div class="quick-icon">🍅</div>
+                <span class="quick-label">番茄钟</span>
+            </a>
+            <a href="/calendar.html" class="quick-item">
+                <div class="quick-icon">📅</div>
+                <span class="quick-label">学习日历</span>
+            </a>
+            <a href="/encouragement.html" class="quick-item">
+                <div class="quick-icon">💌</div>
+                <span class="quick-label">匿名鼓励</span>
+            </a>
+            <a href="/ranking.html" class="quick-item">
+                <div class="quick-icon">🏆</div>
+                <span class="quick-label">排行榜</span>
+            </a>
+            <a href="/message.html" class="quick-item">
+                <div class="quick-icon">💬</div>
+                <span class="quick-label">留言板</span>
+            </a>
+            <a href="/reservation.html" class="quick-item">
+                <div class="quick-icon">📌</div>
+                <span class="quick-label">座位预约</span>
+            </a>
         </div>
 
         <!-- 座位状态 -->

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>匿名鼓励 - 云端自习室</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--space-4);
+            z-index: 100;
+            background: transparent;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        .top-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: #0369A1;
+        }
+
+        .top-action {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            min-height: 100vh;
+            padding: 76px var(--space-4) 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 引导文字 */
+        .intro-text {
+            text-align: center;
+            margin-bottom: var(--space-6);
+            color: #0369A1;
+        }
+
+        .intro-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+
+        .intro-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* 卡片容器 */
+        .card-container {
+            width: 100%;
+            max-width: 360px;
+            perspective: 1000px;
+            margin-bottom: var(--space-6);
+        }
+
+        /* 鼓励卡片 */
+        .encouragement-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-8) var(--space-5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: floatIn 0.6s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) rotateX(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        /* 卡片装饰 */
+        .card-decoration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #38BDF8, #818CF8, #F472B6);
+        }
+
+        .card-emoji {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .card-message {
+            font-size: 18px;
+            line-height: 1.8;
+            color: var(--color-text-primary);
+            font-weight: 500;
+            margin-bottom: var(--space-4);
+        }
+
+        .card-author {
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+        }
+
+        .card-divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #38BDF8, #818CF8);
+            border-radius: var(--radius-full);
+            margin: var(--space-4) auto;
+        }
+
+        .card-footer {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .action-btn {
+            width: 56px;
+            height: 56px;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.refresh {
+            background: white;
+            color: #0369A1;
+        }
+
+        .action-btn.like {
+            background: linear-gradient(135deg, #F472B6, #EC4899);
+            color: white;
+        }
+
+        .action-btn.share {
+            background: white;
+            color: #0369A1;
+        }
+
+        .like-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #EF4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+        }
+
+        /* 写卡片按钮 */
+        .write-btn {
+            background: white;
+            border: none;
+            border-radius: var(--radius-full);
+            padding: var(--space-4) var(--space-6);
+            font-size: 15px;
+            font-weight: 600;
+            color: #0369A1;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            transition: var(--transition-fast);
+        }
+
+        .write-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 写卡片弹窗 */
+        .write-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: var(--space-4);
+        }
+
+        .write-modal.show {
+            display: flex;
+        }
+
+        .write-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 400px;
+            padding: var(--space-5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .write-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+
+        .write-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .write-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--color-card-bg);
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .write-tip {
+            background: #FEF3C7;
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            font-size: 13px;
+            color: #92400E;
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-2);
+        }
+
+        .write-textarea {
+            width: 100%;
+            height: 120px;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3);
+            font-size: 15px;
+            resize: none;
+            font-family: inherit;
+            margin-bottom: var(--space-3);
+        }
+
+        .write-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .write-counter {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            text-align: right;
+            margin-bottom: var(--space-4);
+        }
+
+        .write-emoji-picker {
+            display: flex;
+            gap: var(--space-2);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-4);
+        }
+
+        .emoji-option {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .emoji-option:hover {
+            border-color: var(--color-primary);
+        }
+
+        .emoji-option.selected {
+            border-color: var(--color-primary);
+            background: var(--color-primary-light);
+        }
+
+        .write-submit {
+            width: 100%;
+            padding: var(--space-4);
+            background: linear-gradient(135deg, #38BDF8, #818CF8);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .write-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .write-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 飘动的装饰 */
+        .floating-emoji {
+            position: fixed;
+            font-size: 24px;
+            pointer-events: none;
+            animation: float 6s infinite ease-in-out;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            75% { transform: translateY(10px) rotate(-5deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 心形动画 */
+        .heart-burst {
+            position: fixed;
+            pointer-events: none;
+            z-index: 300;
+        }
+
+        .heart-particle {
+            position: absolute;
+            font-size: 24px;
+            animation: heartFloat 1s ease-out forwards;
+        }
+
+        @keyframes heartFloat {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0.5);
+            }
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: var(--space-3);
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 飘动装饰 -->
+    <div class="floating-emoji" style="top: 15%; left: 10%;">💫</div>
+    <div class="floating-emoji" style="top: 25%; right: 15%; animation-delay: -2s;">⭐</div>
+    <div class="floating-emoji" style="top: 60%; left: 8%; animation-delay: -1s;">🌟</div>
+    <div class="floating-emoji" style="top: 70%; right: 12%; animation-delay: -3s;">✨</div>
+    <div class="floating-emoji" style="top: 40%; right: 5%; animation-delay: -4s;">💖</div>
+
+    <!-- 顶部导航 -->
+    <div class="top-bar">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <span class="top-title">匿名鼓励 💌</span>
+        <button class="top-action" onclick="openWriteModal()">✍️</button>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+        <!-- 引导文字 -->
+        <div class="intro-text">
+            <div class="intro-title">来自自习室的温暖</div>
+            <div class="intro-subtitle">每一句鼓励都是匿名的善意</div>
+        </div>
+
+        <!-- 卡片容器 -->
+        <div class="card-container" id="cardContainer">
+            <div class="encouragement-card" id="currentCard">
+                <div class="card-decoration"></div>
+                <div class="card-emoji" id="cardEmoji">🌸</div>
+                <div class="card-message" id="cardMessage">
+                    学习累了就休息一下吧，<br>你已经很棒了！
+                </div>
+                <div class="card-divider"></div>
+                <div class="card-author" id="cardAuthor">来自自习室的小伙伴</div>
+                <div class="card-footer">点击刷新获取新的鼓励</div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+            <button class="action-btn refresh" onclick="refreshCard()">🔄</button>
+            <button class="action-btn like" onclick="likeCard()" id="likeBtn">
+                ❤️
+            </button>
+            <button class="action-btn share" onclick="shareCard()">📤</button>
+        </div>
+
+        <!-- 写卡片按钮 -->
+        <button class="write-btn" onclick="openWriteModal()">
+            ✍️ 写一张鼓励卡片
+        </button>
+    </div>
+
+    <!-- 写卡片弹窗 -->
+    <div class="write-modal" id="writeModal">
+        <div class="write-card">
+            <div class="write-header">
+                <span class="write-title">写一张鼓励卡片</span>
+                <button class="write-close" onclick="closeWriteModal()">×</button>
+            </div>
+            
+            <div class="write-tip">
+                <span>💡</span>
+                <span>你的鼓励会匿名展示给其他正在学习的小伙伴，传递温暖和力量！</span>
+            </div>
+
+            <textarea class="write-textarea" id="messageInput" 
+                placeholder="写下你想对正在努力学习的TA说的话..."
+                maxlength="100"
+                oninput="updateCounter()"></textarea>
+            <div class="write-counter"><span id="charCount">0</span>/100</div>
+
+            <div class="write-emoji-picker">
+                <button class="emoji-option selected" data-emoji="🌸" onclick="selectEmoji(this)">🌸</button>
+                <button class="emoji-option" data-emoji="⭐" onclick="selectEmoji(this)">⭐</button>
+                <button class="emoji-option" data-emoji="🌈" onclick="selectEmoji(this)">🌈</button>
+                <button class="emoji-option" data-emoji="💪" onclick="selectEmoji(this)">💪</button>
+                <button class="emoji-option" data-emoji="🎯" onclick="selectEmoji(this)">🎯</button>
+                <button class="emoji-option" data-emoji="☀️" onclick="selectEmoji(this)">☀️</button>
+                <button class="emoji-option" data-emoji="🌻" onclick="selectEmoji(this)">🌻</button>
+                <button class="emoji-option" data-emoji="💖" onclick="selectEmoji(this)">💖</button>
+            </div>
+
+            <button class="write-submit" id="submitBtn" onclick="submitCard()" disabled>
+                发送鼓励 💌
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 默认鼓励语列表
+        const DEFAULT_ENCOURAGEMENTS = [
+            { emoji: '🌸', message: '学习累了就休息一下吧，你已经很棒了！' },
+            { emoji: '⭐', message: '每一点努力都不会白费，加油！' },
+            { emoji: '🌈', message: '雨后总会有彩虹，坚持就是胜利！' },
+            { emoji: '💪', message: '相信自己，你比想象中更强大！' },
+            { emoji: '🎯', message: '专注当下，未来会感谢现在努力的你！' },
+            { emoji: '☀️', message: '新的一天，新的开始，你可以的！' },
+            { emoji: '🌻', message: '向阳而生，你的努力终会开花结果！' },
+            { emoji: '💖', message: '有人默默为你加油，你不是一个人在战斗！' },
+            { emoji: '🍀', message: '幸运会眷顾努力的人，继续加油！' },
+            { emoji: '🌟', message: '你就是最亮的那颗星，闪耀吧！' },
+            { emoji: '🎨', message: '生活需要色彩，学习也需要快乐！' },
+            { emoji: '🌺', message: '愿你的努力像花儿一样绽放！' },
+            { emoji: '🐱', message: '学习辛苦了，摸摸头~' },
+            { emoji: '☕', message: '休息一下喝杯水，继续加油！' },
+            { emoji: '📚', message: '知识是最好的礼物，你在给自己送礼！' }
+        ];
+
+        let currentCardId = null;
+        let currentLiked = false;
+        let selectedEmoji = '🌸';
+        let allCards = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCards();
+        });
+
+        // 加载鼓励卡片
+        async function loadCards() {
+            try {
+                const res = await fetch('/api/encouragement/list');
+                const data = await res.json();
+                
+                if (data.success && data.cards && data.cards.length > 0) {
+                    allCards = data.cards;
+                    showRandomCard();
+                } else {
+                    // 使用默认鼓励语
+                    allCards = DEFAULT_ENCOURAGEMENTS.map((e, i) => ({
+                        id: i,
+                        emoji: e.emoji,
+                        message: e.message,
+                        author: '自习室小助手',
+                        likes: Math.floor(Math.random() * 50)
+                    }));
+                    showRandomCard();
+                }
+            } catch (err) {
+                console.error('加载失败:', err);
+                // 使用默认数据
+                allCards = DEFAULT_ENCOURAGEMENTS.map((e, i) => ({
+                    id: i,
+                    emoji: e.emoji,
+                    message: e.message,
+                    author: '自习室小助手',
+                    likes: Math.floor(Math.random() * 50)
+                }));
+                showRandomCard();
+            }
+        }
+
+        // 显示随机卡片
+        function showRandomCard() {
+            if (allCards.length === 0) return;
+            
+            const randomIndex = Math.floor(Math.random() * allCards.length);
+            const card = allCards[randomIndex];
+            
+            currentCardId = card.id;
+            currentLiked = false;
+            
+            // 添加动画
+            const cardEl = document.getElementById('currentCard');
+            cardEl.style.animation = 'none';
+            cardEl.offsetHeight; // 触发重排
+            cardEl.style.animation = 'floatIn 0.6s ease-out';
+            
+            document.getElementById('cardEmoji').textContent = card.emoji || '🌸';
+            document.getElementById('cardMessage').innerHTML = (card.message || '').replace(/\n/g, '<br>');
+            document.getElementById('cardAuthor').textContent = card.author ? `来自 ${card.author}` : '来自自习室的小伙伴';
+            
+            // 重置点赞按钮
+            document.getElementById('likeBtn').style.transform = 'scale(1)';
+        }
+
+        // 刷新卡片
+        function refreshCard() {
+            showRandomCard();
+            showToast('收到新的鼓励 💌');
+        }
+
+        // 点赞
+        async function likeCard() {
+            if (currentLiked) {
+                showToast('你已经点过赞啦~');
+                return;
+            }
+            
+            currentLiked = true;
+            
+            // 心形爆发动画
+            createHeartBurst();
+            
+            // 按钮动画
+            const btn = document.getElementById('likeBtn');
+            btn.style.transform = 'scale(1.2)';
+            setTimeout(() => btn.style.transform = 'scale(1)', 200);
+            
+            showToast('已送出一颗爱心 ❤️');
+            
+            // 发送到服务器
+            if (typeof currentCardId === 'number' && currentCardId >= 0) {
+                try {
+                    await fetch(`/api/encouragement/like/${currentCardId}`, {
+                        method: 'POST'
+                    });
+                } catch (err) {
+                    console.log('点赞同步失败');
+                }
+            }
+        }
+
+        // 心形爆发效果
+        function createHeartBurst() {
+            const container = document.createElement('div');
+            container.className = 'heart-burst';
+            
+            const btn = document.getElementById('likeBtn');
+            const rect = btn.getBoundingClientRect();
+            container.style.left = rect.left + rect.width / 2 + 'px';
+            container.style.top = rect.top + rect.height / 2 + 'px';
+            
+            for (let i = 0; i < 8; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart-particle';
+                heart.textContent = '❤️';
+                
+                const angle = (i / 8) * Math.PI * 2;
+                const distance = 60 + Math.random() * 30;
+                heart.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                heart.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                
+                container.appendChild(heart);
+            }
+            
+            document.body.appendChild(container);
+            setTimeout(() => container.remove(), 1000);
+        }
+
+        // 分享
+        function shareCard() {
+            const message = document.getElementById('cardMessage').textContent;
+            const emoji = document.getElementById('cardEmoji').textContent;
+            
+            const shareText = `${emoji} ${message}\n\n——来自云端自习室的鼓励`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '云端自习室 - 匿名鼓励',
+                    text: shareText
+                }).catch(console.log);
+            } else {
+                // 复制到剪贴板
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showToast('已复制到剪贴板');
+                }).catch(() => {
+                    showToast('分享失败');
+                });
+            }
+        }
+
+        // 打开写卡片弹窗
+        function openWriteModal() {
+            document.getElementById('writeModal').classList.add('show');
+            document.getElementById('messageInput').value = '';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        // 关闭写卡片弹窗
+        function closeWriteModal() {
+            document.getElementById('writeModal').classList.remove('show');
+        }
+
+        // 更新字数统计
+        function updateCounter() {
+            const input = document.getElementById('messageInput');
+            const count = input.value.length;
+            document.getElementById('charCount').textContent = count;
+            document.getElementById('submitBtn').disabled = count === 0 || count > 100;
+        }
+
+        // 选择表情
+        function selectEmoji(btn) {
+            document.querySelectorAll('.emoji-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedEmoji = btn.dataset.emoji;
+        }
+
+        // 提交卡片
+        async function submitCard() {
+            const message = document.getElementById('messageInput').value.trim();
+            
+            if (!message) {
+                showToast('请输入鼓励内容');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/encouragement/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        emoji: selectedEmoji,
+                        message: message
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    closeWriteModal();
+                    showToast('感谢你的温暖！你的鼓励已发送 💌');
+                    
+                    // 添加到本地列表
+                    allCards.push({
+                        id: data.id || Date.now(),
+                        emoji: selectedEmoji,
+                        message: message,
+                        author: '匿名用户',
+                        likes: 0
+                    });
+                } else {
+                    showToast(data.message || '发送失败');
+                }
+            } catch (err) {
+                console.error('提交失败:', err);
+                showToast('网络错误，请重试');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/study.html';
+            }
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('writeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeWriteModal();
+            }
+        });
+    </script>
+</body>
+</html>

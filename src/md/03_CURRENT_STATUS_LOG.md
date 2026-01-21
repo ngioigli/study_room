@@ -3,10 +3,23 @@
 **存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🆕 扩展功能完成**: 
+  - pomodoro.html：番茄钟页面，支持专注/短休息/长休息模式，可配置时长，进度环可视化，本地统计
+  - calendar.html：学习日历页面，月历视图展示学习记录，连续学习天数统计，详情查看
+  - encouragement.html：匿名鼓励卡片页面，随机展示鼓励语，支持发送、点赞、分享
+  - EncouragementCard.java：鼓励卡片实体类
+  - EncouragementCardMapper.java：鼓励卡片数据访问层
+  - EncouragementService.java：鼓励卡片业务逻辑
+  - EncouragementController.java：鼓励卡片API控制器
+  - encouragement_card 数据库表：存储用户发送的鼓励卡片
+- **🔧 首页优化**: 
+  - index.html：新增"常用功能"快捷入口区，包含番茄钟、学习日历、匿名鼓励、排行榜、留言板、座位预约
+- **🔧 学习小屋优化**: 
+  - study.html：工具网格扩展至6个入口，新增番茄钟、学习日历、匿名鼓励
 - **🧭 强化AI身份规则**: 
   - .codebuddy/rules/assistant-identity.mdc：新增UI质量硬性门槛（组件层级/交互状态/移动端适配/视觉一致性）
 - **🧭 强化AI身份规则**: 
-  - .codebuddy/rules/assistant-identity.mdc：新增“每次对话开头明确身份”与标准需求输出模板
+  - .codebuddy/rules/assistant-identity.mdc：新增"每次对话开头明确身份"与标准需求输出模板
 - **🧭 新增AI身份规则**: 
   - .codebuddy/rules/assistant-identity.mdc：明确AI身份、技术栈边界、产品调性与交付准则
 - **🔧 登录页面禁用用户提示优化**: 

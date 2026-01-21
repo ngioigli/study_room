@@ -48,22 +48,76 @@
             justify-content: center;
             font-size: 36px;
             border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition-fast);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .user-avatar::after {
+            content: '✏️';
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
         }
 
         .user-info {
             flex: 1;
         }
 
+        .user-name-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
         .user-name {
             font-size: 20px;
             font-weight: 700;
             color: white;
-            margin-bottom: 4px;
+            cursor: pointer;
+        }
+
+        .edit-icon {
+            font-size: 14px;
+            opacity: 0.8;
         }
 
         .user-meta {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.8);
+            margin-top: 4px;
+        }
+
+        .user-signature {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+            font-style: italic;
+            cursor: pointer;
+        }
+
+        .user-status {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            color: white;
+            margin-top: 8px;
+            cursor: pointer;
         }
 
         /* 统计卡片 */
@@ -79,24 +133,24 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-4);
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
             text-align: center;
         }
 
         .stat-item {
-            padding: var(--space-3);
+            padding: var(--space-2);
         }
 
         .stat-value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--color-primary);
             margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--color-text-secondary);
         }
 
@@ -214,6 +268,220 @@
             color: var(--color-text-tertiary);
             font-size: 12px;
         }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: var(--space-4);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 360px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: modalSlideUp 0.3s ease;
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: var(--color-card-bg);
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: var(--space-4);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: var(--space-4);
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: var(--space-3);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .modal-btn.cancel {
+            background: var(--color-card-bg);
+            color: var(--color-text-secondary);
+        }
+
+        .modal-btn.confirm {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .modal-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* 输入框 */
+        .input-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-2);
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            transition: var(--transition-fast);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            margin-top: 4px;
+        }
+
+        /* 头像选择网格 */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--space-3);
+        }
+
+        .avatar-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            background: var(--color-card-bg);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-fast);
+        }
+
+        .avatar-option:hover {
+            transform: scale(1.1);
+        }
+
+        .avatar-option.selected {
+            border-color: var(--color-primary);
+            background: #EDE9FE;
+        }
+
+        /* 状态选择列表 */
+        .status-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .status-option {
+            padding: var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .status-option:hover {
+            background: var(--color-card-bg);
+        }
+
+        .status-option.selected {
+            border-color: var(--color-primary);
+            background: #EDE9FE;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: var(--space-3) var(--space-5);
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -221,10 +489,15 @@
     <div class="header">
         <div class="header-title">个人中心</div>
         <div class="user-card">
-            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-avatar" id="userAvatar" onclick="openAvatarModal()">👤</div>
             <div class="user-info">
-                <div class="user-name" id="userName">加载中...</div>
+                <div class="user-name-row" onclick="openNicknameModal()">
+                    <span class="user-name" id="userName">加载中...</span>
+                    <span class="edit-icon">✏️</span>
+                </div>
                 <div class="user-meta" id="userMeta">累计学习 -- | Lv.--</div>
+                <div class="user-signature" id="userSignature" onclick="openSignatureModal()">点击添加个性签名...</div>
+                <div class="user-status" id="userStatus" onclick="openStatusModal()">努力学习中 📚</div>
             </div>
         </div>
     </div>
@@ -234,6 +507,10 @@
         <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-value" id="statDays">0</div>
+                <div class="stat-label">学习天数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statStreak">0</div>
                 <div class="stat-label">连续学习</div>
             </div>
             <div class="stat-item">
@@ -269,13 +546,29 @@
                     </div>
                     <span class="menu-arrow">›</span>
                 </a>
-                <a href="#" class="menu-item" onclick="showMessage()">
+                <a href="message.html" class="menu-item">
                     <div class="menu-icon">💬</div>
                     <div class="menu-content">
                         <div class="menu-title">留言板</div>
                         <div class="menu-desc">给自习室留言</div>
                     </div>
                     <span class="menu-badge">New</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="ranking.html" class="menu-item">
+                    <div class="menu-icon">🏆</div>
+                    <div class="menu-content">
+                        <div class="menu-title">排行榜</div>
+                        <div class="menu-desc">查看学习排行</div>
+                    </div>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="reservation.html" class="menu-item">
+                    <div class="menu-icon">📅</div>
+                    <div class="menu-content">
+                        <div class="menu-title">座位预约</div>
+                        <div class="menu-desc">提前预约座位</div>
+                    </div>
                     <span class="menu-arrow">›</span>
                 </a>
             </div>
@@ -317,7 +610,7 @@
 
         <!-- 版本信息 -->
         <div class="version-info">
-            云端自习室 v2.0.0
+            云端自习室 v2.1.0
         </div>
     </div>
 
@@ -341,113 +634,361 @@
         </a>
     </nav>
 
+    <!-- 昵称编辑弹窗 -->
+    <div class="modal-overlay" id="nicknameModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">修改昵称</span>
+                <button class="modal-close" onclick="closeModal('nicknameModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">昵称</label>
+                    <input type="text" class="input-field" id="nicknameInput" maxlength="20" placeholder="请输入昵称">
+                    <div class="input-hint">最多20个字符</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal('nicknameModal')">取消</button>
+                <button class="modal-btn confirm" onclick="saveNickname()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头像选择弹窗 -->
+    <div class="modal-overlay" id="avatarModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">选择头像</span>
+                <button class="modal-close" onclick="closeModal('avatarModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-grid" id="avatarGrid">
+                    <!-- 头像选项由JS生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal('avatarModal')">取消</button>
+                <button class="modal-btn confirm" onclick="saveAvatar()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 签名编辑弹窗 -->
+    <div class="modal-overlay" id="signatureModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">修改签名</span>
+                <button class="modal-close" onclick="closeModal('signatureModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">个性签名</label>
+                    <input type="text" class="input-field" id="signatureInput" maxlength="100" placeholder="写下你的座右铭...">
+                    <div class="input-hint">最多100个字符</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal('signatureModal')">取消</button>
+                <button class="modal-btn confirm" onclick="saveSignature()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态选择弹窗 -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">选择今日状态</span>
+                <button class="modal-close" onclick="closeModal('statusModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="status-list" id="statusList">
+                    <!-- 状态选项由JS生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeModal('statusModal')">取消</button>
+                <button class="modal-btn confirm" onclick="saveStatus()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script src="js/nav.js"></script>
     <script>
-        // 加载用户信息
-        document.addEventListener('DOMContentLoaded', loadUserInfo);
+        // 用户数据
+        let userData = {
+            nickname: '',
+            avatar: '👤',
+            signature: '',
+            todayStatus: '努力学习中 📚'
+        };
+        let selectedAvatar = '';
+        let selectedStatus = '';
 
-        async function loadUserInfo() {
+        // 加载用户信息
+        document.addEventListener('DOMContentLoaded', loadProfile);
+
+        async function loadProfile() {
             try {
-                // 从后端获取用户信息
-                const res = await fetch('/api/user/info');
+                const res = await fetch('/api/user/profile');
                 const data = await res.json();
                 
-                if (data.success && data.user) {
-                    const user = data.user;
-                    document.getElementById('userName').textContent = user.nickname || user.username || '学习者';
-                    localStorage.setItem('userInfo', JSON.stringify(user));
+                if (data.success) {
+                    const profile = data.profile;
+                    const stats = data.stats;
+                    
+                    // 更新用户数据
+                    userData.nickname = profile.nickname || profile.username || '学习者';
+                    userData.avatar = profile.avatar || '👤';
+                    userData.signature = profile.signature || '';
+                    userData.todayStatus = profile.todayStatus || '努力学习中 📚';
+                    
+                    // 更新UI
+                    document.getElementById('userName').textContent = userData.nickname;
+                    document.getElementById('userAvatar').textContent = userData.avatar;
+                    document.getElementById('userSignature').textContent = userData.signature || '点击添加个性签名...';
+                    document.getElementById('userStatus').textContent = userData.todayStatus;
+                    
+                    // 更新统计
+                    if (stats) {
+                        document.getElementById('statDays').textContent = stats.studyDays || 0;
+                        document.getElementById('statStreak').textContent = (stats.streakDays || 0) + '天';
+                        const hours = Math.floor((stats.totalMinutes || 0) / 60);
+                        document.getElementById('statHours').textContent = hours > 0 ? hours + 'h' : (stats.totalMinutes || 0) + '分';
+                        document.getElementById('userMeta').textContent = `累计学习 ${stats.studyDays || 0}天 | ${hours}h`;
+                    }
+                    
+                    // 加载宠物等级
+                    loadPetLevel();
                 } else {
-                    // 从 localStorage 获取备用信息
-                    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                    document.getElementById('userName').textContent = userInfo.nickname || userInfo.username || '学习者';
+                    // 降级处理
+                    loadUserInfoFallback();
                 }
             } catch (err) {
-                console.error('获取用户信息失败:', err);
-                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                document.getElementById('userName').textContent = userInfo.nickname || userInfo.username || '学习者';
+                console.error('加载用户信息失败:', err);
+                loadUserInfoFallback();
             }
             
-            // 加载统计数据
-            loadStats();
+            // 加载头像和状态选项
+            loadAvatarOptions();
+            loadStatusOptions();
         }
 
-        async function loadStats() {
-            try {
-                // 获取学习统计 - 使用正确的接口
-                const [focusRes, statsRes] = await Promise.all([
-                    fetch('/api/focus/today'),
-                    fetch('/api/stats/weekly')
-                ]);
-                
-                const focusData = await focusRes.json();
-                const statsData = await statsRes.json();
-                
-                // 今日数据
-                if (focusData.success) {
-                    // 可以在这里使用今日数据
-                }
-                
-                // 周统计数据
-                if (statsData.success) {
-                    const totalMinutes = statsData.totalMinutes || 0;
-                    const hours = Math.floor(totalMinutes / 60);
-                    document.getElementById('statHours').textContent = hours > 0 ? hours + 'h' : totalMinutes + '分';
-                }
-                
-                // 计算连续学习天数
-                if (statsData.success && statsData.dailyData) {
-                    let streakDays = 0;
-                    const dailyData = statsData.dailyData.slice().reverse(); // 从今天往前数
-                    for (const day of dailyData) {
-                        if (day.minutes > 0) {
-                            streakDays++;
-                        } else {
-                            break;
-                        }
-                    }
-                    document.getElementById('statDays').textContent = streakDays + '天';
-                }
-            } catch (err) {
-                console.error('加载统计失败:', err);
-            }
+        async function loadUserInfoFallback() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            document.getElementById('userName').textContent = userInfo.nickname || userInfo.username || '学习者';
+        }
 
-            // 获取宠物等级
+        async function loadPetLevel() {
             try {
                 const petRes = await fetch('/api/pet');
                 const petData = await petRes.json();
                 
                 if (petData.success && petData.hasPet) {
-                    const pet = petData.pet;
-                    document.getElementById('statLevel').textContent = pet.level || 1;
-                    
-                    // 更新用户元信息
-                    const hours = document.getElementById('statHours').textContent;
-                    document.getElementById('userMeta').textContent = 
-                        `累计学习 ${hours} | Lv.${pet.level || 1}`;
-                } else {
-                    document.getElementById('statLevel').textContent = 1;
-                    const hours = document.getElementById('statHours').textContent;
-                    document.getElementById('userMeta').textContent = `累计学习 ${hours} | Lv.1`;
+                    document.getElementById('statLevel').textContent = petData.pet.level || 1;
                 }
             } catch (err) {
                 console.error('加载宠物失败:', err);
             }
         }
 
-        function showMessage() {
-            alert('留言板功能开发中...');
+        async function loadAvatarOptions() {
+            try {
+                const res = await fetch('/api/user/avatars');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const grid = document.getElementById('avatarGrid');
+                    grid.innerHTML = data.avatars.map(avatar => `
+                        <div class="avatar-option ${avatar === userData.avatar ? 'selected' : ''}" 
+                             onclick="selectAvatar(this, '${avatar}')">${avatar}</div>
+                    `).join('');
+                    selectedAvatar = userData.avatar;
+                }
+            } catch (err) {
+                console.error('加载头像选项失败:', err);
+            }
+        }
+
+        async function loadStatusOptions() {
+            try {
+                const res = await fetch('/api/user/statuses');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const list = document.getElementById('statusList');
+                    list.innerHTML = data.statuses.map(status => `
+                        <div class="status-option ${status === userData.todayStatus ? 'selected' : ''}" 
+                             onclick="selectStatus(this, '${status}')">${status}</div>
+                    `).join('');
+                    selectedStatus = userData.todayStatus;
+                }
+            } catch (err) {
+                console.error('加载状态选项失败:', err);
+            }
+        }
+
+        // 弹窗操作
+        function openNicknameModal() {
+            document.getElementById('nicknameInput').value = userData.nickname;
+            document.getElementById('nicknameModal').classList.add('show');
+        }
+
+        function openAvatarModal() {
+            selectedAvatar = userData.avatar;
+            document.querySelectorAll('.avatar-option').forEach(el => {
+                el.classList.toggle('selected', el.textContent === selectedAvatar);
+            });
+            document.getElementById('avatarModal').classList.add('show');
+        }
+
+        function openSignatureModal() {
+            document.getElementById('signatureInput').value = userData.signature;
+            document.getElementById('signatureModal').classList.add('show');
+        }
+
+        function openStatusModal() {
+            selectedStatus = userData.todayStatus;
+            document.querySelectorAll('.status-option').forEach(el => {
+                el.classList.toggle('selected', el.textContent === selectedStatus);
+            });
+            document.getElementById('statusModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function selectAvatar(el, avatar) {
+            document.querySelectorAll('.avatar-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedAvatar = avatar;
+        }
+
+        function selectStatus(el, status) {
+            document.querySelectorAll('.status-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedStatus = status;
+        }
+
+        // 保存操作
+        async function saveNickname() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                showToast('昵称不能为空');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/user/nickname', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    userData.nickname = nickname;
+                    document.getElementById('userName').textContent = nickname;
+                    closeModal('nicknameModal');
+                    showToast('昵称修改成功');
+                } else {
+                    showToast(data.message || '修改失败');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试');
+            }
+        }
+
+        async function saveAvatar() {
+            try {
+                const res = await fetch('/api/user/avatar', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar: selectedAvatar })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    userData.avatar = selectedAvatar;
+                    document.getElementById('userAvatar').textContent = selectedAvatar;
+                    closeModal('avatarModal');
+                    showToast('头像修改成功');
+                } else {
+                    showToast(data.message || '修改失败');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试');
+            }
+        }
+
+        async function saveSignature() {
+            const signature = document.getElementById('signatureInput').value.trim();
+            
+            try {
+                const res = await fetch('/api/user/signature', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ signature })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    userData.signature = signature;
+                    document.getElementById('userSignature').textContent = signature || '点击添加个性签名...';
+                    closeModal('signatureModal');
+                    showToast('签名修改成功');
+                } else {
+                    showToast(data.message || '修改失败');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试');
+            }
+        }
+
+        async function saveStatus() {
+            try {
+                const res = await fetch('/api/user/status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ todayStatus: selectedStatus })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    userData.todayStatus = selectedStatus;
+                    document.getElementById('userStatus').textContent = selectedStatus;
+                    closeModal('statusModal');
+                    showToast('状态修改成功');
+                } else {
+                    showToast(data.message || '修改失败');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
         function showSettings() {
-            alert('设置功能开发中...');
+            showToast('设置功能开发中...');
         }
 
         function showHelp() {
-            alert('帮助与反馈功能开发中...');
+            showToast('帮助与反馈功能开发中...');
         }
 
         function showAbout() {
-            alert('云端自习室 v2.0.0\n\n一个帮助你专注学习的自习室应用');
+            alert('云端自习室 v2.1.0\n\n一个帮助你专注学习的自习室应用');
         }
 
         async function logout() {

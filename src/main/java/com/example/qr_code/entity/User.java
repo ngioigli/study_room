@@ -7,11 +7,15 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data // Lombok注解，自动生成Getter, Setter, ToString
-@TableName("users") // 告诉MP，这个类对应数据库里的 users 表
+/**
+ * User 用户实体类
+ * 对应数据库 users 表
+ */
+@Data
+@TableName("users")
 public class User {
     
-    @TableId(type = IdType.AUTO) // 主键自增
+    @TableId(type = IdType.AUTO)
     private Long id;
     
     private String username;
@@ -20,6 +24,17 @@ public class User {
     private String avatar;
     private String phone;
     private String email;
+    
+    /** 个性签名 */
+    private String signature;
+    
+    /** 今日状态 */
+    @TableField("today_status")
+    private String todayStatus;
+    
+    /** 累计学习天数 */
+    @TableField("study_days")
+    private Integer studyDays;
     
     /** 角色：user-普通用户，admin-管理员 */
     private String role;

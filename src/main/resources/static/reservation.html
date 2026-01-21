@@ -92,27 +92,104 @@
             padding: var(--space-4);
         }
 
-        /* 日期选择 */
-        .date-selector {
-            display: flex;
-            gap: var(--space-2);
-            overflow-x: auto;
-            padding-bottom: var(--space-3);
+        /* 预约限制提示 */
+        .reservation-limit-card {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
             margin-bottom: var(--space-4);
-            -webkit-overflow-scrolling: touch;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
         }
 
-        .date-selector::-webkit-scrollbar {
+        .limit-icon {
+            font-size: 28px;
+        }
+
+        .limit-text {
+            flex: 1;
+            font-size: 13px;
+            color: #92400E;
+            line-height: 1.5;
+        }
+
+        .limit-text strong {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        /* 已有预约提示 */
+        .existing-reservation-card {
+            background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
             display: none;
         }
 
+        .existing-reservation-card.show {
+            display: block;
+        }
+
+        .existing-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .existing-header span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1E40AF;
+        }
+
+        .existing-info {
+            font-size: 13px;
+            color: #1E40AF;
+            line-height: 1.6;
+        }
+
+        .existing-actions {
+            display: flex;
+            gap: var(--space-2);
+            margin-top: var(--space-3);
+        }
+
+        .existing-btn {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .existing-btn.cancel {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
+        }
+
+        .existing-btn.view {
+            background: #1E40AF;
+            color: white;
+        }
+
+        /* 日期选择（只显示今天和明天） */
+        .date-selector {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+        }
+
         .date-item {
-            flex-shrink: 0;
-            width: 60px;
-            padding: var(--space-3);
+            flex: 1;
+            padding: var(--space-4);
             text-align: center;
             background: white;
-            border: 1px solid var(--color-border);
+            border: 2px solid var(--color-border);
             border-radius: var(--radius-lg);
             cursor: pointer;
             transition: var(--transition-fast);
@@ -130,16 +207,29 @@
         }
 
         .date-weekday {
-            font-size: 11px;
+            font-size: 12px;
             margin-bottom: 4px;
         }
 
         .date-day {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
         }
 
+        .date-label {
+            font-size: 11px;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
         /* 座位网格 */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-3);
+        }
+
         .seat-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -160,7 +250,7 @@
             transition: var(--transition-fast);
         }
 
-        .seat-item:hover {
+        .seat-item:hover:not(.disabled) {
             border-color: var(--color-primary);
         }
 
@@ -169,9 +259,8 @@
             border-color: var(--color-primary);
         }
 
-        .seat-item.occupied {
-            background: #FEE2E2;
-            border-color: #FECACA;
+        .seat-item.disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
@@ -187,11 +276,39 @@
             margin-top: 2px;
         }
 
-        .seat-item.occupied .seat-status {
-            color: var(--color-error);
+        /* 图例 */
+        .legend {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            margin-bottom: var(--space-4);
+            font-size: 12px;
+            color: var(--color-text-secondary);
         }
 
-        /* 时间段选择 */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .legend-dot.available {
+            background: white;
+            border: 1px solid var(--color-border);
+        }
+
+        .legend-dot.selected {
+            background: #EDE9FE;
+            border: 1px solid var(--color-primary);
+        }
+
+        /* 时间选择器 */
         .time-section {
             background: white;
             border-radius: var(--radius-lg);
@@ -199,43 +316,56 @@
             margin-bottom: var(--space-4);
         }
 
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--color-text-primary);
+        .time-picker-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
             margin-bottom: var(--space-3);
         }
 
-        .time-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--space-2);
+        .time-picker-label {
+            width: 60px;
+            font-size: 14px;
+            color: var(--color-text-secondary);
         }
 
-        .time-slot {
+        .time-select {
+            flex: 1;
             padding: var(--space-3);
-            text-align: center;
-            background: var(--color-card-bg);
-            border: 1px solid transparent;
+            border: 1px solid var(--color-border);
             border-radius: var(--radius-md);
-            font-size: 13px;
-            cursor: pointer;
-            transition: var(--transition-fast);
+            font-size: 14px;
+            background: white;
         }
 
-        .time-slot:hover {
+        .time-select:focus {
+            outline: none;
             border-color: var(--color-primary);
         }
 
-        .time-slot.selected {
-            background: #EDE9FE;
-            border-color: var(--color-primary);
+        .time-hint {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: var(--space-2);
+        }
+
+        .time-duration {
+            text-align: center;
+            padding: var(--space-3);
+            background: var(--color-card-bg);
+            border-radius: var(--radius-md);
+            margin-top: var(--space-3);
+        }
+
+        .time-duration-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .time-duration-value {
+            font-size: 18px;
+            font-weight: 600;
             color: var(--color-primary);
-        }
-
-        .time-slot.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         /* 预约按钮 */
@@ -380,42 +510,6 @@
             color: var(--color-text-secondary);
         }
 
-        /* 图例 */
-        .legend {
-            display: flex;
-            gap: var(--space-4);
-            justify-content: center;
-            margin-bottom: var(--space-4);
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
-
-        .legend-dot.available {
-            background: white;
-            border: 1px solid var(--color-border);
-        }
-
-        .legend-dot.selected {
-            background: #EDE9FE;
-            border: 1px solid var(--color-primary);
-        }
-
-        .legend-dot.occupied {
-            background: #FEE2E2;
-        }
-
         /* Toast */
         .toast {
             position: fixed;
@@ -455,7 +549,32 @@
 
     <!-- 预约座位 -->
     <div class="content" id="reserveContent">
-        <!-- 日期选择 -->
+        <!-- 预约规则提示 -->
+        <div class="reservation-limit-card">
+            <span class="limit-icon">💡</span>
+            <div class="limit-text">
+                <strong>预约规则</strong>
+                每位用户最多有1个待使用的预约。可预约今天或明天的座位，时长1-4小时。
+            </div>
+        </div>
+
+        <!-- 已有预约提示（动态显示） -->
+        <div class="existing-reservation-card" id="existingCard">
+            <div class="existing-header">
+                <span>📌</span>
+                <span>您已有一个待使用的预约</span>
+            </div>
+            <div class="existing-info" id="existingInfo">
+                <!-- 动态填充 -->
+            </div>
+            <div class="existing-actions">
+                <button class="existing-btn cancel" onclick="cancelExistingReservation()">取消预约</button>
+                <button class="existing-btn view" onclick="switchTab('my')">查看详情</button>
+            </div>
+        </div>
+
+        <!-- 日期选择（只显示今天和明天） -->
+        <div class="section-title">选择日期</div>
         <div class="date-selector" id="dateSelector">
             <!-- 由JS生成 -->
         </div>
@@ -470,22 +589,33 @@
                 <div class="legend-dot selected"></div>
                 <span>已选</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-dot occupied"></div>
-                <span>已约</span>
-            </div>
         </div>
 
         <!-- 座位网格 -->
+        <div class="section-title">选择座位</div>
         <div class="seat-grid" id="seatGrid">
             <!-- 由JS生成 -->
         </div>
 
-        <!-- 时间段选择 -->
+        <!-- 时间选择 -->
         <div class="time-section">
-            <div class="section-title">选择时间段</div>
-            <div class="time-grid" id="timeGrid">
-                <!-- 由JS生成 -->
+            <div class="section-title">选择时间</div>
+            <div class="time-picker-row">
+                <span class="time-picker-label">开始时间</span>
+                <select class="time-select" id="startTimeSelect" onchange="updateDuration()">
+                    <!-- 由JS生成 -->
+                </select>
+            </div>
+            <div class="time-picker-row">
+                <span class="time-picker-label">结束时间</span>
+                <select class="time-select" id="endTimeSelect" onchange="updateDuration()">
+                    <!-- 由JS生成 -->
+                </select>
+            </div>
+            <div class="time-hint">⏰ 预约时长：最短1小时，最长4小时</div>
+            <div class="time-duration">
+                <div class="time-duration-label">预约时长</div>
+                <div class="time-duration-value" id="durationValue">--</div>
             </div>
         </div>
 
@@ -516,43 +646,155 @@
 
         let selectedDate = null;
         let selectedSeat = null;
-        let selectedTime = null;
         let seats = [];
-        let timeSlots = [];
-        let occupiedSlots = {};
+        let existingReservation = null; // 用户当前的待使用预约
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             generateDateSelector();
+            generateTimeOptions();
             loadSeats();
-            loadTimeSlots();
+            checkExistingReservation();
         });
 
+        // 生成日期选择器（只有今天和明天）
         function generateDateSelector() {
             const container = document.getElementById('dateSelector');
             const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            
+            const dates = [
+                { date: today, label: '今天' },
+                { date: tomorrow, label: '明天' }
+            ];
             
             let html = '';
-            for (let i = 0; i < 7; i++) {
-                const date = new Date(today);
-                date.setDate(today.getDate() + i);
-                
-                const dateStr = formatDateStr(date);
-                const isToday = i === 0;
+            dates.forEach((item, index) => {
+                const dateStr = formatDateStr(item.date);
+                const isToday = index === 0;
                 
                 html += `
                     <div class="date-item ${isToday ? 'active' : ''}" 
                          data-date="${dateStr}" 
                          onclick="selectDate('${dateStr}', this)">
-                        <div class="date-weekday">${isToday ? '今天' : '周' + weekdays[date.getDay()]}</div>
-                        <div class="date-day">${date.getDate()}</div>
+                        <div class="date-weekday">周${weekdays[item.date.getDay()]}</div>
+                        <div class="date-day">${item.date.getDate()}</div>
+                        <div class="date-label">${item.label}</div>
                     </div>
                 `;
-            }
+            });
             container.innerHTML = html;
             
             // 默认选中今天
             selectedDate = formatDateStr(today);
+        }
+
+        // 生成时间选项
+        function generateTimeOptions() {
+            const startSelect = document.getElementById('startTimeSelect');
+            const endSelect = document.getElementById('endTimeSelect');
+            
+            let startHtml = '<option value="">请选择开始时间</option>';
+            let endHtml = '<option value="">请选择结束时间</option>';
+            
+            // 营业时间 8:00 - 22:00
+            for (let h = 8; h <= 21; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    startHtml += `<option value="${time}">${time}</option>`;
+                }
+            }
+            
+            for (let h = 9; h <= 22; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    if (h === 22 && m > 0) continue;
+                    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    endHtml += `<option value="${time}">${time}</option>`;
+                }
+            }
+            
+            startSelect.innerHTML = startHtml;
+            endSelect.innerHTML = endHtml;
+        }
+
+        // 更新时长显示
+        function updateDuration() {
+            const startTime = document.getElementById('startTimeSelect').value;
+            const endTime = document.getElementById('endTimeSelect').value;
+            const durationEl = document.getElementById('durationValue');
+            
+            if (startTime && endTime) {
+                const [startH, startM] = startTime.split(':').map(Number);
+                const [endH, endM] = endTime.split(':').map(Number);
+                const startMinutes = startH * 60 + startM;
+                const endMinutes = endH * 60 + endM;
+                const duration = endMinutes - startMinutes;
+                
+                if (duration > 0) {
+                    const hours = Math.floor(duration / 60);
+                    const mins = duration % 60;
+                    durationEl.textContent = mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
+                } else {
+                    durationEl.textContent = '时间无效';
+                }
+            } else {
+                durationEl.textContent = '--';
+            }
+            
+            updateReserveBtn();
+        }
+
+        // 检查用户是否已有待使用的预约
+        async function checkExistingReservation() {
+            try {
+                const res = await fetch('/api/reservation/pending');
+                const data = await res.json();
+                
+                if (data.success && data.reservation) {
+                    existingReservation = data.reservation;
+                    showExistingReservation(data.reservation);
+                } else {
+                    existingReservation = null;
+                    document.getElementById('existingCard').classList.remove('show');
+                }
+            } catch (err) {
+                console.error('检查预约失败:', err);
+            }
+        }
+
+        // 显示已有预约
+        function showExistingReservation(reservation) {
+            const card = document.getElementById('existingCard');
+            const info = document.getElementById('existingInfo');
+            
+            info.innerHTML = `
+                📅 ${reservation.reservationDate} &nbsp;
+                ⏰ ${reservation.startTime} - ${reservation.endTime} &nbsp;
+                💺 ${reservation.seatNumber || '座位'} 号
+            `;
+            
+            card.classList.add('show');
+        }
+
+        // 取消已有预约
+        async function cancelExistingReservation() {
+            if (!existingReservation) return;
+            if (!confirm('确定要取消这个预约吗？')) return;
+            
+            try {
+                const res = await fetch(`/api/reservation/${existingReservation.id}/cancel`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('取消成功');
+                    checkExistingReservation();
+                } else {
+                    showToast(data.message || '取消失败');
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
         }
 
         async function loadSeats() {
@@ -569,106 +811,40 @@
             }
         }
 
-        async function loadTimeSlots() {
-            try {
-                const res = await fetch('/api/reservation/timeslots');
-                const data = await res.json();
-                
-                if (data.success) {
-                    timeSlots = data.timeSlots;
-                    renderTimeSlots();
-                }
-            } catch (err) {
-                showToast('加载时间段失败');
-            }
-        }
-
-        async function loadSeatReservations() {
-            if (!selectedSeat || !selectedDate) return;
-            
-            try {
-                const res = await fetch(`/api/reservation/seat/${selectedSeat}?date=${selectedDate}`);
-                const data = await res.json();
-                
-                if (data.success) {
-                    occupiedSlots = {};
-                    data.reservations.forEach(r => {
-                        const key = `${r.startTime}-${r.endTime}`;
-                        occupiedSlots[key] = true;
-                    });
-                    renderTimeSlots();
-                }
-            } catch (err) {
-                console.error('加载预约情况失败:', err);
-            }
-        }
-
         function renderSeats() {
             const grid = document.getElementById('seatGrid');
+            const hasExisting = existingReservation !== null;
             
             grid.innerHTML = seats.map(seat => `
-                <div class="seat-item ${selectedSeat === seat.id ? 'selected' : ''}" 
+                <div class="seat-item ${selectedSeat === seat.id ? 'selected' : ''} ${hasExisting ? 'disabled' : ''}" 
                      data-id="${seat.id}"
-                     onclick="selectSeat(${seat.id}, this)">
+                     onclick="${hasExisting ? '' : `selectSeat(${seat.id}, this)`}">
                     <div class="seat-number">${seat.seatNumber}</div>
                     <div class="seat-status">可预约</div>
                 </div>
             `).join('');
         }
 
-        function renderTimeSlots() {
-            const grid = document.getElementById('timeGrid');
-            
-            grid.innerHTML = timeSlots.map((slot, index) => {
-                const key = `${slot[0]}:00-${slot[1]}:00`;
-                const isOccupied = occupiedSlots[key];
-                const isSelected = selectedTime === index;
-                
-                return `
-                    <div class="time-slot ${isSelected ? 'selected' : ''} ${isOccupied ? 'disabled' : ''}"
-                         data-index="${index}"
-                         onclick="${isOccupied ? '' : `selectTime(${index}, this)`}">
-                        ${slot[0]} - ${slot[1]}
-                        ${isOccupied ? '<br><small>已被预约</small>' : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
         function selectDate(dateStr, el) {
             selectedDate = dateStr;
-            selectedTime = null;
-            occupiedSlots = {};
             
             document.querySelectorAll('.date-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.date === dateStr);
             });
             
-            if (selectedSeat) {
-                loadSeatReservations();
-            } else {
-                renderTimeSlots();
-            }
             updateReserveBtn();
         }
 
         function selectSeat(seatId, el) {
+            if (existingReservation) {
+                showToast('您已有一个待使用的预约，请先取消');
+                return;
+            }
+            
             selectedSeat = seatId;
-            selectedTime = null;
             
             document.querySelectorAll('.seat-item').forEach(item => {
                 item.classList.toggle('selected', parseInt(item.dataset.id) === seatId);
-            });
-            
-            loadSeatReservations();
-            updateReserveBtn();
-        }
-
-        function selectTime(index, el) {
-            selectedTime = index;
-            
-            document.querySelectorAll('.time-slot').forEach(item => {
-                item.classList.toggle('selected', parseInt(item.dataset.index) === index);
             });
             
             updateReserveBtn();
@@ -676,14 +852,40 @@
 
         function updateReserveBtn() {
             const btn = document.getElementById('reserveBtn');
+            const startTime = document.getElementById('startTimeSelect').value;
+            const endTime = document.getElementById('endTimeSelect').value;
             
-            if (selectedSeat && selectedTime !== null) {
+            if (existingReservation) {
+                btn.textContent = '您已有待使用的预约';
+                btn.disabled = true;
+                return;
+            }
+            
+            if (selectedSeat && startTime && endTime) {
+                // 验证时间
+                const [startH, startM] = startTime.split(':').map(Number);
+                const [endH, endM] = endTime.split(':').map(Number);
+                const startMinutes = startH * 60 + startM;
+                const endMinutes = endH * 60 + endM;
+                const duration = endMinutes - startMinutes;
+                
+                if (duration < 60) {
+                    btn.textContent = '预约时长不能少于1小时';
+                    btn.disabled = true;
+                    return;
+                }
+                
+                if (duration > 240) {
+                    btn.textContent = '预约时长不能超过4小时';
+                    btn.disabled = true;
+                    return;
+                }
+                
                 const seat = seats.find(s => s.id === selectedSeat);
-                const time = timeSlots[selectedTime];
-                btn.textContent = `预约 ${seat.seatNumber} 号座位 (${time[0]}-${time[1]})`;
+                btn.textContent = `确认预约 ${seat.seatNumber} 号座位`;
                 btn.disabled = false;
             } else if (selectedSeat) {
-                btn.textContent = '请选择时间段';
+                btn.textContent = '请选择时间';
                 btn.disabled = true;
             } else {
                 btn.textContent = '请选择座位和时间';
@@ -692,22 +894,29 @@
         }
 
         async function submitReservation() {
-            if (!selectedSeat || selectedTime === null) return;
+            if (!selectedSeat || existingReservation) return;
+            
+            const startTime = document.getElementById('startTimeSelect').value;
+            const endTime = document.getElementById('endTimeSelect').value;
+            
+            if (!startTime || !endTime) {
+                showToast('请选择时间');
+                return;
+            }
             
             const btn = document.getElementById('reserveBtn');
             btn.disabled = true;
             btn.textContent = '预约中...';
             
             try {
-                const time = timeSlots[selectedTime];
                 const res = await fetch('/api/reservation/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         seatId: selectedSeat.toString(),
                         date: selectedDate,
-                        startTime: time[0] + ':00',
-                        endTime: time[1] + ':00'
+                        startTime: startTime + ':00',
+                        endTime: endTime + ':00'
                     })
                 });
                 const data = await res.json();
@@ -715,9 +924,11 @@
                 if (data.success) {
                     showToast('预约成功！');
                     selectedSeat = null;
-                    selectedTime = null;
+                    document.getElementById('startTimeSelect').value = '';
+                    document.getElementById('endTimeSelect').value = '';
+                    updateDuration();
+                    checkExistingReservation();
                     renderSeats();
-                    loadSeatReservations();
                 } else {
                     showToast(data.message || '预约失败');
                 }
@@ -829,6 +1040,7 @@
                 if (data.success) {
                     showToast('签到成功');
                     loadMyReservations();
+                    checkExistingReservation();
                 } else {
                     showToast(data.message || '签到失败');
                 }
@@ -847,6 +1059,7 @@
                 if (data.success) {
                     showToast('取消成功');
                     loadMyReservations();
+                    checkExistingReservation();
                 } else {
                     showToast(data.message || '取消失败');
                 }

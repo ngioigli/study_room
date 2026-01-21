@@ -40,6 +40,18 @@ public class ReservationService {
     }
 
     /**
+     * 获取用户当前待使用的预约（状态为1）
+     */
+    public SeatReservation getUserPendingReservation(Long userId) {
+        QueryWrapper<SeatReservation> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId)
+               .eq("status", 1) // 状态1表示待使用
+               .orderByDesc("reservation_date")
+               .last("LIMIT 1");
+        return reservationMapper.selectOne(wrapper);
+    }
+
+    /**
      * 获取座位在指定日期的预约情况
      */
     public List<SeatReservation> getSeatReservations(Long seatId, LocalDate date) {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>学习日历 - 云端自习室</title>
+    <title>今日学习总结 - 云端自习室</title>
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
     <style>
@@ -11,9 +11,9 @@
         
         body {
             font-family: var(--font-family);
-            background: var(--color-bg);
+            background: linear-gradient(135deg, #E8F4FD 0%, #F0E6FA 100%);
             min-height: 100vh;
-            padding-bottom: 100px;
+            padding-bottom: 40px;
         }
 
         /* 顶部导航 */
@@ -23,7 +23,8 @@
             left: 0;
             right: 0;
             height: 56px;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             padding: 0 var(--space-4);
@@ -42,6 +43,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--color-primary-light);
         }
 
         .top-title {
@@ -62,294 +68,337 @@
             padding: var(--space-4);
         }
 
-        /* 统计卡片 */
-        .stats-card {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
-            border-radius: var(--radius-xl);
-            padding: var(--space-5);
-            color: white;
-            margin-bottom: var(--space-4);
-        }
-
-        .stats-title {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: var(--space-3);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-3);
-        }
-
-        .stats-item {
+        /* 日期头部 */
+        .date-header {
             text-align: center;
+            margin-bottom: var(--space-5);
+            padding: var(--space-4);
         }
 
-        .stats-value {
+        .date-main {
             font-size: 28px;
             font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-1);
         }
 
-        .stats-label {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        /* 日历卡片 */
-        .calendar-card {
-            background: white;
-            border-radius: var(--radius-xl);
-            padding: var(--space-4);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: var(--space-4);
-        }
-
-        .calendar-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: var(--space-4);
-        }
-
-        .calendar-nav {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: var(--color-card-bg);
-            border-radius: 50%;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .calendar-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            margin-bottom: var(--space-2);
-        }
-
-        .weekday {
-            font-size: 12px;
-            color: var(--color-text-tertiary);
-            padding: var(--space-2);
-        }
-
-        .calendar-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: var(--space-1);
-        }
-
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--radius-md);
+        .date-sub {
             font-size: 14px;
-            cursor: pointer;
-            position: relative;
-            transition: var(--transition-fast);
-        }
-
-        .calendar-day:hover {
-            background: var(--color-card-bg);
-        }
-
-        .calendar-day.other-month {
-            color: var(--color-text-tertiary);
-        }
-
-        .calendar-day.today {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .calendar-day.has-record::after {
-            content: '';
-            position: absolute;
-            bottom: 4px;
-            width: 6px;
-            height: 6px;
-            background: var(--color-success);
-            border-radius: 50%;
-        }
-
-        .calendar-day.today.has-record::after {
-            background: white;
-        }
-
-        .day-number {
-            font-weight: 500;
-        }
-
-        /* 图例 */
-        .legend {
-            display: flex;
-            gap: var(--space-4);
-            justify-content: center;
-            padding: var(--space-3);
-            font-size: 12px;
             color: var(--color-text-secondary);
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
+        /* 番茄收获卡片 */
+        .tomato-card {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-6);
+            color: white;
+            text-align: center;
+            margin-bottom: var(--space-4);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .legend-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
+        .tomato-card::before {
+            content: '🍅';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 100px;
+            opacity: 0.15;
         }
 
-        .legend-dot.today {
-            background: var(--color-primary);
+        .tomato-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-3);
+            animation: bounce 2s infinite;
         }
 
-        .legend-dot.studied {
-            background: var(--color-success);
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        /* 今日详情 */
-        .today-detail {
+        .tomato-count {
+            font-size: 56px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: var(--space-2);
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .tomato-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* 统计网格 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .stat-card {
             background: white;
             border-radius: var(--radius-xl);
-            padding: var(--space-4);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: var(--space-4);
+            padding: var(--space-5);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s;
         }
 
-        .detail-header {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            margin-bottom: var(--space-4);
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
         }
 
-        .detail-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--color-card-bg);
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+        .stat-icon {
+            font-size: 36px;
+            margin-bottom: var(--space-3);
         }
 
-        .detail-info {
-            flex: 1;
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--space-1);
         }
 
-        .detail-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--color-text-primary);
-        }
-
-        .detail-subtitle {
+        .stat-label {
             font-size: 13px;
             color: var(--color-text-secondary);
         }
 
-        .detail-records {
-            border-top: 1px solid var(--color-border);
-            padding-top: var(--space-3);
+        .stat-unit {
+            font-size: 14px;
+            font-weight: normal;
+            color: var(--color-text-secondary);
+        }
+
+        /* 学习时段分布 */
+        .time-distribution {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-4);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .section-title-icon {
+            font-size: 20px;
+        }
+
+        .time-bar-container {
+            margin-bottom: var(--space-4);
+        }
+
+        .time-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .time-period {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .time-duration {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .time-bar {
+            height: 12px;
+            background: var(--color-background-secondary);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+
+        .time-bar-fill {
+            height: 100%;
+            border-radius: var(--radius-full);
+            transition: width 0.8s ease;
+        }
+
+        .time-bar-fill.morning {
+            background: linear-gradient(90deg, #FFD93D, #FF9A3C);
+        }
+
+        .time-bar-fill.afternoon {
+            background: linear-gradient(90deg, #6BCB77, #4D96FF);
+        }
+
+        .time-bar-fill.evening {
+            background: linear-gradient(90deg, #9B59B6, #3498DB);
+        }
+
+        .time-bar-fill.night {
+            background: linear-gradient(90deg, #2C3E50, #4834D4);
+        }
+
+        /* 专注记录列表 */
+        .focus-records {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-4);
+        }
+
+        .record-list {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .record-item {
             display: flex;
             align-items: center;
             gap: var(--space-3);
-            padding: var(--space-3) 0;
-            border-bottom: 1px solid var(--color-border);
+            padding: var(--space-3);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-2);
+            background: var(--color-background-secondary);
+            transition: all 0.2s;
+        }
+
+        .record-item:hover {
+            background: var(--color-primary-light);
         }
 
         .record-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
         }
 
-        .record-time {
-            font-size: 13px;
-            color: var(--color-text-tertiary);
-            width: 50px;
-        }
-
-        .record-bar {
-            flex: 1;
-            height: 8px;
-            background: var(--color-card-bg);
-            border-radius: var(--radius-full);
-            overflow: hidden;
-        }
-
-        .record-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
-            border-radius: var(--radius-full);
-        }
-
-        .record-duration {
-            font-size: 13px;
-            color: var(--color-text-secondary);
-            width: 50px;
-            text-align: right;
-        }
-
-        /* 连续学习卡片 */
-        .streak-card {
-            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
-            border-radius: var(--radius-xl);
-            padding: var(--space-5);
+        .record-time-badge {
+            min-width: 60px;
+            padding: var(--space-1) var(--space-2);
+            background: var(--color-primary);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 500;
             text-align: center;
         }
 
-        .streak-icon {
+        .record-info {
+            flex: 1;
+        }
+
+        .record-duration-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .record-type {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .record-exp {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-success);
+        }
+
+        /* 鼓励卡片 */
+        .encourage-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-6);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .encourage-card::before {
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+
+        .encourage-card::after {
+            content: '🌟';
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+
+        .encourage-icon {
             font-size: 48px;
             margin-bottom: var(--space-3);
         }
 
-        .streak-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #92400E;
-        }
-
-        .streak-label {
-            font-size: 14px;
-            color: #B45309;
-        }
-
-        .streak-tip {
-            font-size: 12px;
-            color: #D97706;
-            margin-top: var(--space-2);
+        .encourage-text {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.6;
         }
 
         /* 空状态 */
-        .empty-records {
+        .empty-state {
             text-align: center;
-            padding: var(--space-6);
+            padding: var(--space-8);
             color: var(--color-text-secondary);
         }
 
         .empty-icon {
-            font-size: 48px;
-            margin-bottom: var(--space-3);
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            margin-bottom: var(--space-4);
+        }
+
+        .start-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-3) var(--space-6);
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
         }
 
         /* Toast */
@@ -373,91 +422,41 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-8);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <!-- 顶部导航 -->
     <div class="top-bar">
         <button class="back-btn" onclick="goBack()">←</button>
-        <span class="top-title">学习日历 📅</span>
+        <span class="top-title">今日学习总结 📊</span>
         <div class="top-action"></div>
     </div>
 
     <!-- 内容区域 -->
-    <div class="content">
-        <!-- 统计卡片 -->
-        <div class="stats-card">
-            <div class="stats-title">本月学习统计</div>
-            <div class="stats-grid">
-                <div class="stats-item">
-                    <div class="stats-value" id="monthDays">0</div>
-                    <div class="stats-label">学习天数</div>
-                </div>
-                <div class="stats-item">
-                    <div class="stats-value" id="monthHours">0</div>
-                    <div class="stats-label">学习小时</div>
-                </div>
-                <div class="stats-item">
-                    <div class="stats-value" id="monthSessions">0</div>
-                    <div class="stats-label">专注次数</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 日历卡片 -->
-        <div class="calendar-card">
-            <div class="calendar-header">
-                <button class="calendar-nav" onclick="prevMonth()">‹</button>
-                <span class="calendar-title" id="calendarTitle">2026年1月</span>
-                <button class="calendar-nav" onclick="nextMonth()">›</button>
-            </div>
-            <div class="calendar-weekdays">
-                <div class="weekday">日</div>
-                <div class="weekday">一</div>
-                <div class="weekday">二</div>
-                <div class="weekday">三</div>
-                <div class="weekday">四</div>
-                <div class="weekday">五</div>
-                <div class="weekday">六</div>
-            </div>
-            <div class="calendar-days" id="calendarDays">
-                <!-- 由JS生成 -->
-            </div>
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-dot today"></div>
-                    <span>今天</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot studied"></div>
-                    <span>已学习</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 连续学习卡片 -->
-        <div class="streak-card">
-            <div class="streak-icon">🔥</div>
-            <div class="streak-value" id="streakDays">0</div>
-            <div class="streak-label">连续学习天数</div>
-            <div class="streak-tip" id="streakTip">今天还没学习哦，快去打卡吧！</div>
-        </div>
-
-        <!-- 今日详情 -->
-        <div class="today-detail" id="todayDetail">
-            <div class="detail-header">
-                <div class="detail-icon">📊</div>
-                <div class="detail-info">
-                    <div class="detail-title" id="detailTitle">今日学习</div>
-                    <div class="detail-subtitle" id="detailSubtitle">暂无学习记录</div>
-                </div>
-            </div>
-            <div class="detail-records" id="detailRecords">
-                <div class="empty-records">
-                    <div class="empty-icon">📚</div>
-                    <div>今天还没有学习记录</div>
-                </div>
-            </div>
+    <div class="content" id="mainContent">
+        <div class="loading">
+            <div class="loading-spinner"></div>
         </div>
     </div>
 
@@ -465,191 +464,269 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth();
-        let studyData = {};
-        let selectedDate = new Date().toISOString().split('T')[0];
+        // 今日学习数据
+        let todayData = {
+            tomatoCount: 0,
+            totalDuration: 0,  // 秒
+            focusCount: 0,
+            expEarned: 0,
+            records: [],       // 专注记录列表
+            timePeriods: {
+                morning: 0,    // 6:00-12:00
+                afternoon: 0,  // 12:00-18:00
+                evening: 0,    // 18:00-22:00
+                night: 0       // 22:00-6:00
+            }
+        };
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            loadStudyData();
-            renderCalendar();
+            loadTodayData();
         });
 
-        async function loadStudyData() {
+        async function loadTodayData() {
             try {
-                // 获取月统计
-                const monthlyRes = await fetch('/api/stats/monthly');
-                const monthlyData = await monthlyRes.json();
+                // 获取今日专注记录
+                const res = await fetch('/api/focus/today/details');
+                const data = await res.json();
                 
-                if (monthlyData.success) {
-                    document.getElementById('monthDays').textContent = monthlyData.studyDays || 0;
-                    document.getElementById('monthHours').textContent = Math.floor((monthlyData.totalMinutes || 0) / 60);
-                    document.getElementById('monthSessions').textContent = monthlyData.totalSessions || 0;
+                if (data.success) {
+                    todayData.tomatoCount = data.tomatoCount || 0;
+                    todayData.totalDuration = data.totalDuration || 0;
+                    todayData.focusCount = data.focusCount || 0;
+                    todayData.expEarned = data.expEarned || 0;
+                    todayData.records = data.records || [];
                     
-                    // 存储每日数据
-                    if (monthlyData.dailyData) {
-                        monthlyData.dailyData.forEach(day => {
-                            if (day.date && day.minutes > 0) {
-                                studyData[day.date] = {
-                                    minutes: day.minutes,
-                                    sessions: day.sessions || 1
-                                };
-                            }
-                        });
-                    }
+                    // 计算时段分布（只统计>=10分钟的记录）
+                    calculateTimePeriods(data.records || []);
                 }
                 
-                // 获取连续学习天数
-                const profileRes = await fetch('/api/user/profile');
-                const profileData = await profileRes.json();
-                
-                if (profileData.success && profileData.stats) {
-                    const streak = profileData.stats.streakDays || 0;
-                    document.getElementById('streakDays').textContent = streak;
-                    
-                    if (streak > 0) {
-                        document.getElementById('streakTip').textContent = `太棒了！继续保持！`;
-                    } else {
-                        document.getElementById('streakTip').textContent = `今天还没学习哦，快去打卡吧！`;
-                    }
-                }
-                
-                renderCalendar();
-                loadDayDetail(selectedDate);
+                renderPage();
             } catch (err) {
-                console.error('加载学习数据失败:', err);
+                console.error('加载数据失败:', err);
+                // 使用本地存储的数据作为备用
+                loadFromLocalStorage();
+                renderPage();
             }
         }
 
-        function renderCalendar() {
-            const title = `${currentYear}年${currentMonth + 1}月`;
-            document.getElementById('calendarTitle').textContent = title;
-            
-            const container = document.getElementById('calendarDays');
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const startDay = firstDay.getDay();
-            const daysInMonth = lastDay.getDate();
-            
-            const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
-            
-            let html = '';
-            
-            // 上月补充天数
-            const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
-            for (let i = startDay - 1; i >= 0; i--) {
-                const day = prevMonthDays - i;
-                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('todayFocusData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                const today = new Date().toDateString();
+                if (data.date === today) {
+                    todayData = { ...todayData, ...data };
+                }
             }
-            
-            // 本月天数
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isToday = dateStr === todayStr;
-                const hasRecord = studyData[dateStr];
+        }
+
+        function calculateTimePeriods(records) {
+            todayData.timePeriods = {
+                morning: 0,
+                afternoon: 0,
+                evening: 0,
+                night: 0
+            };
+
+            records.forEach(record => {
+                // 只统计超过10分钟的记录
+                if (record.duration < 600) return; // 600秒 = 10分钟
                 
-                let classes = 'calendar-day';
-                if (isToday) classes += ' today';
-                if (hasRecord) classes += ' has-record';
-                
-                html += `
-                    <div class="${classes}" onclick="selectDay('${dateStr}')">
-                        <span class="day-number">${day}</span>
-                    </div>
-                `;
-            }
+                const hour = new Date(record.startTime).getHours();
+                const duration = record.duration;
+
+                if (hour >= 6 && hour < 12) {
+                    todayData.timePeriods.morning += duration;
+                } else if (hour >= 12 && hour < 18) {
+                    todayData.timePeriods.afternoon += duration;
+                } else if (hour >= 18 && hour < 22) {
+                    todayData.timePeriods.evening += duration;
+                } else {
+                    todayData.timePeriods.night += duration;
+                }
+            });
+        }
+
+        function renderPage() {
+            const content = document.getElementById('mainContent');
             
-            // 下月补充天数
-            const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
-            const nextDays = totalCells - startDay - daysInMonth;
-            for (let day = 1; day <= nextDays; day++) {
-                html += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
-            }
-            
-            container.innerHTML = html;
-        }
-
-        function prevMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
-
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
-        }
-
-        function selectDay(dateStr) {
-            selectedDate = dateStr;
-            loadDayDetail(dateStr);
-        }
-
-        async function loadDayDetail(dateStr) {
-            const date = new Date(dateStr);
+            // 获取今日日期
             const today = new Date();
-            const isToday = dateStr === today.toISOString().split('T')[0];
-            
             const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-            const dateTitle = isToday ? '今日学习' : 
-                `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
-            
-            document.getElementById('detailTitle').textContent = dateTitle;
-            
-            const dayData = studyData[dateStr];
-            
-            if (dayData) {
-                document.getElementById('detailSubtitle').textContent = 
-                    `学习 ${dayData.minutes} 分钟，${dayData.sessions} 次专注`;
-                
-                // 模拟时间段数据
-                const records = generateTimeRecords(dayData.minutes);
-                document.getElementById('detailRecords').innerHTML = records.map(r => `
-                    <div class="record-item">
-                        <span class="record-time">${r.time}</span>
-                        <div class="record-bar">
-                            <div class="record-fill" style="width: ${r.percent}%"></div>
-                        </div>
-                        <span class="record-duration">${r.duration}分</span>
+            const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`;
+            const weekStr = weekdays[today.getDay()];
+
+            // 如果今天没有学习记录
+            if (todayData.focusCount === 0) {
+                content.innerHTML = `
+                    <div class="date-header">
+                        <div class="date-main">${dateStr}</div>
+                        <div class="date-sub">${weekStr}</div>
                     </div>
-                `).join('');
-            } else {
-                document.getElementById('detailSubtitle').textContent = '暂无学习记录';
-                document.getElementById('detailRecords').innerHTML = `
-                    <div class="empty-records">
+                    <div class="empty-state">
                         <div class="empty-icon">📚</div>
-                        <div>${isToday ? '今天还没有学习记录' : '当天没有学习记录'}</div>
+                        <div class="empty-title">今天还没有学习记录</div>
+                        <div class="empty-desc">开始专注，收获你的第一个番茄吧！</div>
+                        <button class="start-btn" onclick="goToFocus()">
+                            <span>🍅</span>
+                            <span>开始专注</span>
+                        </button>
                     </div>
                 `;
+                return;
             }
+
+            // 计算总时长（分钟和小时）
+            const totalMinutes = Math.floor(todayData.totalDuration / 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const durationText = hours > 0 ? `${hours}小时${minutes}分钟` : `${minutes}分钟`;
+
+            // 计算时段分布最大值
+            const maxPeriod = Math.max(
+                todayData.timePeriods.morning,
+                todayData.timePeriods.afternoon,
+                todayData.timePeriods.evening,
+                todayData.timePeriods.night
+            );
+
+            // 生成时段分布HTML
+            let timeDistributionHtml = '';
+            const periods = [
+                { key: 'morning', name: '上午', time: '6:00 - 12:00', class: 'morning' },
+                { key: 'afternoon', name: '下午', time: '12:00 - 18:00', class: 'afternoon' },
+                { key: 'evening', name: '傍晚', time: '18:00 - 22:00', class: 'evening' },
+                { key: 'night', name: '深夜', time: '22:00 - 6:00', class: 'night' }
+            ];
+
+            let hasAnyPeriod = false;
+            periods.forEach(period => {
+                const duration = todayData.timePeriods[period.key];
+                if (duration > 0) {
+                    hasAnyPeriod = true;
+                    const percent = maxPeriod > 0 ? (duration / maxPeriod) * 100 : 0;
+                    const mins = Math.floor(duration / 60);
+                    timeDistributionHtml += `
+                        <div class="time-bar-container">
+                            <div class="time-bar-header">
+                                <span class="time-period">${period.name} (${period.time})</span>
+                                <span class="time-duration">${mins}分钟</span>
+                            </div>
+                            <div class="time-bar">
+                                <div class="time-bar-fill ${period.class}" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 生成专注记录HTML（只显示>=10分钟的记录）
+            let recordsHtml = '';
+            const significantRecords = todayData.records.filter(r => r.duration >= 600);
+            
+            if (significantRecords.length > 0) {
+                significantRecords.forEach(record => {
+                    const time = new Date(record.startTime);
+                    const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+                    const mins = Math.floor(record.duration / 60);
+                    const exp = record.exp || Math.floor(mins * (record.type === 'pomodoro' ? 1.5 : 1));
+                    const typeText = record.type === 'pomodoro' ? '🍅 番茄钟' : '⏱️ 自由专注';
+                    
+                    recordsHtml += `
+                        <div class="record-item">
+                            <div class="record-time-badge">${timeStr}</div>
+                            <div class="record-info">
+                                <div class="record-duration-text">专注 ${mins} 分钟</div>
+                                <div class="record-type">${typeText}</div>
+                            </div>
+                            <div class="record-exp">+${exp} EXP</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // 生成鼓励语
+            let encourageText = '';
+            if (todayData.tomatoCount >= 8) {
+                encourageText = '今天超级高产！你就是学习机器！🚀';
+            } else if (todayData.tomatoCount >= 4) {
+                encourageText = '太棒了！保持这个节奏，你正在变得更强！💪';
+            } else if (todayData.tomatoCount >= 1) {
+                encourageText = '很好的开始！每一分钟的努力都在积累！✨';
+            } else if (totalMinutes >= 60) {
+                encourageText = '专注了一个多小时，坚持就是胜利！🎯';
+            } else if (totalMinutes >= 30) {
+                encourageText = '半小时的专注，值得鼓励！继续加油！🌟';
+            } else {
+                encourageText = '每一步都算数，明天会更好！💖';
+            }
+
+            content.innerHTML = `
+                <!-- 日期头部 -->
+                <div class="date-header">
+                    <div class="date-main">${dateStr}</div>
+                    <div class="date-sub">${weekStr}</div>
+                </div>
+
+                <!-- 番茄收获卡片 -->
+                <div class="tomato-card">
+                    <div class="tomato-icon">🍅</div>
+                    <div class="tomato-count">${todayData.tomatoCount}</div>
+                    <div class="tomato-label">今日收获番茄</div>
+                </div>
+
+                <!-- 统计网格 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-value">${hours > 0 ? hours : totalMinutes}<span class="stat-unit">${hours > 0 ? '小时' : '分钟'}</span></div>
+                        <div class="stat-label">学习时长</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-value">${todayData.focusCount}<span class="stat-unit">次</span></div>
+                        <div class="stat-label">专注次数</div>
+                    </div>
+                </div>
+
+                <!-- 学习时段分布 -->
+                ${hasAnyPeriod ? `
+                <div class="time-distribution">
+                    <div class="section-title">
+                        <span class="section-title-icon">📈</span>
+                        主要学习时段
+                    </div>
+                    ${timeDistributionHtml}
+                    <div style="font-size: 12px; color: var(--color-text-tertiary); margin-top: var(--space-2); text-align: center;">
+                        仅统计超过10分钟的专注记录
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 专注记录列表 -->
+                ${significantRecords.length > 0 ? `
+                <div class="focus-records">
+                    <div class="section-title">
+                        <span class="section-title-icon">📝</span>
+                        今日专注记录
+                    </div>
+                    <div class="record-list">
+                        ${recordsHtml}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 鼓励卡片 -->
+                <div class="encourage-card">
+                    <div class="encourage-icon">${todayData.tomatoCount >= 4 ? '🏆' : '💪'}</div>
+                    <div class="encourage-text">${encourageText}</div>
+                </div>
+            `;
         }
 
-        function generateTimeRecords(totalMinutes) {
-            // 模拟生成时间段数据
-            const records = [];
-            let remaining = totalMinutes;
-            const times = ['09:00', '10:30', '14:00', '15:30', '19:00', '20:30'];
-            
-            for (let i = 0; i < times.length && remaining > 0; i++) {
-                const duration = Math.min(remaining, Math.floor(Math.random() * 30) + 15);
-                records.push({
-                    time: times[i],
-                    duration: duration,
-                    percent: (duration / 60) * 100
-                });
-                remaining -= duration;
-            }
-            
-            return records;
+        function goToFocus() {
+            window.location.href = '/focus.html';
         }
 
         function showToast(msg) {

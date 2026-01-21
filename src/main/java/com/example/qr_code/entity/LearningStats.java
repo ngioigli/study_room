@@ -42,6 +42,10 @@ public class LearningStats {
     @TableField("exp_earned")
     private Integer expEarned;
     
+    /** 当日番茄钟完成数 */
+    @TableField("tomato_count")
+    private Integer tomatoCount;
+    
     @TableField("created_at")
     private LocalDateTime createdAt;
     

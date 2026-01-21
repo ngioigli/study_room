@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * EncouragementCard 匿名鼓励卡片实体
  */
 @Data
-@TableName("encouragement_card")
+@TableName("encouragement_cards")
 public class EncouragementCard {
     
     @TableId(type = IdType.AUTO)
@@ -18,6 +18,7 @@ public class EncouragementCard {
     /**
      * 发送者用户ID（匿名展示，但后台可追溯）
      */
+    @TableField("user_id")
     private Long userId;
     
     /**
@@ -36,13 +37,13 @@ public class EncouragementCard {
     private Integer likes;
     
     /**
-     * 是否隐藏（管理员封禁）
+     * 状态：0-隐藏，1-显示
      */
-    private Boolean isHidden;
+    private Integer status;
     
     /**
      * 创建时间
      */
-    @TableField(fill = FieldFill.INSERT)
+    @TableField("created_at")
     private LocalDateTime createdAt;
 }

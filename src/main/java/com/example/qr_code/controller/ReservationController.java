@@ -49,6 +49,30 @@ public class ReservationController {
     }
 
     /**
+     * 获取用户当前待使用的预约
+     * GET /api/reservation/pending
+     */
+    @GetMapping("/pending")
+    public Map<String, Object> getPendingReservation(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "请先登录");
+            return response;
+        }
+        
+        SeatReservation pending = reservationService.getUserPendingReservation(user.getId());
+        
+        response.put("success", true);
+        if (pending != null) {
+            response.put("reservation", pending);
+        }
+        return response;
+    }
+
+    /**
      * 获取所有座位列表
      * GET /api/reservation/seats
      */

@@ -1,0 +1,570 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-01-21T07:01:34.082Z
+provider: 
+---
+
+你是一个专业的单元测试开发助手，所有代码必须严格遵循以下编码规范。
+
+本规则文件用于指导 AI 在 tccp 项目中生成高质量的单元测试。
+
+## 变量定义
+- JAVAHOME: 通过 which java 命令获取 JAVA_HOME 环境变量
+
+## 项目要求
+
+### 测试用例生成策略
+- **质量优先**: 优先保证生成的测试用例能够正确运行
+- **完整覆盖**: 生成全面的测试用例，包括正常流程、边界情况和异常处理
+- **场景丰富**: 根据函数特性生成多种测试场景
+- **代码正确性**: 1.正确import依赖对象,禁止编造不存在的类型；2.**调用被测代码时必须遵循其实际的方法签名,禁止编造不存在方法**
+
+### 技术栈
+- Java 版本: 1.8
+- 项目框架：Spring Boot 2.7+
+- 测试框架：TestNG 7.5
+- Mock工具：Mockito 4.11.0
+- 工具插件：Lombok 1.18.24
+
+## 测试文件组织规范
+
+### 文件命名与路径
+- 测试文件以 `Test.java` 结尾，如：`DealApiImpl.java` → `DealApiImplTest.java`
+- 测试文件放在对应子模块的src/test目录下，目录层级与被测类保持一致
+
+### 测试注释规范
+每个测试方法必须包含注释信息：
+
+```java
+// 测试场景：更新不存在的策略时应返回未找到错误
+// 前置条件：数据库中不存在目标策略ID
+// 输入数据：不存在的策略ID和更新内容
+// 预期结果：返回策略未找到的错误信息
+@Test
+public void testUpdateNonExistentStrategy() {
+    // 测试实现...
+}
+```
+
+### 测试结构
+> 📝 **示例说明**: 以下示例中的类型和方法名仅作为示例演示，需要根据项目实际的类型命名进行替换。
+
+#### 单个测试模式（推荐）
+每个测试函数专注于一个具体的测试场景，优势：
+- 🎯 **易于理解**: 测试逻辑清晰，场景明确
+- 🔍 **易于调试**: 测试失败时能快速定位问题
+- 📝 **易于维护**: 修改某个场景不影响其他测试
+
+#### 完整测试类示例
+
+```java
+@Slf4j
+public class DealApiImplTest {
+
+    @InjectMocks
+    private DealApiImpl dealApi;
+
+    @Mock
+    private PurchaseDealBroker purchaseDealBroker;
+    @Mock
+    private PaymentService paymentService;
+
+    @BeforeMethod
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    // 测试场景：正常购买流程
+    // 前置条件：所有依赖服务正常返回
+    // 输入数据：包含有效商品的购买请求
+    // 预期结果：返回成功的购买响应
+    @Test
+    public void testPurchaseDeal_Success() {
+        // 1. 准备测试数据
+        PurchaseOrderItemBo orderItem = PurchaseOrderItemBo.builder()
+                .spuId("spu456")
+                .quantity(2)
+                .unitPrice(new BigDecimal("99.99"))
+                .build();
+
+        PurchaseDealRequest request = PurchaseDealRequest.builder()
+                .dealItemList(Collections.singletonList(orderItem))
+                .userId("user123")
+                .build();
+
+        // 2. Mock依赖服务
+        when(purchaseDealBroker.arrange(any())).thenReturn(mockContext);
+
+        // 3. 执行测试
+        PurchaseDealResponse response = dealApi.purchaseDeal(ctx, request);
+
+        // 4. 验证结果
+        assertNotNull(response);
+        assertEquals(response.getOrderId(), "order789");
+
+        // 5. 验证依赖调用
+        verify(purchaseDealBroker, times(1)).arrange(any());
+    }
+
+    // 测试场景：空商品列表的边界情况
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testPurchaseDeal_EmptyDealItems() {
+        PurchaseDealRequest request = PurchaseDealRequest.builder()
+                .dealItemList(Collections.emptyList())
+                .userId("user123")
+                .build();
+
+        dealApi.purchaseDeal(ctx, request);
+    }
+}
+```
+#### Mock使用规范
+
+- 被测试类所依赖的所有外部组件（其他Service、Broker等）都应该使用 Mockito 进行Mock
+- 静态方法调用一般不需要mock
+
+**基本示例**：
+```java
+@Slf4j
+class UserServiceTest {
+
+    @Mock
+    private OrderService orderService;
+
+    @InjectMocks
+    private UserService userService;
+
+    @Test
+    void testGetUserWithOrderCount() {
+        // 准备测试数据
+        Long userId = 1L;
+        int mockOrderCount = 5;
+
+        // Mock依赖行为
+        when(orderService.countOrdersByUserId(any(Long.class))).thenReturn(mockOrderCount);
+
+        // 执行测试
+        UserInfo result = userService.getUserWithOrderCount(userId);
+
+        // 验证结果
+        assertEquals(result.getOrderCount(), mockOrderCount);
+        verify(orderService, times(1)).countOrdersByUserId(eq(userId));
+    }
+}
+```
+#### 断言规范与示例
+
+##### 1. 基本对象断言
+```java
+@Test
+public void testCreateUser_Success() {
+    UserVo result = userService.createUser("张三", "zhangsan@example.com", 25);
+    
+    assertNotNull(result);
+    assertEquals(result.getName(), "张三");
+    assertEquals(result.getEmail(), "zhangsan@example.com");
+    assertTrue(result.getId() > 0);
+}
+```
+
+##### 2. List对象断言
+```java
+@Test
+public void testQueryUserOrders_Success() {
+    List<OrderVo> orders = orderService.queryUserOrders("user123");
+    
+    assertNotNull(orders);
+    assertEquals(orders.size(), 3);
+    
+    // 验证每个元素
+    for (OrderVo order : orders) {
+        assertNotNull(order.getOrderId());
+        assertTrue(order.getTotalAmount().compareTo(BigDecimal.ZERO) > 0);
+    }
+}
+```
+
+##### 3. 异常断言
+**方式1：使用expectedExceptions注解**
+```java
+@Test(expectedExceptions = ValidationException.class, 
+      expectedExceptionsMessageRegExp = "邮箱格式不正确.*")
+public void testCreateUser_InvalidEmail() {
+    userService.createUser("张三", "invalid-email", 25);
+}
+```
+
+**方式2：使用Assert.expectThrows方法（推荐）**
+```java
+@Test
+public void testCreateUser_InvalidEmail() {
+    ValidationException exception = Assert.expectThrows(ValidationException.class, () -> {
+        userService.createUser("张三", "invalid-email", 25);
+    });
+    
+    assertNotNull(exception);
+    assertTrue(exception.getMessage().contains("邮箱格式不正确"));
+}
+```
+
+
+## 测试数据管理
+
+### 测试数据构造策略
+
+#### 1. 使用Builder模式构造复杂对象
+对于使用Lombok @Builder或@SuperBuilder注解的类，应使用builder模式构造测试数据：
+
+```java
+@Test
+public void testComplexObjectConstruction() {
+    OrderVo order = OrderVo.builder()
+            .orderId("ORDER_123")
+            .userId("user123")
+            .status(OrderStatus.PENDING)
+            .totalAmount(new BigDecimal("299.99"))
+            .build();
+}
+```
+
+#### 2. 测试数据工厂方法
+创建专门的工厂方法来生成标准测试数据：
+
+```java
+public class TestDataFactory {
+    
+    public static UserVo createStandardUser() {
+        return UserVo.builder()
+                .userId("user_123")
+                .name("测试用户")
+                .email("test@example.com")
+                .age(25)
+                .build();
+    }
+}
+
+// 在测试类中使用
+@Test
+public void testWithFactoryData() {
+    UserVo user = TestDataFactory.createStandardUser();
+    // 执行测试...
+}
+```
+
+#### 3. 参数化测试数据
+使用TestNG的DataProvider提供多组测试数据：
+
+```java
+@DataProvider(name = "userValidationData")
+public Object[][] provideUserValidationData() {
+    return new Object[][] {
+        {"张三", "zhangsan@example.com", 25, true},
+        {"", "empty@example.com", 25, false},
+        {"王五", "invalid-email", 25, false},
+    };
+}
+
+@Test(dataProvider = "userValidationData")
+public void testUserValidation(String name, String email, int age, boolean expectedValid) {
+    UserCreateRequest request = UserCreateRequest.builder()
+            .name(name).email(email).age(age).build();
+    
+    if (expectedValid) {
+        assertDoesNotThrow(() -> userService.validateUser(request));
+    } else {
+        assertThrows(ValidationException.class, 
+                () -> userService.validateUser(request));
+    }
+}
+```
+
+## 常见测试场景示例
+
+### 1. 服务层(Service)测试示例
+
+```java
+@Slf4j
+public class UserServiceImplTest {
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @BeforeMethod
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testCreateUser_Success() {
+        UserCreateRequest request = UserCreateRequest.builder()
+                .username("testuser")
+                .email("test@example.com")
+                .build();
+
+        User savedUser = new User();
+        savedUser.setUserId("user123");
+
+        when(userMapper.findByUsername("testuser")).thenReturn(null);
+        when(userMapper.insert(any(User.class))).thenReturn(1);
+
+        Result<UserVo> result = userService.createUser(request);
+
+        assertTrue(result.isSuccess());
+        verify(userMapper, times(1)).findByUsername("testuser");
+    }
+}
+```
+
+### 2. 控制器(Controller)测试示例
+
+```java
+@Slf4j
+public class UserControllerTest {
+
+    @InjectMocks
+    private UserController userController;
+
+    @Mock
+    private UserService userService;
+
+    @BeforeMethod
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetUser_Success() {
+        String userId = "user123";
+        UserVo expectedUser = UserVo.builder()
+                .userId(userId)
+                .username("testuser")
+                .build();
+
+        when(userService.getUserById(userId)).thenReturn(Result.fromSuccess(expectedUser));
+
+        ApiResponse<UserVo> response = userController.getUser(context, userId);
+
+        assertTrue(response.isSuccess());
+        assertEquals(response.getData().getUserId(), userId);
+    }
+}
+```
+
+### 3. 工具类(Utility)测试示例
+
+```java
+@Slf4j
+public class DateUtilTest {
+
+    @Test
+    public void testFormatDate_Success() {
+        Date testDate = new Date(1640995200000L);
+        String result = DateUtil.formatDate(testDate, "yyyy-MM-dd HH:mm:ss");
+        assertEquals(result, "2022-01-01 00:00:00");
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testParseDate_EmptyString() {
+        DateUtil.parseDate("", "yyyy-MM-dd");
+    }
+}
+```
+
+## AI 测试生成指导原则
+
+### 🤖 生成策略
+- ✅ **质量第一**: 优先保证生成的测试能够编译通过并正确执行
+- 🎯 **全面覆盖**: 生成全面的测试用例，包括正常流程、边界情况和异常处理
+- 📋 **场景丰富**: 根据函数特性和业务逻辑生成多种测试场景
+
+### 🔒 安全的测试生成流程
+
+**新文件生成模式**：
+1. **创建临时测试文件**: 在新的临时 Java 文件中生成测试用例(如'DealApiImplTempTest.java')
+2. **完成所有验证步骤**: 在临时文件中完成编译、测试运行等所有验证
+3. **确认测试通过**: 只有当所有测试都成功运行后，才进行合并操作
+4. **安全合并**: 将验证通过的测试代码合并到原测试文件中
+5. **清理临时文件**: 合并完成后删除临时文件
+
+**详细执行步骤**：
+
+**第1步：创建临时测试文件**
+
+**第2步：生成测试用例**
+- 在临时文件中生成完整的测试类与测试函数
+- 包含必要的import语句
+- 修复语法问题,比如调用不存在的方法,引用了不存在的包
+
+**第3步：验证测试**
+验证测试必须按如下步骤进行:
+1. 进入项目根目录下,编译项目并安装依赖,请执行如下命令:
+```bash
+export JAVA_HOME=<JAVAHOME>
+export PATH=${JAVA_HOME}/bin:$PATH
+mvn compile -DskipTests
+mvn install -Dmaven.test.skip=true
+```
+2. 执行测试时一定要在项目根目录下通过命令：**mvn test -pl <模块名> -Dtest=<测试类名> -Dsurefire.failIfNoSpecifiedTests=false** 来执行，使用此命令只执行本次会话生成或变更的测试类,例如:
+```bash
+export JAVA_HOME=<JAVAHOME>
+export PATH=${JAVA_HOME}/bin:$PATH
+mvn -q --no-transfer-progress test -pl tccp-trade-api -am -Dtest=DealApiImplTempTest -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**第4步：修复问题（如有）**
+- 如果测试失败，只在临时文件中修复
+- 重复第3步验证，直到测试通过
+
+**第5步：安全合并**
+- 将验证通过的测试函数复制到原测试文件
+- 确保不破坏原文件的其他内容
+
+**第6步：清理临时文件**
+
+### 🚨 重要安全提醒
+
+1. **绝对不允许直接修改原测试文件**: 始终在临时文件中工作，直到测试完全通过
+2. **合并时保持谨慎**: 只复制测试函数，不要修改原文件的其他部分
+3. **验证合并结果**: 合并后必须再次运行测试确保没有问题
+
+## 项目特定的测试注意事项
+> 📝 **示例说明**: 以下示例中的类型和方法名仅作为示例演示，需要根据项目实际的类型命名进行替换。
+
+### Lombok注解使用规范
+项目中使用lombok插件简化java代码，在编写测试用例时需要特别注意以下几点：
+
+#### 1. @Builder 和 @SuperBuilder 注解的类
+如果类被 **@Builder** 或 **@SuperBuilder** 注解修饰，必须使用builder模式构造对象：
+
+**@Builder注解类的构造示例：**
+```java
+@Data
+@Builder
+public class DemandDto {
+    @NotNull
+    private Demand demand;
+    private List<Deal> dealList;
+    private String status;
+}
+
+// 测试用例中构造DemandDto
+@Test
+public void testDemandDtoConstruction() {
+    Demand demand = new Demand();
+    demand.setDemandId("demand123");
+    
+    DemandDto demandDto = DemandDto.builder()
+            .demand(demand)                    // 必填字段（@NotNull）
+            .dealList(Collections.emptyList()) // 可选字段
+            .status("ACTIVE")                 // 可选字段
+            .build();
+    
+    assertNotNull(demandDto);
+    assertEquals(demandDto.getStatus(), "ACTIVE");
+}
+```
+
+**@SuperBuilder注解类的构造示例：**
+```java
+@Data
+@SuperBuilder
+public class PurchaseDealRequest extends BaseRequest {
+    @NotNull
+    private List<PurchaseOrderItemBo> dealItemList;
+    private String paymentMethod;
+}
+
+// 测试用例中构造PurchaseDealRequest
+@Test
+public void testPurchaseDealRequestConstruction() {
+    List<PurchaseOrderItemBo> dealItems = Arrays.asList(
+        PurchaseOrderItemBo.builder()
+            .spuId("spu001")
+            .quantity(2)
+            .build()
+    );
+    
+    PurchaseDealRequest request = PurchaseDealRequest.builder()
+            .requestId("req_123")           // 父类字段
+            .userId("user123")              // 父类字段
+            .dealItemList(dealItems)        // 子类字段（必填）
+            .paymentMethod("BALANCE")       // 子类字段（可选）
+            .build();
+    
+    assertNotNull(request);
+    assertEquals(request.getUserId(), "user123");
+}
+```
+
+#### 2. 静态工厂方法构造
+项目中有些类提供静态方法来构造对象：
+```java
+@Data
+public class Result<T> {
+    private boolean success;
+    private T data;
+    private String code;
+
+    protected Result() {} // 构造函数为protected
+
+    public static <T> Result<T> fromSuccess(T data) {
+        Result<T> result = new Result<>();
+        result.setSuccess(true);
+        result.setData(data);
+        return result;
+    }
+}
+
+// 测试用例中使用静态工厂方法
+@Test
+public void testResultConstruction() {
+    UserVo userData = new UserVo("user123", "张三");
+    Result<UserVo> successResult = Result.fromSuccess(userData);
+    
+    assertTrue(successResult.isSuccess());
+    assertEquals(successResult.getData().getName(), "张三");
+}
+```
+
+#### 3. 普通@Data注解类构造
+对于只使用@Data注解的类，可以使用new关键字构造：
+```java
+@Data
+public class QueryDealShipmentRequest {
+    @NotNull
+    private List<String> dealIds;
+    private String userId;
+}
+
+// 测试用例中使用new关键字构造对象
+@Test
+public void testQueryDealShipmentRequestConstruction() {
+    QueryDealShipmentRequest request = new QueryDealShipmentRequest();
+    
+    request.setDealIds(Arrays.asList("deal001", "deal002"));
+    request.setUserId("user123");
+    
+    assertNotNull(request);
+    assertEquals(request.getDealIds().size(), 2);
+}
+```
+
+#### 对象构造最佳实践总结
+
+1. **识别注解类型**：
+   - `@Builder/@SuperBuilder` → 使用builder模式
+   - `private/protected构造函数 + 静态方法` → 使用静态工厂方法
+   - `@Data` → 使用new关键字 + setter方法
+
+2. **处理必填字段**：
+   - `@NotNull/@NonNull` → 必须赋值，不能为null
+
+3. **避免常见错误**：
+   - 不要编造不存在的方法
+   - 不要混用构造方式
+   - 遵循实际的方法签名

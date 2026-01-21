@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 对应数据库 message_reply 表
  */
 @Data
-@TableName("message_reply")
+@TableName("message_replies")
 public class MessageReply {
     
     @TableId(type = IdType.AUTO)

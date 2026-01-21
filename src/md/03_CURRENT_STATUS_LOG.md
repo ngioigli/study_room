@@ -3,6 +3,64 @@
 **存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🔧 专注模式UI优化**: 
+  - focus.html：将番茄钟/自由计时模式切换移入专注设置面板
+  - 修复番茄钟信息与经验条重叠问题（调整 .pomodoro-info 的 top 值从 70px 到 140px）
+  - 在番茄钟信息栏添加"+20%经验"标注
+  - 设置面板内的模式切换按钮显示经验奖励提示
+- **🔧 座位预约系统重构**: 
+  - reservation.html：完全重构预约页面
+  - 预约日期限定为今天和明天
+  - 每位用户最多只能有1个待使用的预约
+  - 支持自选时间段（开始-结束时间选择器，时长1-4小时）
+  - ReservationController.java：新增 `/api/reservation/pending` 接口
+  - ReservationService.java：新增 `getUserPendingReservation()` 方法
+- **🔧 学习统计页面修复**: 
+  - stats.html：返回按钮跳转从 `/study.html` 改为 `/index.html`
+- **🔧 学习小屋工具简化**: 
+  - study.html：删除番茄钟和白噪音独立入口（已集成到专注模式）
+  - 保留学习日历、匿名鼓励、情绪碎纸机、学习统计4个工具入口
+- **🔧 留言板功能简化**: 
+  - message.html：暂时移除图片上传功能
+  - 移除图片选择按钮和预览区域
+  - 发布接口改为JSON格式（不再使用FormData）
+- **🆕 测试数据创建**: 
+  - 新增5个测试用户（test_xiaoming等）
+  - 插入最近7天的专注记录数据
+  - 插入座位预约测试数据
+  - 插入学习统计测试数据
+- **🔧 留言板图片上传功能**: 
+  - MessageController.java：支持 MultipartFile 图片上传，最多9张图片，单张最大2MB
+  - MessageService.java：新增带图片参数的 createMessage 重载方法
+  - MessageBoard.java：新增 images 字段存储图片URL（逗号分隔）
+  - schema.sql：message_board 表新增 images 字段
+  - message.html：完整图片上传/预览/显示功能
+  - WebConfig.java：配置 /uploads/** 静态资源映射和拦截器白名单
+- **🔧 番茄钟合并到专注模式**: 
+  - focus.html：新增模式切换器（自由计时/番茄钟模式）
+  - 番茄钟模式支持25分钟工作/5分钟短休息/15分钟长休息循环
+  - 番茄钟完成有额外20%经验奖励
+  - 完成番茄时有专属提示音和宠物反馈
+- **🔧 学习日历改为今日学习总结**: 
+  - calendar.html：完全重构为"今日学习总结"页面
+  - 显示今日收获番茄数（大卡片）
+  - 显示学习时长、专注次数统计
+  - 主要学习时段分布（只统计>10分钟的专注记录）
+  - 今日专注记录列表（带类型标识：🍅番茄钟/⏱️自由专注）
+  - 根据表现生成个性化鼓励语
+- **🆕 新增API**: 
+  - GET /api/focus/today/details：获取今日学习详情（含所有专注记录）
+- **🔧 数据库更新**: 
+  - focus_records表新增type字段（free/pomodoro）
+  - learning_stats表新增tomato_count字段
+- **🔧 前后端开发强制规范**: 
+  - .codebuddy/rules/assistant-identity.mdc：新增"前后端开发强制规范"
+  - 禁止只写前端不写后端，禁止只写后端不写前端
+  - 接口必须对齐，单元测试覆盖率要求
+  - 开发检查清单
+- **🔧 数据库schema修复**: 
+  - schema.sql：修复所有缺失的表（seat_reservations, message_board, message_replies, encouragement_cards, system_config）
+  - 修复实体类@TableName注解与数据库表名一致（使用复数形式）
 - **🆕 扩展功能完成**: 
   - pomodoro.html：番茄钟页面，支持专注/短休息/长休息模式，可配置时长，进度环可视化，本地统计
   - calendar.html：学习日历页面，月历视图展示学习记录，连续学习天数统计，详情查看
@@ -135,12 +193,17 @@ qr_code/
 | `users` | 用户表 | ✅ 已创建 |
 | `seats` | 座位表 | ✅ 已创建 |
 | `orders` | 订单表 | ✅ 已创建 |
-| `focus_records` | 专注记录表 | ✅ 已创建 |
+| `focus_records` | 专注记录表（含type字段：free/pomodoro） | ✅ 已创建 |
 | `user_pets` | 用户宠物表 | ✅ 已创建 |
-| `learning_stats` | 学习统计表 | ✅ 已创建 |
+| `learning_stats` | 学习统计表（含tomato_count字段） | ✅ 已创建 |
 | `access_logs` | 门禁通行记录表 | ✅ 已创建 |
+| `seat_reservations` | 座位预约表 | ✅ 已创建 |
+| `message_board` | 留言板表 | ✅ 已创建 |
+| `message_replies` | 留言回复表 | ✅ 已创建 |
+| `encouragement_cards` | 鼓励卡片表 | ✅ 已创建 |
+| `system_config` | 系统配置表 | ✅ 已创建 |
 
-**初始数据**：2个用户（admin/test）+ 8个座位（A01-C02）
+**初始数据**：2个用户（admin/test）+ 8个座位（A01-C02）+ 8条鼓励卡片
 
 ---
 
@@ -162,8 +225,9 @@ qr_code/
 
 *   **专注模块**:
     *   `FocusService`: 专注记录保存 + 学习统计更新 + 宠物经验同步
-    *   `/api/focus/save`: 保存专注记录（POST）
-    *   `/api/focus/today`: 获取今日学习统计（GET）
+    *   `/api/focus/save`: 保存专注记录（POST，支持type参数：free/pomodoro）
+    *   `/api/focus/today`: 获取今日学习统计（GET，含tomatoCount）
+    *   `/api/focus/today/details`: 获取今日学习详情（GET，含所有专注记录）
 
 *   **电子宠物模块**:
     *   `PetService`: 宠物孵化、成长、进化、交互
@@ -216,9 +280,10 @@ qr_code/
 | `login.html` | 云朵背景登录页 | HTML/CSS |
 | `index.html` | 自习室首页（扫码开门 + 座位状态） | HTML/CSS/JS |
 | `study.html` | 学习小屋（专注入口 + 工具网格） | HTML/CSS/JS |
-| `focus.html` | 沉浸式专注（计时器 + 浮动宠物 + 白噪音） | Vue 3 CDN |
+| `focus.html` | 沉浸式专注（计时器 + 番茄钟模式 + 浮动宠物 + 白噪音） | Vue 3 CDN |
 | `pet.html` | 宠物详情（互动 + 成长日志） | Vue 3 CDN |
 | `profile.html` | 个人中心（用户信息 + 统计 + 设置） | HTML/CSS/JS |
+| `calendar.html` | 今日学习总结（番茄数 + 时长 + 时段分布） | HTML/CSS/JS |
 | `member.html` | 会员中心（套餐选择 + 权益展示） | HTML/CSS/JS |
 | `shredder.html` | 情绪碎纸机（4种粉碎动画 + 治愈团子 + AI安慰 + 历史记录） | HTML/CSS/JS |
 | `stats.html` | 学习统计（ECharts图表） | HTML/CSS/JS |

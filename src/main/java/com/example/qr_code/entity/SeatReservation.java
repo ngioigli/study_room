@@ -14,7 +14,7 @@ import java.time.LocalTime;
  * 对应数据库 seat_reservation 表
  */
 @Data
-@TableName("seat_reservation")
+@TableName("seat_reservations")
 public class SeatReservation {
     
     @TableId(type = IdType.AUTO)

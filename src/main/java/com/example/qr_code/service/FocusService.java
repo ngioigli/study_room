@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class FocusService {
@@ -37,10 +38,25 @@ public class FocusService {
      */
     @Transactional
     public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime) {
+        return saveFocusRecord(userId, duration, startTime, endTime, "free");
+    }
+
+    /**
+     * 保存专注记录并更新学习统计（带类型）
+     * @param userId 用户ID
+     * @param duration 专注时长（秒）
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param type 专注类型: free 或 pomodoro
+     * @return 保存的记录
+     */
+    @Transactional
+    public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime, String type) {
         // 1. 保存专注记录
         FocusRecord record = new FocusRecord();
         record.setUserId(userId);
         record.setDuration(duration);
+        record.setType(type != null ? type : "free");
         record.setFocusDate(LocalDate.now());
         record.setStartTime(startTime);
         record.setEndTime(endTime);
@@ -50,11 +66,16 @@ public class FocusService {
         int baseExp = calculateExp(duration);
         int finalExp = baseExp;
         
+        // 番茄钟模式额外奖励
+        if ("pomodoro".equals(type)) {
+            finalExp = (int) (finalExp * 1.2); // 番茄钟20%额外奖励
+        }
+        
         // 获取宠物心情值并计算加成
         try {
             UserPet pet = petService.getPet(userId);
             if (pet != null) {
-                finalExp = petService.calculateExpWithMoodBonus(baseExp, pet.getMood());
+                finalExp = petService.calculateExpWithMoodBonus(finalExp, pet.getMood());
             }
         } catch (Exception e) {
             // 如果获取宠物失败，使用基础经验值
@@ -62,7 +83,7 @@ public class FocusService {
         }
 
         // 3. 更新当日学习统计
-        updateLearningStats(userId, duration, finalExp);
+        updateLearningStats(userId, duration, finalExp, "pomodoro".equals(type));
 
         // 4. 给宠物增加经验值
         petService.addExp(userId, finalExp);
@@ -73,7 +94,7 @@ public class FocusService {
     /**
      * 更新用户当日学习统计
      */
-    private void updateLearningStats(Long userId, Integer duration, Integer expEarned) {
+    private void updateLearningStats(Long userId, Integer duration, Integer expEarned, boolean isPomodoro) {
         LocalDate today = LocalDate.now();
         
         // 查找今日统计记录
@@ -91,6 +112,7 @@ public class FocusService {
             stats.setAvgDuration(duration);
             stats.setMaxDuration(duration);
             stats.setExpEarned(expEarned);
+            stats.setTomatoCount(isPomodoro ? 1 : 0);
             learningStatsMapper.insert(stats);
         } else {
             // 更新今日统计
@@ -99,12 +121,14 @@ public class FocusService {
             int newAvg = newTotal / newCount;
             int newMax = Math.max(stats.getMaxDuration(), duration);
             int newExp = stats.getExpEarned() + expEarned;
+            int newTomato = (stats.getTomatoCount() != null ? stats.getTomatoCount() : 0) + (isPomodoro ? 1 : 0);
 
             stats.setTotalDuration(newTotal);
             stats.setFocusCount(newCount);
             stats.setAvgDuration(newAvg);
             stats.setMaxDuration(newMax);
             stats.setExpEarned(newExp);
+            stats.setTomatoCount(newTomato);
             learningStatsMapper.updateById(stats);
         }
     }
@@ -128,5 +152,16 @@ public class FocusService {
         QueryWrapper<LearningStats> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId).eq("stat_date", LocalDate.now());
         return learningStatsMapper.selectOne(wrapper);
+    }
+
+    /**
+     * 获取用户今日所有专注记录
+     */
+    public List<FocusRecord> getTodayRecords(Long userId) {
+        QueryWrapper<FocusRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId)
+               .eq("focus_date", LocalDate.now())
+               .orderByDesc("start_time");
+        return focusRecordMapper.selectList(wrapper);
     }
 }

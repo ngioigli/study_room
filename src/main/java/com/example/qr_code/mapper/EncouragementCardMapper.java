@@ -17,12 +17,12 @@ public interface EncouragementCardMapper extends BaseMapper<EncouragementCard> {
     /**
      * 获取随机可见的鼓励卡片
      */
-    @Select("SELECT * FROM encouragement_card WHERE is_hidden = 0 ORDER BY RAND() LIMIT #{limit}")
+    @Select("SELECT * FROM encouragement_cards WHERE status = 1 ORDER BY RAND() LIMIT #{limit}")
     List<EncouragementCard> selectRandomCards(int limit);
     
     /**
      * 增加点赞数
      */
-    @Update("UPDATE encouragement_card SET likes = likes + 1 WHERE id = #{id}")
+    @Update("UPDATE encouragement_cards SET likes = likes + 1 WHERE id = #{id}")
     int incrementLikes(Long id);
 }

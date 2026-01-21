@@ -46,9 +46,16 @@ public class MessageService {
     }
 
     /**
-     * 发布留言
+     * 发布留言（不带图片）
      */
     public boolean createMessage(Long userId, String content) {
+        return createMessage(userId, content, null);
+    }
+    
+    /**
+     * 发布留言（带图片）
+     */
+    public boolean createMessage(Long userId, String content, List<String> imageUrls) {
         // 检查敏感词
         if (containsForbiddenWords(content)) {
             return false;
@@ -59,6 +66,11 @@ public class MessageService {
         message.setContent(content);
         message.setStatus(1);
         message.setReplyCount(0);
+        
+        // 处理图片URL
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            message.setImages(String.join(",", imageUrls));
+        }
         
         return messageBoardMapper.insert(message) > 0;
     }

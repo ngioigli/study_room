@@ -25,6 +25,9 @@ public class FocusRecord {
     /** 专注时长(秒) */
     private Integer duration;
     
+    /** 专注类型: free(自由专注), pomodoro(番茄钟) */
+    private String type;
+    
     /** 专注日期 */
     @TableField("focus_date")
     private LocalDate focusDate;

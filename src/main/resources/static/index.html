@@ -152,6 +152,77 @@
             margin-bottom: var(--space-4);
         }
 
+        /* 占座状态卡片 */
+        .seat-status-card {
+            background: linear-gradient(135deg, #10B981, #34D399);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            color: #fff;
+            margin-bottom: var(--space-5);
+            box-shadow: var(--shadow-card);
+            display: none;
+        }
+
+        .seat-status-card.active {
+            display: block;
+        }
+
+        .seat-status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-3);
+        }
+
+        .seat-status-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .seat-status-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+        }
+
+        .seat-status-info {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .seat-status-item {
+            text-align: center;
+        }
+
+        .seat-status-value {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+        }
+
+        .seat-status-label {
+            font-size: var(--font-size-xs);
+            opacity: 0.9;
+        }
+
+        .leave-seat-btn {
+            width: 100%;
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--radius-lg);
+            color: #fff;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .leave-seat-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         /* 座位状态 */
         .section-title {
             font-size: var(--font-size-base);
@@ -269,6 +340,29 @@
             </div>
         </div>
 
+        <!-- 占座状态卡片（默认隐藏） -->
+        <div class="seat-status-card" id="seatStatusCard">
+            <div class="seat-status-header">
+                <span class="seat-status-title">🎯 正在占座中</span>
+                <span class="seat-status-badge" id="seatStatusBadge">使用中</span>
+            </div>
+            <div class="seat-status-info">
+                <div class="seat-status-item">
+                    <div class="seat-status-value" id="currentSeatNumber">--</div>
+                    <div class="seat-status-label">座位号</div>
+                </div>
+                <div class="seat-status-item">
+                    <div class="seat-status-value" id="seatUseDuration">--</div>
+                    <div class="seat-status-label">已使用</div>
+                </div>
+                <div class="seat-status-item">
+                    <div class="seat-status-value" id="seatPowerStatus">🔌</div>
+                    <div class="seat-status-label">电源状态</div>
+                </div>
+            </div>
+            <button class="leave-seat-btn" onclick="leaveSeat()">🚪 一键离座断电</button>
+        </div>
+
         <!-- 二维码卡片 -->
         <div class="qrcode-card">
             <div class="qrcode-title">扫码进入自习室</div>
@@ -288,9 +382,9 @@
         <!-- 快捷入口 -->
         <div class="section-title">常用功能</div>
         <div class="quick-access">
-            <a href="/pomodoro.html" class="quick-item">
-                <div class="quick-icon">🍅</div>
-                <span class="quick-label">番茄钟</span>
+            <a href="/focus.html" class="quick-item">
+                <div class="quick-icon">⏱️</div>
+                <span class="quick-label">专注模式</span>
             </a>
             <a href="/calendar.html" class="quick-item">
                 <div class="quick-icon">📅</div>
@@ -351,6 +445,7 @@
             loadUserInfo();
             loadTodayStats();
             loadSeats();
+            loadCurrentSeatStatus();
         });
 
         // 格式化时长（秒转为可读格式）
@@ -362,6 +457,61 @@
                 return minutes > 0 ? `${hours}h${minutes}m` : `${hours}h`;
             }
             return `${minutes}分`;
+        }
+
+        // 加载当前占座状态
+        async function loadCurrentSeatStatus() {
+            try {
+                const res = await fetch('/api/order/current');
+                const data = await res.json();
+                
+                if (data.success && data.order) {
+                    const card = document.getElementById('seatStatusCard');
+                    card.classList.add('active');
+                    
+                    document.getElementById('currentSeatNumber').textContent = data.order.seatNumber || '--';
+                    document.getElementById('seatPowerStatus').textContent = data.order.powerOn ? '⚡ 已通电' : '🔌 已断电';
+                    
+                    // 计算使用时长
+                    if (data.order.startTime) {
+                        updateSeatDuration(data.order.startTime);
+                        setInterval(() => updateSeatDuration(data.order.startTime), 60000);
+                    }
+                }
+            } catch (err) {
+                console.error('加载占座状态失败:', err);
+            }
+        }
+
+        // 更新使用时长
+        function updateSeatDuration(startTime) {
+            const start = new Date(startTime);
+            const now = new Date();
+            const diffSeconds = Math.floor((now - start) / 1000);
+            document.getElementById('seatUseDuration').textContent = formatDuration(diffSeconds);
+        }
+
+        // 一键离座
+        async function leaveSeat() {
+            if (!confirm('确定要离座并断电吗？')) return;
+            
+            try {
+                const res = await fetch('/api/order/leave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('已成功离座，座位电源已断开');
+                    document.getElementById('seatStatusCard').classList.remove('active');
+                    loadSeats();
+                } else {
+                    alert(data.message || '离座失败，请重试');
+                }
+            } catch (err) {
+                alert('网络错误，请重试');
+            }
         }
 
         // 加载用户信息

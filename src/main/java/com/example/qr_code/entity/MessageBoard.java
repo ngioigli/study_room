@@ -28,6 +28,9 @@ public class MessageBoard {
     /** 状态：1正常 0封禁 */
     private Integer status;
     
+    /** 图片URL列表，多个用逗号分隔 */
+    private String images;
+    
     /** 回复数量 */
     @TableField("reply_count")
     private Integer replyCount;

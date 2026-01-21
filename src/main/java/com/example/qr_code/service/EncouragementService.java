@@ -78,7 +78,7 @@ public class EncouragementService {
         card.setEmoji(emoji != null ? emoji : "🌸");
         card.setMessage(message.trim());
         card.setLikes(0);
-        card.setIsHidden(false);
+        card.setStatus(1);
         card.setCreatedAt(LocalDateTime.now());
         
         encouragementCardMapper.insert(card);
@@ -102,7 +102,7 @@ public class EncouragementService {
     public boolean hideCard(Long cardId) {
         EncouragementCard card = encouragementCardMapper.selectById(cardId);
         if (card != null) {
-            card.setIsHidden(true);
+            card.setStatus(0);
             return encouragementCardMapper.updateById(card) > 0;
         }
         return false;

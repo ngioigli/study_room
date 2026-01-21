@@ -5,12 +5,17 @@ import com.example.qr_code.entity.MessageReply;
 import com.example.qr_code.entity.User;
 import com.example.qr_code.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * MessageController 留言板控制器
@@ -22,6 +27,9 @@ public class MessageController {
 
     @Autowired
     private MessageService messageService;
+    
+    @Value("${upload.path:uploads}")
+    private String uploadPath;
 
     /**
      * 获取留言列表
@@ -46,11 +54,14 @@ public class MessageController {
     }
 
     /**
-     * 发布留言
+     * 发布留言（支持图片上传）
      * POST /api/message/create
      */
     @PostMapping("/create")
-    public Map<String, Object> createMessage(@RequestBody Map<String, String> data, HttpSession session) {
+    public Map<String, Object> createMessage(
+            @RequestParam(value = "content", required = false, defaultValue = "") String content,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
+            HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         User user = (User) session.getAttribute("user");
         
@@ -60,20 +71,66 @@ public class MessageController {
             return response;
         }
         
-        String content = data.get("content");
-        if (content == null || content.trim().isEmpty()) {
+        // 处理纯文本内容
+        if (content != null) {
+            content = content.trim();
+        }
+        
+        boolean hasContent = content != null && !content.isEmpty();
+        boolean hasImages = images != null && images.length > 0;
+        
+        if (!hasContent && !hasImages) {
             response.put("success", false);
             response.put("message", "留言内容不能为空");
             return response;
         }
         
-        if (content.length() > 500) {
+        if (hasContent && content.length() > 500) {
             response.put("success", false);
             response.put("message", "留言内容不能超过500字");
             return response;
         }
         
-        boolean success = messageService.createMessage(user.getId(), content.trim());
+        // 处理图片上传
+        List<String> imageUrls = new ArrayList<>();
+        if (hasImages) {
+            if (images.length > 9) {
+                response.put("success", false);
+                response.put("message", "最多只能上传9张图片");
+                return response;
+            }
+            
+            for (MultipartFile image : images) {
+                if (image.isEmpty()) continue;
+                
+                // 检查文件类型
+                String contentType = image.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    response.put("success", false);
+                    response.put("message", "只能上传图片文件");
+                    return response;
+                }
+                
+                // 检查文件大小（2MB）
+                if (image.getSize() > 2 * 1024 * 1024) {
+                    response.put("success", false);
+                    response.put("message", "图片大小不能超过2MB");
+                    return response;
+                }
+                
+                try {
+                    String imageUrl = saveImage(image);
+                    imageUrls.add(imageUrl);
+                } catch (IOException e) {
+                    response.put("success", false);
+                    response.put("message", "图片上传失败");
+                    return response;
+                }
+            }
+        }
+        
+        // 保存留言
+        boolean success = messageService.createMessage(user.getId(), hasContent ? content : "", imageUrls);
         if (success) {
             response.put("success", true);
             response.put("message", "留言发布成功");
@@ -82,6 +139,32 @@ public class MessageController {
             response.put("message", "留言包含敏感词，请修改后重试");
         }
         return response;
+    }
+    
+    /**
+     * 保存上传的图片
+     */
+    private String saveImage(MultipartFile file) throws IOException {
+        // 创建上传目录
+        Path uploadDir = Paths.get(uploadPath, "messages");
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+        
+        // 生成唯一文件名
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String filename = UUID.randomUUID().toString() + extension;
+        
+        // 保存文件
+        Path filePath = uploadDir.resolve(filename);
+        Files.copy(file.getInputStream(), filePath);
+        
+        // 返回访问URL
+        return "/uploads/messages/" + filename;
     }
 
     /**

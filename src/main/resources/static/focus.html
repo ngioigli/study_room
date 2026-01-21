@@ -127,6 +127,11 @@
             transform: translateX(-50%);
             width: 280px;
             z-index: 40;
+            transition: top 0.3s;
+        }
+
+        body.pomodoro-mode .exp-bar-section {
+            top: 90px;
         }
 
         .exp-info {
@@ -382,6 +387,90 @@
             box-shadow: var(--shadow-lg);
         }
 
+        /* 番茄钟模式切换 - 移入设置面板，隐藏原位置 */
+        .mode-switcher {
+            display: none;
+        }
+
+        /* 设置面板内的模式切换 */
+        .settings-mode-switcher {
+            display: flex;
+            gap: var(--space-2);
+            background: var(--color-card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--space-1);
+        }
+
+        .settings-mode-btn {
+            flex: 1;
+            padding: var(--space-3);
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-mode-btn.active {
+            background: var(--gradient-primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+
+        .settings-mode-btn:hover:not(.active) {
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        /* 番茄钟专用样式 - 调整位置避免重叠 */
+        .pomodoro-info {
+            position: fixed;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-full);
+            box-shadow: var(--shadow-card);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .pomodoro-info.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 番茄钟奖励提示 */
+        .pomodoro-bonus-hint {
+            font-size: var(--font-size-xs);
+            color: var(--color-success);
+            margin-left: var(--space-2);
+        }
+
+        .pomodoro-phase {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
+        }
+
+        .pomodoro-session {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        .pomodoro-tomato {
+            font-size: 18px;
+        }
+
         /* 设置面板 */
         .settings-panel {
             position: fixed;
@@ -537,6 +626,57 @@
 
         .no-pet-hint a:hover {
             text-decoration: underline;
+        }
+
+        /* 番茄钟设置样式 */
+        .pomodoro-settings {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .pomodoro-setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .setting-item-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .duration-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .duration-btn {
+            padding: var(--space-2) var(--space-3);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: white;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .duration-btn:hover {
+            border-color: var(--color-primary);
+        }
+
+        .duration-btn.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        .duration-btn.small {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--font-size-xs);
         }
 
         /* Toast 样式覆盖 */
@@ -707,6 +847,16 @@
             </button>
         </div>
 
+        <!-- 模式切换已移入设置面板 -->
+
+        <!-- 番茄钟信息 -->
+        <div class="pomodoro-info" :class="{ visible: focusMode === 'pomodoro' }">
+            <span class="pomodoro-tomato">🍅</span>
+            <span class="pomodoro-phase">{{ pomodoroPhase === 'focus' ? '专注时间' : (pomodoroPhase === 'shortBreak' ? '短休息' : '长休息') }}</span>
+            <span class="pomodoro-session">第 {{ pomodoroSession }} 个番茄</span>
+            <span class="pomodoro-bonus-hint">+20%经验</span>
+        </div>
+
         <!-- 经验进度条 -->
         <div class="exp-bar-section">
             <div class="exp-info">
@@ -757,6 +907,19 @@
             </div>
             
             <div class="settings-content">
+                <!-- 专注模式切换（从原位置移入） -->
+                <div class="setting-group">
+                    <label class="setting-label">专注模式</label>
+                    <div class="settings-mode-switcher">
+                        <button class="settings-mode-btn" :class="{ active: focusMode === 'free' }" @click="switchMode('free')">
+                            ⏱️ 自由计时
+                        </button>
+                        <button class="settings-mode-btn" :class="{ active: focusMode === 'pomodoro' }" @click="switchMode('pomodoro')">
+                            🍅 番茄钟 <small style="opacity:0.8">+20%</small>
+                        </button>
+                    </div>
+                </div>
+
                 <div class="setting-group">
                     <label class="setting-label">背景主题</label>
                     <div class="theme-options">
@@ -829,6 +992,63 @@
                     </div>
                     <div v-else class="no-pet-hint">
                         <p>还没有宠物，<a href="/pet.html">去孵化一只吧！</a></p>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">🍅 番茄钟时长设置</label>
+                    <div class="pomodoro-settings">
+                        <div class="pomodoro-setting-item">
+                            <span class="setting-item-label">专注时长</span>
+                            <div class="duration-options">
+                                <button 
+                                    class="duration-btn" 
+                                    :class="{ active: pomodoroConfig.focusDuration === 25 }"
+                                    @click="setPomodoroConfig('focus', 25)">25分钟</button>
+                                <button 
+                                    class="duration-btn" 
+                                    :class="{ active: pomodoroConfig.focusDuration === 30 }"
+                                    @click="setPomodoroConfig('focus', 30)">30分钟</button>
+                                <button 
+                                    class="duration-btn" 
+                                    :class="{ active: pomodoroConfig.focusDuration === 45 }"
+                                    @click="setPomodoroConfig('focus', 45)">45分钟</button>
+                                <button 
+                                    class="duration-btn" 
+                                    :class="{ active: pomodoroConfig.focusDuration === 60 }"
+                                    @click="setPomodoroConfig('focus', 60)">60分钟</button>
+                            </div>
+                        </div>
+                        <div class="pomodoro-setting-item">
+                            <span class="setting-item-label">短休息</span>
+                            <div class="duration-options">
+                                <button 
+                                    class="duration-btn small" 
+                                    :class="{ active: pomodoroConfig.shortBreakDuration === 5 }"
+                                    @click="setPomodoroConfig('short', 5)">5分钟</button>
+                                <button 
+                                    class="duration-btn small" 
+                                    :class="{ active: pomodoroConfig.shortBreakDuration === 10 }"
+                                    @click="setPomodoroConfig('short', 10)">10分钟</button>
+                            </div>
+                        </div>
+                        <div class="pomodoro-setting-item">
+                            <span class="setting-item-label">长休息</span>
+                            <div class="duration-options">
+                                <button 
+                                    class="duration-btn small" 
+                                    :class="{ active: pomodoroConfig.longBreakDuration === 15 }"
+                                    @click="setPomodoroConfig('long', 15)">15分钟</button>
+                                <button 
+                                    class="duration-btn small" 
+                                    :class="{ active: pomodoroConfig.longBreakDuration === 20 }"
+                                    @click="setPomodoroConfig('long', 20)">20分钟</button>
+                                <button 
+                                    class="duration-btn small" 
+                                    :class="{ active: pomodoroConfig.longBreakDuration === 30 }"
+                                    @click="setPomodoroConfig('long', 30)">30分钟</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -919,10 +1139,23 @@
                 const isRunning = ref(false);
                 const statusText = ref('准备好了吗？');
                 
+                // 番茄钟模式状态
+                const focusMode = ref('free'); // 'free' 或 'pomodoro'
+                const pomodoroPhase = ref('focus'); // 'focus', 'shortBreak', 'longBreak'
+                const pomodoroSession = ref(1);
+                const pomodoroTimeLeft = ref(25 * 60); // 剩余时间（秒）
+                const pomodoroConfig = reactive({
+                    focusDuration: 25,
+                    shortBreakDuration: 5,
+                    longBreakDuration: 15,
+                    longBreakInterval: 4
+                });
+                
                 const todayStats = reactive({
                     totalDuration: 0,
                     focusCount: 0,
-                    expEarned: 0
+                    expEarned: 0,
+                    tomatoCount: 0 // 今日番茄数
                 });
                 
                 const petInfo = reactive({
@@ -998,6 +1231,13 @@
                 
                 // ==================== 方法 ====================
                 function formatTime(totalSeconds) {
+                    // 番茄钟模式显示倒计时
+                    if (focusMode.value === 'pomodoro') {
+                        const m = Math.floor(pomodoroTimeLeft.value / 60).toString().padStart(2, '0');
+                        const s = (pomodoroTimeLeft.value % 60).toString().padStart(2, '0');
+                        return `${m}:${s}`;
+                    }
+                    // 自由模式显示正计时
                     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
                     const s = (totalSeconds % 60).toString().padStart(2, '0');
                     return `${m}:${s}`;
@@ -1011,6 +1251,89 @@
                     return `${m}分钟`;
                 }
                 
+                // 切换专注模式
+                function switchMode(mode) {
+                    if (isRunning.value) {
+                        if (!confirm('切换模式将重置计时器，确定吗？')) return;
+                        stopTimerInternal();
+                    }
+                    
+                    focusMode.value = mode;
+                    secondsElapsed.value = 0;
+                    
+                    if (mode === 'pomodoro') {
+                        document.body.classList.add('pomodoro-mode');
+                        pomodoroPhase.value = 'focus';
+                        pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                        statusText.value = '🍅 番茄钟准备就绪';
+                    } else {
+                        document.body.classList.remove('pomodoro-mode');
+                        statusText.value = '准备好了吗？';
+                    }
+                }
+                
+                // 番茄钟阶段完成
+                function completePomodoroPhase() {
+                    pauseTimer();
+                    
+                    if (pomodoroPhase.value === 'focus') {
+                        // 完成一个番茄
+                        todayStats.tomatoCount++;
+                        showPetBubble('🍅 太棒了！完成一个番茄！');
+                        petState.value = 'playing';
+                        
+                        // 保存番茄记录
+                        saveFocusRecord(pomodoroConfig.focusDuration * 60, 'pomodoro');
+                        
+                        // 播放提示音
+                        playPomodoroSound();
+                        
+                        // 决定下一阶段
+                        if (pomodoroSession.value % pomodoroConfig.longBreakInterval === 0) {
+                            pomodoroPhase.value = 'longBreak';
+                            pomodoroTimeLeft.value = pomodoroConfig.longBreakDuration * 60;
+                            statusText.value = '☕ 长休息时间';
+                        } else {
+                            pomodoroPhase.value = 'shortBreak';
+                            pomodoroTimeLeft.value = pomodoroConfig.shortBreakDuration * 60;
+                            statusText.value = '☕ 短休息时间';
+                        }
+                        pomodoroSession.value++;
+                    } else {
+                        // 休息结束
+                        pomodoroPhase.value = 'focus';
+                        pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                        statusText.value = '🍅 准备开始新番茄';
+                        showPetBubble('休息结束啦~准备好继续了吗？');
+                        playPomodoroSound();
+                    }
+                    
+                    setTimeout(() => petState.value = 'idle', 2000);
+                }
+                
+                // 播放番茄钟提示音
+                function playPomodoroSound() {
+                    try {
+                        const audio = new AudioContext();
+                        const oscillator = audio.createOscillator();
+                        const gain = audio.createGain();
+                        
+                        oscillator.connect(gain);
+                        gain.connect(audio.destination);
+                        
+                        oscillator.frequency.value = 880;
+                        oscillator.type = 'sine';
+                        
+                        gain.gain.setValueAtTime(0.3, audio.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.5);
+                        
+                        oscillator.start(audio.currentTime);
+                        oscillator.stop(audio.currentTime + 0.5);
+                    } catch (err) {
+                        console.log('无法播放提示音');
+                    }
+                }
+                
                 function toggleTimer() {
                     if (isRunning.value) {
                         pauseTimer();
@@ -1022,26 +1345,46 @@
                 function startTimer() {
                     isRunning.value = true;
                     document.body.classList.add('focus-mode');
-                    statusText.value = '专注进行中...';
+                    
+                    if (focusMode.value === 'pomodoro') {
+                        statusText.value = pomodoroPhase.value === 'focus' ? '🍅 专注进行中...' : '☕ 休息中...';
+                    } else {
+                        statusText.value = '专注进行中...';
+                    }
                     
                     // 开始时宠物说话
-                    if (secondsElapsed.value === 0) {
+                    if (secondsElapsed.value === 0 && focusMode.value !== 'pomodoro') {
                         showPetBubble(petAI.getRandomDialogue('focus_start'));
                         petAI.resetMilestone();
+                    } else if (focusMode.value === 'pomodoro' && pomodoroPhase.value === 'focus') {
+                        showPetBubble('🍅 番茄钟开始！加油！');
                     }
                     
                     timerId = setInterval(() => {
-                        secondsElapsed.value++;
-                        document.title = `(${formatTime(secondsElapsed.value)}) 专注中`;
-                        
-                        // 检查里程碑
-                        const milestoneMsg = petAI.checkMilestone(secondsElapsed.value);
-                        if (milestoneMsg) {
-                            showPetBubble(milestoneMsg);
-                            petState.value = 'interact';
-                            setTimeout(() => {
-                                if (isRunning.value) petState.value = 'idle';
-                            }, 1000);
+                        if (focusMode.value === 'pomodoro') {
+                            // 番茄钟倒计时
+                            pomodoroTimeLeft.value--;
+                            secondsElapsed.value++; // 同时记录总时间
+                            
+                            if (pomodoroTimeLeft.value <= 0) {
+                                completePomodoroPhase();
+                            } else {
+                                document.title = `(${formatTime(secondsElapsed.value)}) 番茄钟`;
+                            }
+                        } else {
+                            // 自由模式正计时
+                            secondsElapsed.value++;
+                            document.title = `(${formatTime(secondsElapsed.value)}) 专注中`;
+                            
+                            // 检查里程碑
+                            const milestoneMsg = petAI.checkMilestone(secondsElapsed.value);
+                            if (milestoneMsg) {
+                                showPetBubble(milestoneMsg);
+                                petState.value = 'interact';
+                                setTimeout(() => {
+                                    if (isRunning.value) petState.value = 'idle';
+                                }, 1000);
+                            }
                         }
                     }, 1000);
                 }
@@ -1050,8 +1393,31 @@
                     clearInterval(timerId);
                     isRunning.value = false;
                     document.body.classList.remove('focus-mode');
-                    statusText.value = '暂停中';
+                    
+                    if (focusMode.value === 'pomodoro') {
+                        statusText.value = '⏸️ 暂停中';
+                    } else {
+                        statusText.value = '暂停中';
+                    }
                     document.title = '深度专注 - 云端自习室';
+                }
+                
+                function stopTimerInternal() {
+                    clearInterval(timerId);
+                    isRunning.value = false;
+                    document.body.classList.remove('focus-mode');
+                    secondsElapsed.value = 0;
+                    
+                    if (focusMode.value === 'pomodoro') {
+                        pomodoroPhase.value = 'focus';
+                        pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                        statusText.value = '🍅 番茄钟准备就绪';
+                    } else {
+                        statusText.value = '准备好了吗？';
+                    }
+                    
+                    document.title = '深度专注 - 云端自习室';
+                    petAI.resetMilestone();
                 }
                 
                 function stopTimer() {
@@ -1061,33 +1427,55 @@
                     
                     // 保存记录
                     if (secondsElapsed.value > 0) {
-                        saveFocusRecord(secondsElapsed.value);
+                        if (focusMode.value === 'pomodoro') {
+                            // 番茄钟模式下，记录实际专注时间
+                            const focusedTime = pomodoroConfig.focusDuration * 60 - pomodoroTimeLeft.value;
+                            if (focusedTime >= 60) {
+                                saveFocusRecord(focusedTime, 'pomodoro');
+                            }
+                        } else {
+                            saveFocusRecord(secondsElapsed.value);
+                        }
                     }
                     
                     secondsElapsed.value = 0;
-                    statusText.value = '准备好了吗？';
+                    
+                    if (focusMode.value === 'pomodoro') {
+                        pomodoroPhase.value = 'focus';
+                        pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                        statusText.value = '🍅 番茄钟准备就绪';
+                    } else {
+                        statusText.value = '准备好了吗？';
+                    }
+                    
                     document.title = '深度专注 - 云端自习室';
                     petAI.resetMilestone();
                 }
                 
-                async function saveFocusRecord(duration) {
+                async function saveFocusRecord(duration, type = 'free') {
                     try {
                         const res = await fetch('/api/focus/save', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ duration })
+                            body: JSON.stringify({ duration, type })
                         });
                         const data = await res.json();
                         
                         if (data.success) {
-                            showToast(`专注 ${formatTime(duration)} 已记录！获得 ${data.expEarned} 经验值`);
+                            if (type === 'pomodoro') {
+                                showToast(`🍅 番茄完成！获得 ${data.expEarned} 经验值（含20%奖励）`);
+                            } else {
+                                showToast(`专注 ${formatTime(duration)} 已记录！获得 ${data.expEarned} 经验值`);
+                            }
                             todayStats.totalDuration += duration;
                             todayStats.focusCount += 1;
                             todayStats.expEarned += data.expEarned;
                             petInfo.exp += data.expEarned;
                             
                             // 宠物开心
-                            showPetBubble('太棒了！又获得经验啦~');
+                            if (type !== 'pomodoro') {
+                                showPetBubble('太棒了！又获得经验啦~');
+                            }
                             petState.value = 'playing';
                             setTimeout(() => petState.value = 'idle', 2000);
                         }
@@ -1233,6 +1621,32 @@
                 }
 
                 // ==================== 新增功能 ====================
+                
+                // 番茄钟时长设置
+                function setPomodoroConfig(type, value) {
+                    if (isRunning.value) {
+                        showToast('请先停止计时再修改设置');
+                        return;
+                    }
+                    
+                    if (type === 'focus') {
+                        pomodoroConfig.focusDuration = value;
+                    } else if (type === 'short') {
+                        pomodoroConfig.shortBreakDuration = value;
+                    } else if (type === 'long') {
+                        pomodoroConfig.longBreakDuration = value;
+                    }
+                    
+                    // 保存到本地
+                    localStorage.setItem('pomodoroConfig', JSON.stringify(pomodoroConfig));
+                    
+                    // 更新当前显示
+                    if (focusMode.value === 'pomodoro' && pomodoroPhase.value === 'focus') {
+                        pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                    }
+                    
+                    showToast('设置已保存');
+                }
                 
                 // 主题切换
                 function changeTheme(theme) {
@@ -1409,6 +1823,18 @@
                     const savedTheme = localStorage.getItem('focusTheme') || 'default';
                     changeTheme(savedTheme);
                     
+                    // 加载番茄钟配置
+                    const savedPomodoroConfig = localStorage.getItem('pomodoroConfig');
+                    if (savedPomodoroConfig) {
+                        try {
+                            const config = JSON.parse(savedPomodoroConfig);
+                            pomodoroConfig.focusDuration = config.focusDuration || 25;
+                            pomodoroConfig.shortBreakDuration = config.shortBreakDuration || 5;
+                            pomodoroConfig.longBreakDuration = config.longBreakDuration || 15;
+                            pomodoroTimeLeft.value = pomodoroConfig.focusDuration * 60;
+                        } catch(e) {}
+                    }
+                    
                     // 初始化宠物拖动
                     setTimeout(() => {
                         if (petElement.value) {
@@ -1477,7 +1903,15 @@
                     // 返回确认弹窗
                     showBackConfirm,
                     showBackModal,
-                    confirmBack
+                    confirmBack,
+                    // 番茄钟模式
+                    focusMode,
+                    pomodoroPhase,
+                    pomodoroSession,
+                    pomodoroTimeLeft,
+                    pomodoroConfig,
+                    switchMode,
+                    setPomodoroConfig
                 };
             }
         }).mount('#app');

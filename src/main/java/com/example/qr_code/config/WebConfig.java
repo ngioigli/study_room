@@ -27,6 +27,10 @@ public class WebConfig implements WebMvcConfigurer {
         }
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(resourceLocation);
+        
+        // 配置 /uploads/** 路径映射（留言板图片等）
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(resourceLocation);
     }
 
     // --- 2. 配置拦截器 ---
@@ -39,6 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/login",        // 登录接口必须放行
                         "/upload/qrcode",    // 允许上传接口匿名访问
                         "/images/**",        // 图片资源放行
+                        "/uploads/**",       // 上传的图片资源放行
                         "/css/**", "/js/**", // 静态资源放行
                         "/app/**",           // React 应用静态资源放行
                         "/audio/**",         // 音频资源放行

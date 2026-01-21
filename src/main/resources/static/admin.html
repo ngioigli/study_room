@@ -149,6 +149,12 @@
             align-items: center;
             padding: var(--space-3);
             border-bottom: 1px solid var(--color-divider);
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .list-item:hover {
+            background: var(--color-card-bg);
         }
 
         .list-item:last-child {
@@ -181,6 +187,22 @@
             font-size: var(--font-size-xs);
             color: var(--color-text-secondary);
             margin-top: 2px;
+        }
+
+        .list-stats {
+            display: flex;
+            gap: var(--space-3);
+            margin-top: var(--space-2);
+        }
+
+        .stat-item {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        .stat-item .value {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-primary);
         }
 
         .list-actions {
@@ -342,6 +364,118 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* 用户详情弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: var(--space-5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--color-divider);
+        }
+
+        .modal-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--color-card-bg);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .detail-section {
+            margin-bottom: var(--space-4);
+        }
+
+        .detail-section-title {
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-2);
+            padding-bottom: var(--space-1);
+            border-bottom: 1px solid var(--color-divider);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-3);
+        }
+
+        .detail-item {
+            background: var(--color-card-bg);
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+        }
+
+        .detail-label {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        .detail-value {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-dark);
+            margin-top: 2px;
+        }
+
+        .detail-value.highlight {
+            color: var(--color-primary);
+        }
+
+        .chart-container {
+            height: 150px;
+            background: var(--color-card-bg);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: var(--color-primary);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            min-height: 4px;
+            transition: height 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -457,6 +591,19 @@
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
+
+    <!-- 用户详情弹窗 -->
+    <div class="modal-overlay" id="userDetailModal" onclick="closeUserDetail(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">用户详情</h3>
+                <button class="modal-close" onclick="closeUserDetail()">&times;</button>
+            </div>
+            <div id="userDetailContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 初始化
@@ -578,10 +725,10 @@
             }).join('');
         }
 
-        // 加载用户列表
+        // 加载用户列表（带统计数据）
         async function loadUsers() {
             try {
-                const res = await fetch('/api/admin/users');
+                const res = await fetch('/api/admin/users?withStats=true');
                 const data = await res.json();
                 
                 if (data.success) {
@@ -603,24 +750,198 @@
             }
 
             document.getElementById('usersList').innerHTML = users.map(user => `
-                <div class="list-item">
-                    <div class="list-avatar">👤</div>
+                <div class="list-item" onclick="showUserDetail(${user.id})">
+                    <div class="list-avatar">${user.status === 0 ? '🚫' : '👤'}</div>
                     <div class="list-info">
                         <div class="list-name">
-                            ${user.username}
+                            ${user.username || user.nickname}
                             ${user.role === 'admin' ? '<span class="status-badge admin">管理员</span>' : ''}
+                            ${user.status === 0 ? '<span class="status-badge disabled">已禁用</span>' : ''}
+                        </div>
+                        <div class="list-stats">
+                            <span class="stat-item">今日: <span class="value">${user.todayFocusCount || 0}</span>次 / <span class="value">${formatHours(user.todayDuration || 0)}</span></span>
+                            <span class="stat-item">本月: <span class="value">${user.monthFocusCount || 0}</span>次</span>
                         </div>
                         <div class="list-meta">
-                            创建时间: ${formatDate(user.createdAt)}
+                            总学习: ${formatHours(user.totalDuration || 0)} | 扫码进门: ${user.totalAccessCount || 0}次 | 创建: ${formatDate(user.createdAt)}
                         </div>
                     </div>
-                    <div class="list-actions">
+                    <div class="list-actions" onclick="event.stopPropagation()">
                         ${user.status === 1 ?
                             `<button class="action-btn-sm danger" onclick="toggleUserStatus(${user.id}, 0)">禁用</button>` :
                             `<button class="action-btn-sm success" onclick="toggleUserStatus(${user.id}, 1)">启用</button>`}
                     </div>
                 </div>
             `).join('');
+        }
+
+        // 显示用户详情弹窗
+        async function showUserDetail(userId) {
+            document.getElementById('userDetailModal').classList.add('show');
+            document.getElementById('userDetailContent').innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/detail`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    renderUserDetail(data.user);
+                } else {
+                    document.getElementById('userDetailContent').innerHTML = '<p>加载失败</p>';
+                }
+            } catch (err) {
+                console.error('加载用户详情失败:', err);
+                document.getElementById('userDetailContent').innerHTML = '<p>网络错误</p>';
+            }
+        }
+
+        // 渲染用户详情
+        function renderUserDetail(user) {
+            document.getElementById('modalTitle').textContent = `${user.nickname || user.username} 的详细数据`;
+            
+            // 计算图表数据
+            const dailyStats = user.dailyStats || [];
+            const maxDuration = Math.max(...dailyStats.map(d => d.duration || 0), 1);
+            
+            document.getElementById('userDetailContent').innerHTML = `
+                <!-- 基本信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">📋 基本信息</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">用户名</div>
+                            <div class="detail-value">${user.username}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">角色</div>
+                            <div class="detail-value">${user.role === 'admin' ? '管理员' : '普通用户'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">状态</div>
+                            <div class="detail-value">${user.status === 1 ? '✅ 正常' : '🚫 已禁用'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">连续学习</div>
+                            <div class="detail-value highlight">${user.streakDays || 0}天</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 今日数据 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">📅 今日数据</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">专注次数</div>
+                            <div class="detail-value highlight">${user.todayFocusCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">学习时长</div>
+                            <div class="detail-value highlight">${formatHours(user.todayDuration || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">扫码进门</div>
+                            <div class="detail-value">${user.todayAccessCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">获得经验</div>
+                            <div class="detail-value">${user.todayExpEarned || 0}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 本周数据 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">📊 本周数据 (最近7天)</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">专注次数</div>
+                            <div class="detail-value">${user.weekFocusCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">学习时长</div>
+                            <div class="detail-value">${formatHours(user.weekDuration || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">扫码进门</div>
+                            <div class="detail-value">${user.weekAccessCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">获得经验</div>
+                            <div class="detail-value">${user.weekExpEarned || 0}</div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="margin-top: var(--space-3);">
+                        ${dailyStats.map(day => `
+                            <div class="chart-bar" style="height: ${Math.max(((day.duration || 0) / maxDuration) * 100, 5)}%;" title="${day.date}: ${formatHours(day.duration || 0)}"></div>
+                        `).join('')}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--color-text-secondary); margin-top: 4px;">
+                        ${dailyStats.map(day => `<span>${day.date.slice(5)}</span>`).join('')}
+                    </div>
+                </div>
+
+                <!-- 本月数据 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">📆 本月数据</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">专注次数</div>
+                            <div class="detail-value">${user.monthFocusCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">学习时长</div>
+                            <div class="detail-value">${formatHours(user.monthDuration || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">扫码进门</div>
+                            <div class="detail-value">${user.monthAccessCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">获得经验</div>
+                            <div class="detail-value">${user.monthExpEarned || 0}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 总计数据 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">🏆 累计数据</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">总专注次数</div>
+                            <div class="detail-value highlight">${user.totalFocusCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">总学习时长</div>
+                            <div class="detail-value highlight">${formatHours(user.totalDuration || 0)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">总扫码进门</div>
+                            <div class="detail-value">${user.totalAccessCount || 0}次</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">总获得经验</div>
+                            <div class="detail-value">${user.totalExpEarned || 0}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">座位订单数</div>
+                            <div class="detail-value">${user.totalOrders || 0}单</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">完成订单数</div>
+                            <div class="detail-value">${user.completedOrders || 0}单</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 关闭用户详情弹窗
+        function closeUserDetail(event) {
+            if (!event || event.target === event.currentTarget) {
+                document.getElementById('userDetailModal').classList.remove('show');
+            }
         }
 
         // 加载排行榜

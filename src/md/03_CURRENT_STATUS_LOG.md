@@ -1,8 +1,40 @@
 # Project Status Log & Handover Note (项目现状与交接日志)
 
-**存档日期**: 2026-01-20
+**存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🧭 强化AI身份规则**: 
+  - .codebuddy/rules/assistant-identity.mdc：新增UI质量硬性门槛（组件层级/交互状态/移动端适配/视觉一致性）
+- **🧭 强化AI身份规则**: 
+  - .codebuddy/rules/assistant-identity.mdc：新增“每次对话开头明确身份”与标准需求输出模板
+- **🧭 新增AI身份规则**: 
+  - .codebuddy/rules/assistant-identity.mdc：明确AI身份、技术栈边界、产品调性与交付准则
+- **🔧 登录页面禁用用户提示优化**: 
+  - login.html：当用户被禁用时，显示服务器返回的具体错误消息"您的账号已被禁用，请联系管理员"
+  - 区分403禁用状态和401认证失败状态的错误提示
+- **💺 座位管理页面优化**:
+  - 添加返回按钮（左上角圆形按钮）
+  - 增加面板底部间距，确保"占座通电"和"离座断电"按钮不被底部导航遮挡
+- **🔒 用户禁用功能彻底修复**: 
+  - LoginInterceptor.java：改为 `@Component` 注入，从数据库实时查询用户状态
+  - 每次请求都会检查数据库中的用户status字段，确保被禁用的用户立即失效
+  - WebConfig.java：通过 `@Autowired` 注入 LoginInterceptor
+- **🔒 用户禁用功能修复**: 
+  - LoginController.java：登录时检查用户status字段，禁用用户无法登录
+  - LoginInterceptor.java：拦截器实时检查用户禁用状态，被禁用的用户会话会被强制注销
+  - 登录页面支持显示禁用提示（?error=disabled）
+- **👥 管理后台用户模块增强**:
+  - 用户列表显示更多统计数据：今日专注次数、今日学习时长、本月专注次数、总学习时长、扫码进门总次数
+  - 新增用户详情弹窗：点击用户可查看完整统计（今日/本周/本月/累计数据）
+  - 新增7天学习趋势图表
+  - 新增连续学习天数统计
+  - 禁用用户显示特殊标识
+- **📊 统计数据修复**: 
+  - 今日专注次数从 learning_stats 表获取（而非 focus_records 表），确保数据准确
+  - 排行榜同时显示专注次数
+- **🆕 新增后端API**:
+  - `GET /api/admin/users?withStats=true`：获取用户列表（含统计数据）
+  - `GET /api/admin/users/{id}/detail`：获取单个用户详细统计
 - **📦 配置模板归档**: 创建 `config-templates/` 目录，包含 MCP 配置模板和用户规则模板，方便环境迁移
 - **🔗 双仓库同步**: 代码同步至 Gitee: `https://gitee.com/abcdxiaocheng/cloud-based-self-study-room`
 - **🌐 项目开源**: 仓库已创建并上传至 GitHub: `https://github.com/ngioigli/study_room`
@@ -152,7 +184,8 @@ qr_code/
 *   **管理员后台模块**:
     *   `AdminService`: 管理员业务逻辑
     *   `/api/admin/check`: 检查管理员权限（GET）
-    *   `/api/admin/users`: 获取用户列表（GET）
+    *   `/api/admin/users`: 获取用户列表（GET，支持 ?withStats=true 获取统计数据）
+    *   `/api/admin/users/{id}/detail`: 获取用户详细统计（GET）
     *   `/api/admin/users/{id}/status`: 更新用户状态（PUT）
     *   `/api/admin/users/{id}/role`: 更新用户角色（PUT）
     *   `/api/admin/seats`: 获取座位列表（GET）

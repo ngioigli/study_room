@@ -197,18 +197,26 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: username, password: password })
         })
-            .then(response => {
-                if (response.ok) return response.json();
-                throw new Error('Login failed');
-            })
-            .then(data => {
+            .then(response => response.json().then(data => ({ status: response.status, data })))
+            .then(({ status, data }) => {
                 if (data.success) {
                     window.location.href = data.redirectUrl;
                 } else {
-                    throw new Error('Auth failed');
+                    // 显示服务器返回的错误消息
+                    if (status === 403) {
+                        // 用户被禁用
+                        errorMsg.textContent = data.message || '该用户已被禁用，请联系管理员';
+                    } else {
+                        errorMsg.textContent = data.message || '账号或密码不对，别急，再试一次';
+                    }
+                    errorMsg.style.opacity = '1';
+                    setTimeout(() => { errorMsg.style.opacity = '0'; }, 5000);
+                    btn.disabled = false;
+                    btn.innerText = "进入自习室";
                 }
             })
             .catch(error => {
+                errorMsg.textContent = '网络错误，请稍后重试';
                 errorMsg.style.opacity = '1';
                 setTimeout(() => { errorMsg.style.opacity = '0'; }, 3000);
                 btn.disabled = false;

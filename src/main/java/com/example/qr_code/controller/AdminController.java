@@ -40,24 +40,51 @@ public class AdminController {
     // ==================== 用户管理 ====================
 
     /**
-     * 获取所有用户列表
+     * 获取所有用户列表（含统计数据）
      * GET /api/admin/users
      */
     @GetMapping("/users")
-    public Map<String, Object> getAllUsers(HttpSession session) {
+    public Map<String, Object> getAllUsers(
+            @RequestParam(defaultValue = "false") boolean withStats,
+            HttpSession session) {
         if (!isAdmin(session)) return unauthorized();
 
         Map<String, Object> result = new HashMap<>();
         try {
-            List<User> users = adminService.getAllUsers();
-            Map<String, Integer> stats = adminService.getUserStats();
-
-            result.put("success", true);
-            result.put("users", users);
-            result.put("stats", stats);
+            if (withStats) {
+                List<Map<String, Object>> users = adminService.getAllUsersWithStats();
+                result.put("success", true);
+                result.put("users", users);
+            } else {
+                List<User> users = adminService.getAllUsers();
+                Map<String, Integer> stats = adminService.getUserStats();
+                result.put("success", true);
+                result.put("users", users);
+                result.put("stats", stats);
+            }
         } catch (Exception e) {
             result.put("success", false);
             result.put("message", "获取用户列表失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 获取单个用户详细统计
+     * GET /api/admin/users/{id}/detail
+     */
+    @GetMapping("/users/{id}/detail")
+    public Map<String, Object> getUserDetail(@PathVariable Long id, HttpSession session) {
+        if (!isAdmin(session)) return unauthorized();
+
+        Map<String, Object> result = new HashMap<>();
+        try {
+            Map<String, Object> userDetail = adminService.getUserDetailStats(id);
+            result.put("success", true);
+            result.put("user", userDetail);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
         }
         return result;
     }

@@ -36,6 +36,13 @@ public class LoginController {
 
         // 校验逻辑
         if (user != null && user.getPassword().equals(password)) {
+            // 检查用户是否被禁用
+            if (user.getStatus() != null && user.getStatus() == 0) {
+                response.put("success", false);
+                response.put("message", "您的账号已被禁用，请联系管理员");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
             // 登录成功，写入Session
             session.setAttribute("user", user);
             

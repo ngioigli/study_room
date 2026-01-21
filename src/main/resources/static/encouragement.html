@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>匿名鼓励 - 云端自习室</title>
+    <title>温暖传递 - 云端自习室</title>
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/components.css">
     <style>
@@ -205,11 +205,6 @@
         .action-btn.like {
             background: linear-gradient(135deg, #F472B6, #EC4899);
             color: white;
-        }
-
-        .action-btn.share {
-            background: white;
-            color: #0369A1;
         }
 
         .like-count {
@@ -494,7 +489,7 @@
     <!-- 顶部导航 -->
     <div class="top-bar">
         <button class="back-btn" onclick="goBack()">←</button>
-        <span class="top-title">匿名鼓励 💌</span>
+        <span class="top-title">温暖传递 💌</span>
         <button class="top-action" onclick="openWriteModal()">✍️</button>
     </div>
 
@@ -526,7 +521,6 @@
             <button class="action-btn like" onclick="likeCard()" id="likeBtn">
                 ❤️
             </button>
-            <button class="action-btn share" onclick="shareCard()">📤</button>
         </div>
 
         <!-- 写卡片按钮 -->
@@ -724,28 +718,6 @@
             
             document.body.appendChild(container);
             setTimeout(() => container.remove(), 1000);
-        }
-
-        // 分享
-        function shareCard() {
-            const message = document.getElementById('cardMessage').textContent;
-            const emoji = document.getElementById('cardEmoji').textContent;
-            
-            const shareText = `${emoji} ${message}\n\n——来自云端自习室的鼓励`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: '云端自习室 - 匿名鼓励',
-                    text: shareText
-                }).catch(console.log);
-            } else {
-                // 复制到剪贴板
-                navigator.clipboard.writeText(shareText).then(() => {
-                    showToast('已复制到剪贴板');
-                }).catch(() => {
-                    showToast('分享失败');
-                });
-            }
         }
 
         // 打开写卡片弹窗

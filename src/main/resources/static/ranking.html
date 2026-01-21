@@ -290,9 +290,8 @@
             color: var(--color-text-secondary);
         }
 
-        .rank-item:nth-child(1) .rank-number,
-        .rank-item:nth-child(2) .rank-number,
-        .rank-item:nth-child(3) .rank-number {
+        /* 隐藏前三名的排名数字（他们使用奖牌显示） */
+        .rank-item.hide-rank .rank-number {
             display: none;
         }
 
@@ -572,9 +571,12 @@
                 restHtml = '<div class="rank-card">';
                 for (let i = 3; i < ranking.length; i++) {
                     const item = ranking[i];
+                    const rank = i + 1;
+                    // 第4-20名显示排名，第21名及以后不显示排名
+                    const showRank = rank <= 20;
                     restHtml += `
-                        <div class="rank-item">
-                            <div class="rank-number">${i + 1}</div>
+                        <div class="rank-item ${!showRank ? 'hide-rank' : ''}">
+                            <div class="rank-number">${showRank ? rank : ''}</div>
                             <div class="rank-avatar">${item.avatar || '👤'}</div>
                             <div class="rank-info">
                                 <div class="rank-name">${escapeHtml(item.nickname || '匿名')}</div>

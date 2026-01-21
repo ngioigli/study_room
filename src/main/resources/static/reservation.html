@@ -554,7 +554,8 @@
             <span class="limit-icon">💡</span>
             <div class="limit-text">
                 <strong>预约规则</strong>
-                每位用户最多有1个待使用的预约。可预约今天或明天的座位，时长1-4小时。
+                每位用户最多有1个待使用的预约。可预约今天或明天的座位，时长1-4小时。<br>
+                ⏰ 预约需提前至少1小时，开始前30分钟内不可取消。
             </div>
         </div>
 
@@ -881,6 +882,18 @@
                     return;
                 }
                 
+                // 验证是否提前至少1小时预约
+                const now = new Date();
+                const today = formatDateStr(now);
+                if (selectedDate === today) {
+                    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                    if (startMinutes < currentMinutes + 60) {
+                        btn.textContent = '预约需提前至少1小时';
+                        btn.disabled = true;
+                        return;
+                    }
+                }
+                
                 const seat = seats.find(s => s.id === selectedSeat);
                 btn.textContent = `确认预约 ${seat.seatNumber} 号座位`;
                 btn.disabled = false;
@@ -902,6 +915,19 @@
             if (!startTime || !endTime) {
                 showToast('请选择时间');
                 return;
+            }
+            
+            // 再次验证是否提前至少1小时预约
+            const now = new Date();
+            const today = formatDateStr(now);
+            if (selectedDate === today) {
+                const [startH, startM] = startTime.split(':').map(Number);
+                const startMinutes = startH * 60 + startM;
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                if (startMinutes < currentMinutes + 60) {
+                    showToast('预约需提前至少1小时');
+                    return;
+                }
             }
             
             const btn = document.getElementById('reserveBtn');
@@ -965,6 +991,7 @@
                         const status = statusMap[r.status] || statusMap[0];
                         const canCheckin = r.status === 1 && isWithinCheckinTime(r);
                         const canCancel = r.status === 1 && !isNearStart(r);
+                        const cancelBtnText = canCancel ? '取消' : '开始前30分钟内不可取消';
                         
                         return `
                             <div class="reservation-card">
@@ -988,7 +1015,7 @@
                                         ${canCheckin ? '签到' : '未到签到时间'}
                                     </button>
                                     <button class="action-btn cancel" onclick="cancelReservation(${r.id})" ${!canCancel ? 'disabled' : ''}>
-                                        取消
+                                        ${cancelBtnText}
                                     </button>
                                 </div>
                                 ` : ''}
@@ -1020,15 +1047,23 @@
             return currentTime >= startMinutes - 15 && currentTime <= startMinutes + 15;
         }
 
+        // 判断是否在开始前30分钟内（不可取消）
         function isNearStart(reservation) {
             const now = new Date();
             const today = formatDateStr(now);
-            if (reservation.reservationDate !== today) return false;
             
+            // 如果是明天的预约，还可以取消
+            if (reservation.reservationDate > today) return false;
+            
+            // 如果预约日期已过，不可取消
+            if (reservation.reservationDate < today) return true;
+            
+            // 今天的预约，检查是否在开始前30分钟内
             const currentTime = now.getHours() * 60 + now.getMinutes();
             const [startH, startM] = reservation.startTime.split(':').map(Number);
             const startMinutes = startH * 60 + startM;
             
+            // 如果当前时间 >= 开始时间-30分钟，则不可取消
             return currentTime >= startMinutes - 30;
         }
 

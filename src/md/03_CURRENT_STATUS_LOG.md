@@ -3,6 +3,12 @@
 **存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🔧 多处Bug修复（2026-01-21）**:
+  - stats.html：返回按钮跳转从 `/study.html` 改为 `/index.html`
+  - ranking.html：前20名显示排名序号，第21名及以后隐藏排名序号
+  - reservation.html：新增预约时间限制（需提前至少1小时）、取消时间限制（开始前30分钟内不可取消）
+  - encouragement.html：页面改名为"温暖传递"，移除分享按钮
+  - study.html/index.html：更新"匿名鼓励"入口名称为"温暖传递"
 - **🔧 专注模式UI优化**: 
   - focus.html：将番茄钟/自由计时模式切换移入专注设置面板
   - 修复番茄钟信息与经验条重叠问题（调整 .pomodoro-info 的 top 值从 70px 到 140px）

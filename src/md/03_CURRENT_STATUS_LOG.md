@@ -3,6 +3,13 @@
 **存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🚀 超级团队模式规则文件创建（2026-01-22）**:
+  - **目标**：把 `src/md/12_AI_SUPER_TEAM_PROMPT_PACK.md` 的内容适配到 `.codebuddy/rules/` 目录
+  - **新增文件**：
+    - `.codebuddy/rules/super-team-mode.mdc`：超级团队模式核心规则，触发口令"进入超级团队模式"
+    - `.codebuddy/rules/project-facts.mdc`：项目事实快照（技术栈、目录、API、数据库等）
+    - `.codebuddy/rules/git-commit-rules.mdc`：Git 双仓库提交规范
+  - **使用方式**：说"进入超级团队模式"或"启动超级团队模式"即可激活所有规则
 - **🎨 study.html 页面布局与数据加载优化（2026-01-22）**:
   - **问题**：study.html 页面显示异常，"开始专注"卡片内容溢出，今日数据显示为"-"
   - **修复内容**：

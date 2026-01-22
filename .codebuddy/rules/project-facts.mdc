@@ -1,0 +1,178 @@
+---
+description: 项目事实快照 - AI 必须遵守的"不可编造现实"，防止 AI 偏航或编造不存在的技术栈/API/类
+alwaysApply: true
+globs:
+---
+
+# 📋 项目事实快照（AI 的"不可编造现实"）
+
+> **重要**：以下信息以仓库真实代码为准，AI 不得编造不存在的类/方法/配置。
+
+---
+
+## 1. 产品定位（不可偏离）
+
+| 项目 | 云端自习室（助学 + 轻互动 + 低社交压力） |
+|------|------------------------------------------|
+| **调性关键词** | 温暖、治愈、简洁、安静、专注 |
+| **禁忌** | 高强度社交、私聊、过度打扰、娱乐化过强 |
+
+---
+
+## 2. 技术栈与边界
+
+### 2.1 后端
+- **框架**：Spring Boot `2.6.13`（见 `pom.xml`）
+- **ORM**：MyBatis-Plus `3.5.3.1`
+- **数据库**：MySQL `8.x`，数据库名 `study_room`
+- **Java 兼容**：Maven 编译目标 `1.8`；运行环境可为 JDK 8/11/17
+
+### 2.2 前端
+- **技术**：纯 `HTML/CSS/JS`，位于 `src/main/resources/static/`
+- **部分页面**：使用 `Vue 3 CDN`（如 `focus.html`、`pet.html`）
+- **设计系统**：`css/variables.css` + `css/components.css`
+
+### 2.3 配置
+- **端口**：`9090`（见 `application.properties`）
+- **鉴权**：Session 登录（`HttpSession` 内存 Session，登录后写入 `session.setAttribute("user", user)`）
+- **静态资源**：Spring Boot 直接托管 `static/` 下资源
+- **数据库初始化**：`spring.sql.init.mode=always`，脚本 `classpath:schema.sql`，`continue-on-error=true`
+
+---
+
+## 3. 关键目录
+
+| 目录 | 说明 |
+|------|------|
+| `src/main/java/com/example/qr_code/` | 后端 Java 代码 |
+| `├── controller/` | 控制器层 |
+| `├── service/` | 服务层 |
+| `├── mapper/` | MyBatis Mapper |
+| `├── entity/` | 实体类 |
+| `├── config/` | 配置类 |
+| `src/main/resources/static/` | 前端静态资源 |
+| `├── css/variables.css` | CSS 变量（设计系统） |
+| `├── css/components.css` | 公共组件样式 |
+| `├── js/nav.js` | 导航公共逻辑 |
+| `├── js/pet-ai.js` | 宠物 AI 逻辑 |
+| `src/md/` | 项目文档 |
+| `.codebuddy/rules/` | 项目规则与 AI 运行约束 |
+| `.codebuddy/config-templates/` | MCP 模板 |
+
+---
+
+## 4. 核心页面（入口清单）
+
+| 页面 | 功能 |
+|------|------|
+| `login.html` | 登录 |
+| `index.html` | 自习室首页（扫码开门 + 座位状态 + 快捷入口） |
+| `qrcode_scan.html` | 扫码开门 |
+| `seat.html` | 座位管理（占座通电/离座断电） |
+| `study.html` | 学习小屋入口 |
+| `focus.html` | 专注（自由计时/番茄钟 + 白噪音 + 浮动宠物） |
+| `pet.html` | 宠物 |
+| `calendar.html` | 今日学习总结 |
+| `stats.html` | 统计（ECharts） |
+| `message.html` | 留言板（含文明提示与治理） |
+| `encouragement.html` | 温暖传递（匿名鼓励卡片） |
+| `ranking.html` | 排行榜 |
+| `reservation.html` | 座位预约 |
+| `admin.html` | 管理后台 |
+
+---
+
+## 5. 后端 Controller 清单
+
+| Controller | 职责 |
+|------------|------|
+| `AdminController` | 管理后台接口 |
+| `LoginController` | 登录/退出 |
+| `UserController` | 用户信息 |
+| `SeatController` | 座位列表 |
+| `OrderController` | 入座/离座订单 |
+| `ReservationController` | 座位预约 |
+| `QrStatusController` | 二维码抢占式锁定（3分钟） |
+| `FocusController` | 专注记录/今日统计/今日详情 |
+| `PetController` | 宠物创建/获取/互动/鼓励语 |
+| `StatsController` | 周/月/时段/画像统计 |
+| `MessageController` | 留言板 |
+| `EncouragementController` | 匿名鼓励卡片 |
+| `RankingController` | 排行榜 |
+| `FileUploadController` | 二维码图片上传 |
+
+---
+
+## 6. 数据库关键表
+
+| 表名 | 说明 |
+|------|------|
+| `users` | 用户表 |
+| `seats` | 座位表 |
+| `orders` | 入座订单表 |
+| `focus_records` | 专注记录（**含 `type`：free/pomodoro**） |
+| `learning_stats` | 学习统计（**含 `tomato_count`**） |
+| `user_pets` | 用户宠物 |
+| `access_logs` | 访问日志 |
+| `seat_reservations` | 座位预约 |
+| `message_board` | 留言板 |
+| `message_replies` | 留言回复 |
+| `encouragement_cards` | 鼓励卡片 |
+| `system_config` | 系统配置 |
+
+---
+
+## 7. 常用 API 接口
+
+### 7.1 登录与用户
+- `POST /api/login`：登录，成功后 session 写入 `user`
+- `GET/POST /api/logout`：退出
+- `GET /api/user/info`：获取当前用户
+- `GET /api/user/profile`：用户详情
+
+### 7.2 专注与宠物
+- `POST /api/focus/save`：保存专注记录，Body: `{ "duration": 秒, "type": "free"|"pomodoro" }`
+- `GET /api/focus/today`：今日统计
+- `GET /api/focus/today/details`：今日详情（含 records）
+- `GET /api/pet`：宠物信息
+
+### 7.3 门禁二维码
+- `POST /api/qr-status/lock`：锁定 3 分钟
+- `GET /api/qr-status/check`：检查锁定状态
+
+### 7.4 座位与订单
+- `GET /api/seats`：座位列表
+- `POST /api/orders`：入座创建订单（通电）
+- `PUT /api/orders/{id}/end`：离座结束订单（断电）
+
+### 7.5 管理后台
+- `GET /api/admin/check`：管理员权限检查
+- `GET /api/admin/users?withStats=true`：用户列表（含统计）
+- `GET /api/admin/seats`：座位列表（含使用者）
+
+---
+
+## 8. API 返回格式现状
+
+**当前**：Controller 普遍使用 `Map<String,Object>` 返回
+
+```json
+{
+  "success": true/false,
+  "message": "string",
+  "data": { ... }  // 字段不统一（有的叫 users/profile/order 等）
+}
+```
+
+**结论**：短期内不要强行全站切到 `{code,message,data}`，除非同时完成：
+1. 后端兼容层（同时返回 `success` 和 `code`）
+2. 前端所有页面的 fetch 解析统一迁移
+
+---
+
+## 9. 数据库迁移策略
+
+- 优先使用"向后兼容"的增量变更：新增字段要给 DEFAULT
+- 必须同步修改：`schema.sql` 与 `study_room_init.sql`
+- 如果 `spring.sql.init.mode=always`，确保脚本可重复执行
+- 任何改表必须写入 `src/md/03_CURRENT_STATUS_LOG.md`

@@ -39,7 +39,7 @@
         .focus-entry-card {
             background: var(--gradient-primary);
             border-radius: var(--radius-xl);
-            padding: var(--space-8) var(--space-6);
+            padding: var(--space-6);
             text-align: center;
             color: #fff;
             margin-bottom: var(--space-6);
@@ -47,7 +47,10 @@
             cursor: pointer;
             transition: var(--transition-normal);
             text-decoration: none;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .focus-entry-card:hover {
@@ -80,25 +83,30 @@
         .today-stats {
             display: flex;
             justify-content: space-around;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: var(--radius-lg);
-            padding: var(--space-4);
+            padding: var(--space-3) var(--space-4);
             margin-top: var(--space-4);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .today-stat {
             text-align: center;
+            flex: 1;
         }
 
         .today-stat-value {
             font-size: var(--font-size-lg);
             font-weight: var(--font-weight-bold);
+            word-break: break-word;
         }
 
         .today-stat-label {
             font-size: var(--font-size-xs);
-            opacity: 0.8;
-            margin-top: 2px;
+            opacity: 0.9;
+            margin-top: 4px;
+            white-space: nowrap;
         }
 
         /* 工具区块 */
@@ -338,13 +346,8 @@
     <script src="/js/nav.js"></script>
     <script src="/js/pet-ai.js"></script>
     <script>
-        // 宠物 Emoji 映射
-        const PET_EMOJIS = {
-            cat: { egg: '🥚', baby: '🐱', teen: '😺', adult: '😸', professional: '🎓😸' },
-            dog: { egg: '🥚', baby: '🐶', teen: '🐕', adult: '🦮', professional: '🎓🐶' },
-            rabbit: { egg: '🥚', baby: '🐰', teen: '🐇', adult: '🐇', professional: '🎓🐰' }
-        };
-
+        // 注意：PET_EMOJIS 已在 pet-ai.js 中定义，不要重复声明
+        
         const STAGE_NAMES = {
             egg: '蛋',
             baby: '幼年体',
@@ -373,15 +376,33 @@
         // 加载今日统计
         async function loadTodayStats() {
             try {
-                const res = await fetch('/api/focus/today');
+                console.log('[study.html] 开始加载今日统计...');
+                const res = await fetch('/api/focus/today', { credentials: 'include' });
+                console.log('[study.html] API 响应状态:', res.status);
+                
                 const data = await res.json();
-                if (data.success) {
-                    document.getElementById('todayDuration').textContent = formatDuration(data.totalDuration || 0);
-                    document.getElementById('todayCount').textContent = data.focusCount || 0;
-                    document.getElementById('todayExp').textContent = data.expEarned || 0;
+                console.log('[study.html] 今日统计数据:', JSON.stringify(data));
+                
+                if (res.ok && data.success) {
+                    const duration = formatDuration(data.totalDuration || 0);
+                    const count = data.focusCount || 0;
+                    const exp = data.expEarned || 0;
+                    
+                    console.log('[study.html] 更新UI:', { duration, count, exp });
+                    document.getElementById('todayDuration').textContent = duration;
+                    document.getElementById('todayCount').textContent = count;
+                    document.getElementById('todayExp').textContent = exp;
+                } else {
+                    console.warn('[study.html] 加载统计失败:', data.message || '未知错误');
+                    document.getElementById('todayDuration').textContent = '0分';
+                    document.getElementById('todayCount').textContent = '0';
+                    document.getElementById('todayExp').textContent = '0';
                 }
             } catch (err) {
-                console.error('加载统计失败:', err);
+                console.error('[study.html] 加载统计异常:', err);
+                document.getElementById('todayDuration').textContent = '0分';
+                document.getElementById('todayCount').textContent = '0';
+                document.getElementById('todayExp').textContent = '0';
             }
         }
 
@@ -390,6 +411,7 @@
             try {
                 const res = await fetch('/api/pet');
                 const data = await res.json();
+                console.log('宠物数据:', data);
                 
                 if (data.success && data.hasPet) {
                     const pet = data.pet;
@@ -410,6 +432,9 @@
                 }
             } catch (err) {
                 console.error('加载宠物信息失败:', err);
+                document.getElementById('petAvatar').textContent = '🥚';
+                document.getElementById('petName').textContent = '加载失败';
+                document.getElementById('petLevel').textContent = '请刷新重试';
             }
         }
     </script>

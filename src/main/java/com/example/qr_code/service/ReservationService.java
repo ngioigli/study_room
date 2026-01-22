@@ -64,26 +64,48 @@ public class ReservationService {
     @Transactional
     public String createReservation(Long userId, Long seatId, LocalDate date, 
                                     LocalTime startTime, LocalTime endTime) {
-        // 检查预约日期是否在允许范围内
-        int advanceDays = getConfigInt("reservation_advance_days", 7);
-        LocalDate maxDate = LocalDate.now().plusDays(advanceDays);
-        if (date.isBefore(LocalDate.now())) {
+        // 检查预约日期是否在允许范围内（只允许今天和明天）
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        if (date.isBefore(today)) {
             return "不能预约过去的日期";
         }
-        if (date.isAfter(maxDate)) {
-            return "最多只能提前" + advanceDays + "天预约";
+        if (date.isAfter(tomorrow)) {
+            return "最多只能提前1天预约（今天或明天）";
         }
 
         // 检查时间有效性
         if (!startTime.isBefore(endTime)) {
             return "开始时间必须早于结束时间";
         }
+        
+        // 检查预约时长（1-4小时）
+        long durationMinutes = java.time.Duration.between(startTime, endTime).toMinutes();
+        if (durationMinutes < 60) {
+            return "预约时长不能少于1小时";
+        }
+        if (durationMinutes > 240) {
+            return "预约时长不能超过4小时";
+        }
+        
+        // 检查是否提前至少1小时预约
+        LocalDateTime reservationStart = LocalDateTime.of(date, startTime);
+        LocalDateTime minAllowedTime = LocalDateTime.now().plusHours(1);
+        if (reservationStart.isBefore(minAllowedTime)) {
+            return "预约需提前至少1小时";
+        }
+        
+        // 检查营业时间（08:00 - 22:00）
+        LocalTime openTime = LocalTime.of(8, 0);
+        LocalTime closeTime = LocalTime.of(22, 0);
+        if (startTime.isBefore(openTime) || endTime.isAfter(closeTime)) {
+            return "营业时间为08:00-22:00";
+        }
 
-        // 检查用户当日预约数量
-        int maxDaily = getConfigInt("max_daily_reservations", 2);
-        int userDaily = reservationMapper.countUserDailyReservations(userId, date);
-        if (userDaily >= maxDaily) {
-            return "每天最多只能预约" + maxDaily + "次";
+        // 检查用户是否已有待使用的预约
+        SeatReservation pending = getUserPendingReservation(userId);
+        if (pending != null) {
+            return "您已有一个待使用的预约，请先使用或取消";
         }
 
         // 检查座位是否存在且可用

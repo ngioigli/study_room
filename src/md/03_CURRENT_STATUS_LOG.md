@@ -3,6 +3,29 @@
 **存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🎨 study.html 页面布局与数据加载优化（2026-01-22）**:
+  - **问题**：study.html 页面显示异常，"开始专注"卡片内容溢出，今日数据显示为"-"
+  - **修复内容**：
+    - 修改 `.focus-entry-card` 样式：从 `display: block` 改为 `display: flex` + `flex-direction: column`，并调整 padding
+    - 优化 `.today-stats` 样式：修改背景透明度、padding、width 等属性，确保内容正确自适应
+    - 优化 `.today-stat-value` 和 `.today-stat-label` 的字体大小与间距
+    - 增强 `loadTodayStats()` 和 `loadPetInfo()` 函数错误处理，添加详细的 console.log 日志便于调试
+    - 当 API 失败时显示默认值而非"-"
+  - **BUG修复**：移除重复声明的 `PET_EMOJIS` 常量（与 pet-ai.js 中的定义冲突导致 JavaScript 语法错误）
+- **📅 座位预约系统时间选择优化（2026-01-22）**:
+  - **需求**：预约需提前至少1小时，开始前30分钟内不可取消
+  - **前端修复内容**（reservation.html）：
+    - 重写 `generateTimeOptions()` 函数：开始时间只显示当前时间1小时后的最近半小时时间点
+    - 新增 `updateEndTimeOptions()` 函数：结束时间至少是开始时间的1小时之后，最多4小时
+    - 新增 `onStartTimeChange()` 函数：开始时间变更时自动更新结束时间选项
+    - 修改 `selectDate()` 函数：切换日期时重新生成时间选项
+    - 更新提示文案：⏰ 预约需提前至少1小时，时长1-4小时
+  - **后端修复内容**（ReservationService.java）：
+    - 新增"预约需提前至少1小时"验证
+    - 新增"预约时长1-4小时"验证
+    - 新增"营业时间08:00-22:00"验证
+    - 新增"用户只能有一个待使用预约"验证
+    - 简化预约日期限制为只允许今天和明天
 - **🚀 超级团队模式 5 大改进完成（2026-01-22）**:
   - **改进点 #1：专注结算逻辑补全**
     - 前端 `focus.html` 新增 `saveFocusRecordWithRetry()` 自动重试机制（最多 3 次，指数退避 1s/2s/4s）

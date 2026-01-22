@@ -603,7 +603,7 @@
             <div class="section-title">选择时间</div>
             <div class="time-picker-row">
                 <span class="time-picker-label">开始时间</span>
-                <select class="time-select" id="startTimeSelect" onchange="updateDuration()">
+                <select class="time-select" id="startTimeSelect" onchange="onStartTimeChange()">
                     <!-- 由JS生成 -->
                 </select>
             </div>
@@ -613,7 +613,7 @@
                     <!-- 由JS生成 -->
                 </select>
             </div>
-            <div class="time-hint">⏰ 预约时长：最短1小时，最长4小时</div>
+            <div class="time-hint">⏰ 预约需提前至少1小时，时长1-4小时</div>
             <div class="time-duration">
                 <div class="time-duration-label">预约时长</div>
                 <div class="time-duration-value" id="durationValue">--</div>
@@ -691,32 +691,79 @@
             selectedDate = formatDateStr(today);
         }
 
-        // 生成时间选项
+        // 生成时间选项（根据选择的日期动态生成）
         function generateTimeOptions() {
             const startSelect = document.getElementById('startTimeSelect');
             const endSelect = document.getElementById('endTimeSelect');
             
-            let startHtml = '<option value="">请选择开始时间</option>';
-            let endHtml = '<option value="">请选择结束时间</option>';
+            // 清空现有选项
+            startSelect.innerHTML = '<option value="">请选择开始时间</option>';
+            endSelect.innerHTML = '<option value="">请选择结束时间</option>';
             
-            // 营业时间 8:00 - 22:00
-            for (let h = 8; h <= 21; h++) {
-                for (let m = 0; m < 60; m += 30) {
-                    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                    startHtml += `<option value="${time}">${time}</option>`;
+            const now = new Date();
+            const today = formatDateStr(now);
+            const isToday = selectedDate === today;
+            
+            // 计算最早可选的开始时间：当前时间 + 1小时，向上取整到最近的半小时
+            let minStartMinutes = 8 * 60; // 默认从08:00开始（营业时间）
+            
+            if (isToday) {
+                // 当前时间 + 60分钟
+                const currentMinutes = now.getHours() * 60 + now.getMinutes() + 60;
+                // 向上取整到最近的半小时（例如 10:15 -> 10:30, 10:45 -> 11:00）
+                minStartMinutes = Math.ceil(currentMinutes / 30) * 30;
+            }
+            
+            // 营业时间 8:00 - 22:00，开始时间最晚21:00（确保至少1小时）
+            const maxStartMinutes = 21 * 60; // 21:00
+            
+            // 生成开始时间选项
+            for (let m = minStartMinutes; m <= maxStartMinutes; m += 30) {
+                const h = Math.floor(m / 60);
+                const min = m % 60;
+                if (h >= 8 && h <= 21) { // 确保在营业时间内
+                    const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+                    startSelect.innerHTML += `<option value="${time}">${time}</option>`;
                 }
             }
             
-            for (let h = 9; h <= 22; h++) {
-                for (let m = 0; m < 60; m += 30) {
-                    if (h === 22 && m > 0) continue;
-                    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                    endHtml += `<option value="${time}">${time}</option>`;
-                }
+            // 如果没有可选的开始时间（今天已经太晚了）
+            if (startSelect.options.length <= 1 && isToday) {
+                startSelect.innerHTML = '<option value="">今日已无可预约时段</option>';
+                endSelect.innerHTML = '<option value="">请先选择开始时间</option>';
+                showToast('今日已无可预约时段，请选择明天');
+            }
+        }
+        
+        // 更新结束时间选项（基于开始时间）
+        function updateEndTimeOptions() {
+            const startTime = document.getElementById('startTimeSelect').value;
+            const endSelect = document.getElementById('endTimeSelect');
+            
+            endSelect.innerHTML = '<option value="">请选择结束时间</option>';
+            
+            if (!startTime) {
+                return;
             }
             
-            startSelect.innerHTML = startHtml;
-            endSelect.innerHTML = endHtml;
+            const [startH, startM] = startTime.split(':').map(Number);
+            const startMinutes = startH * 60 + startM;
+            
+            // 结束时间至少是开始时间 + 1小时，最多 + 4小时，最晚22:00
+            const minEndMinutes = startMinutes + 60; // 开始时间 + 1小时
+            const maxEndMinutes = Math.min(startMinutes + 240, 22 * 60); // 最多4小时，最晚22:00
+            
+            for (let m = minEndMinutes; m <= maxEndMinutes; m += 30) {
+                const h = Math.floor(m / 60);
+                const min = m % 60;
+                const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+                endSelect.innerHTML += `<option value="${time}">${time}</option>`;
+            }
+            
+            // 如果只有一个选项（开始时间太晚了）
+            if (endSelect.options.length <= 1) {
+                endSelect.innerHTML = '<option value="">无可选结束时间</option>';
+            }
         }
 
         // 更新时长显示
@@ -744,6 +791,14 @@
             }
             
             updateReserveBtn();
+        }
+        
+        // 开始时间变更时，更新结束时间选项
+        function onStartTimeChange() {
+            updateEndTimeOptions();
+            // 清空已选的结束时间
+            document.getElementById('endTimeSelect').value = '';
+            updateDuration();
         }
 
         // 检查用户是否已有待使用的预约
@@ -832,6 +887,12 @@
             document.querySelectorAll('.date-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.date === dateStr);
             });
+            
+            // 重新生成时间选项（因为今天和明天的可选时间不同）
+            generateTimeOptions();
+            // 清空已选的结束时间
+            document.getElementById('endTimeSelect').innerHTML = '<option value="">请先选择开始时间</option>';
+            document.getElementById('durationValue').textContent = '--';
             
             updateReserveBtn();
         }

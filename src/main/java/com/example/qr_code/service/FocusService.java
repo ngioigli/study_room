@@ -6,6 +6,7 @@ import com.example.qr_code.entity.LearningStats;
 import com.example.qr_code.entity.UserPet;
 import com.example.qr_code.mapper.FocusRecordMapper;
 import com.example.qr_code.mapper.LearningStatsMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class FocusService {
 
@@ -79,7 +81,7 @@ public class FocusService {
             }
         } catch (Exception e) {
             // 如果获取宠物失败，使用基础经验值
-            System.err.println("获取宠物心情失败: " + e.getMessage());
+            log.warn("获取宠物心情失败: {}", e.getMessage());
         }
 
         // 3. 更新当日学习统计

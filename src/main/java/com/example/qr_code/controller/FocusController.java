@@ -22,9 +22,9 @@ public class FocusController {
     private FocusService focusService;
 
     /**
-     * 保存专注记录
+     * 保存专注记录（支持幂等性）
      * POST /api/focus/save
-     * Body: { "duration": 1800, "type": "free" }
+     * Body: { "duration": 1800, "type": "free", "clientId": "xxx", "timestamp": 123456789 }
      */
     @PostMapping("/save")
     public Map<String, Object> saveFocusRecord(@RequestBody Map<String, Object> body, HttpSession session) {
@@ -34,6 +34,7 @@ public class FocusController {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             result.put("success", false);
+            result.put("code", 401);
             result.put("message", "请先登录");
             return result;
         }
@@ -48,6 +49,7 @@ public class FocusController {
             
             if (duration == null || duration <= 0) {
                 result.put("success", false);
+                result.put("code", 400);
                 result.put("message", "无效的专注时长");
                 return result;
             }
@@ -57,21 +59,26 @@ public class FocusController {
             if (type == null || type.isEmpty()) {
                 type = "free";
             }
+            
+            // 获取客户端唯一标识（用于幂等性校验）
+            String clientId = (String) body.get("clientId");
 
             // 解析时间（前端可能不传，后端自动计算）
             LocalDateTime endTime = LocalDateTime.now();
             LocalDateTime startTime = endTime.minusSeconds(duration);
 
-            // 保存记录
-            FocusRecord record = focusService.saveFocusRecord(user.getId(), duration, startTime, endTime, type);
+            // 保存记录（带幂等性校验）
+            FocusRecord record = focusService.saveFocusRecord(user.getId(), duration, startTime, endTime, type, clientId);
 
             // 获取今日统计
             LearningStats todayStats = focusService.getTodayStats(user.getId());
 
             result.put("success", true);
+            result.put("code", 0);
             result.put("message", "专注记录已保存");
             result.put("recordId", record.getId());
             result.put("expEarned", calculateExp(duration, type));
+            result.put("timestamp", System.currentTimeMillis());
             
             if (todayStats != null) {
                 result.put("todayTotal", todayStats.getTotalDuration());
@@ -81,6 +88,7 @@ public class FocusController {
 
         } catch (Exception e) {
             result.put("success", false);
+            result.put("code", 500);
             result.put("message", "保存失败: " + e.getMessage());
         }
 

@@ -171,4 +171,15 @@ public class UserService {
         
         return userMapper.update(null, updateWrapper) > 0;
     }
+    
+    /**
+     * 更新排行榜隐私设置
+     * @param userId 用户ID
+     * @param hideRanking true-隐藏排名，false-显示排名
+     */
+    public boolean updateHideRanking(Long userId, boolean hideRanking) {
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", userId).set("hide_ranking", hideRanking ? 1 : 0);
+        return userMapper.update(null, updateWrapper) > 0;
+    }
 }

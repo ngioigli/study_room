@@ -17,7 +17,7 @@ import java.util.Map;
 public interface LearningStatsMapper extends BaseMapper<LearningStats> {
     
     /**
-     * 按日期范围获取排行榜
+     * 按日期范围获取排行榜（过滤隐藏排名的用户）
      */
     @Select("SELECT u.id as userId, u.nickname, u.avatar, u.today_status as todayStatus, " +
             "SUM(ls.total_duration) as totalMinutes " +
@@ -25,6 +25,7 @@ public interface LearningStatsMapper extends BaseMapper<LearningStats> {
             "JOIN users u ON ls.user_id = u.id " +
             "WHERE ls.stat_date BETWEEN #{startDate} AND #{endDate} " +
             "AND u.status = 1 " +
+            "AND (u.hide_ranking IS NULL OR u.hide_ranking = 0) " +
             "GROUP BY u.id, u.nickname, u.avatar, u.today_status " +
             "ORDER BY totalMinutes DESC " +
             "LIMIT #{limit}")
@@ -34,13 +35,14 @@ public interface LearningStatsMapper extends BaseMapper<LearningStats> {
             @Param("limit") int limit);
     
     /**
-     * 获取总排行榜
+     * 获取总排行榜（过滤隐藏排名的用户）
      */
     @Select("SELECT u.id as userId, u.nickname, u.avatar, u.today_status as todayStatus, " +
             "SUM(ls.total_duration) as totalMinutes " +
             "FROM learning_stats ls " +
             "JOIN users u ON ls.user_id = u.id " +
             "WHERE u.status = 1 " +
+            "AND (u.hide_ranking IS NULL OR u.hide_ranking = 0) " +
             "GROUP BY u.id, u.nickname, u.avatar, u.today_status " +
             "ORDER BY totalMinutes DESC " +
             "LIMIT #{limit}")

@@ -1470,54 +1470,180 @@
                     petAI.resetMilestone();
                 }
                 
+                // ==================== 离线缓存相关 ====================
+                const OFFLINE_CACHE_KEY = 'focus_offline_records';
+                
+                // 生成唯一客户端 ID
+                function generateClientId() {
+                    return 'focus_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                }
+                
+                // 保存到离线缓存
+                function saveToOfflineCache(record) {
+                    try {
+                        const cache = JSON.parse(localStorage.getItem(OFFLINE_CACHE_KEY) || '[]');
+                        // 最多保存 50 条
+                        if (cache.length >= 50) {
+                            cache.shift();
+                        }
+                        cache.push(record);
+                        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(cache));
+                        console.log('已保存到离线缓存:', record);
+                        return true;
+                    } catch (err) {
+                        console.error('离线缓存保存失败:', err);
+                        return false;
+                    }
+                }
+                
+                // 从离线缓存移除
+                function removeFromOfflineCache(clientId) {
+                    try {
+                        const cache = JSON.parse(localStorage.getItem(OFFLINE_CACHE_KEY) || '[]');
+                        const newCache = cache.filter(r => r.clientId !== clientId);
+                        localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(newCache));
+                    } catch (err) {
+                        console.error('离线缓存移除失败:', err);
+                    }
+                }
+                
+                // 获取离线缓存
+                function getOfflineCache() {
+                    try {
+                        return JSON.parse(localStorage.getItem(OFFLINE_CACHE_KEY) || '[]');
+                    } catch (err) {
+                        return [];
+                    }
+                }
+                
+                // 同步离线缓存（网络恢复时调用）
+                async function syncOfflineCache() {
+                    const cache = getOfflineCache();
+                    if (cache.length === 0) return;
+                    
+                    console.log('开始同步离线缓存，共', cache.length, '条记录');
+                    showToast(`正在同步 ${cache.length} 条离线记录...`);
+                    
+                    let successCount = 0;
+                    for (const record of cache) {
+                        const success = await saveFocusRecordWithRetry(
+                            record.duration, 
+                            record.type, 
+                            record.clientId, 
+                            record.timestamp,
+                            1 // 只重试一次
+                        );
+                        if (success) {
+                            successCount++;
+                            removeFromOfflineCache(record.clientId);
+                        }
+                    }
+                    
+                    if (successCount > 0) {
+                        showToast(`✓ 已同步 ${successCount} 条离线记录`);
+                        loadTodayStats(); // 刷新统计
+                    }
+                }
+                
+                // 带重试的保存专注记录
+                async function saveFocusRecordWithRetry(duration, type = 'free', clientId = null, timestamp = null, maxRetries = 3) {
+                    clientId = clientId || generateClientId();
+                    timestamp = timestamp || Date.now();
+                    
+                    let lastError = null;
+                    
+                    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                        try {
+                            console.log(`保存专注记录 (尝试 ${attempt}/${maxRetries}):`, { duration, type, clientId });
+                            
+                            const res = await fetch('/api/focus/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    duration, 
+                                    type,
+                                    clientId,
+                                    timestamp
+                                })
+                            });
+                            
+                            const data = await res.json();
+                            console.log('保存结果:', data);
+                            
+                            if (data.success || data.code === 0) {
+                                return { success: true, data };
+                            } else {
+                                lastError = data.message || '保存失败';
+                            }
+                        } catch (err) {
+                            console.error(`尝试 ${attempt} 失败:`, err);
+                            lastError = err.message || '网络错误';
+                            
+                            // 指数退避等待
+                            if (attempt < maxRetries) {
+                                const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+                                console.log(`等待 ${delay}ms 后重试...`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                            }
+                        }
+                    }
+                    
+                    return { success: false, error: lastError };
+                }
+                
                 async function saveFocusRecord(duration, type = 'free') {
                     console.log('保存专注记录:', { duration, type });
-                    try {
-                        const res = await fetch('/api/focus/save', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ duration, type })
-                        });
-                        const data = await res.json();
-                        console.log('保存结果:', data);
+                    
+                    const clientId = generateClientId();
+                    const timestamp = Date.now();
+                    
+                    // 先存入离线缓存（防止数据丢失）
+                    const offlineRecord = { duration, type, clientId, timestamp };
+                    saveToOfflineCache(offlineRecord);
+                    
+                    // 显示保存中状态
+                    showToast('⏳ 正在保存...');
+                    
+                    const result = await saveFocusRecordWithRetry(duration, type, clientId, timestamp);
+                    
+                    if (result.success) {
+                        // 保存成功，从离线缓存移除
+                        removeFromOfflineCache(clientId);
                         
-                        if (data.success) {
-                            const expEarned = data.expEarned || 0;
-                            if (type === 'pomodoro') {
-                                showToast(`🍅 番茄完成！获得 ${expEarned} 经验值（含20%奖励）`);
-                            } else {
-                                showToast(`专注 ${formatDuration(duration)} 已记录！获得 ${expEarned} 经验值`);
-                            }
-                            
-                            // 更新今日统计
-                            todayStats.totalDuration += duration;
-                            todayStats.focusCount += 1;
-                            todayStats.expEarned += expEarned;
-                            
-                            // 更新宠物经验
-                            petInfo.exp += expEarned;
-                            
-                            // 检查是否升级
-                            const newLevel = Math.floor(petInfo.exp / 100) + 1;
-                            if (newLevel > petInfo.level) {
-                                petInfo.level = newLevel;
-                                showPetBubble(`🎉 恭喜！宠物升到 Lv.${newLevel} 啦！`);
-                            } else if (type !== 'pomodoro') {
-                                showPetBubble('太棒了！又获得经验啦~');
-                            }
-                            
-                            petState.value = 'playing';
-                            setTimeout(() => petState.value = 'idle', 2000);
-                            
-                            return true;
+                        const data = result.data;
+                        const expEarned = data.expEarned || 0;
+                        
+                        if (type === 'pomodoro') {
+                            showToast(`🍅 番茄完成！获得 ${expEarned} 经验值（含20%奖励）`);
                         } else {
-                            console.error('保存失败:', data.message);
-                            showToast(data.message || '保存失败，请重试');
-                            return false;
+                            showToast(`专注 ${formatDuration(duration)} 已记录！获得 ${expEarned} 经验值`);
                         }
-                    } catch (err) {
-                        console.error('保存失败:', err);
-                        showToast('网络错误，保存失败');
+                        
+                        // 更新今日统计
+                        todayStats.totalDuration += duration;
+                        todayStats.focusCount += 1;
+                        todayStats.expEarned += expEarned;
+                        
+                        // 更新宠物经验
+                        petInfo.exp += expEarned;
+                        
+                        // 检查是否升级
+                        const newLevel = Math.floor(petInfo.exp / 100) + 1;
+                        if (newLevel > petInfo.level) {
+                            petInfo.level = newLevel;
+                            showPetBubble(`🎉 恭喜！宠物升到 Lv.${newLevel} 啦！`);
+                        } else if (type !== 'pomodoro') {
+                            showPetBubble('太棒了！又获得经验啦~');
+                        }
+                        
+                        petState.value = 'playing';
+                        setTimeout(() => petState.value = 'idle', 2000);
+                        
+                        return true;
+                    } else {
+                        // 3 次重试都失败了，保留在离线缓存中
+                        console.error('保存失败，已存入离线缓存:', result.error);
+                        showToast('📴 离线保存，待网络恢复自动上传');
                         return false;
                     }
                 }
@@ -1843,6 +1969,19 @@
                             pauseTimer();
                         }
                     });
+                    
+                    // 监听网络状态变化
+                    window.addEventListener('online', () => {
+                        console.log('网络已恢复');
+                        showToast('✓ 网络已恢复');
+                        // 自动同步离线缓存
+                        setTimeout(() => syncOfflineCache(), 1000);
+                    });
+                    
+                    window.addEventListener('offline', () => {
+                        console.log('网络已断开');
+                        showToast('⚠️ 网络已断开，数据将离线保存');
+                    });
                 }
                 
                 function showToast(message) {
@@ -1865,6 +2004,13 @@
                     // 初始化新功能
                     setupPageLeaveWarning();
                     startCooldownTimer();
+                    
+                    // 页面加载时检查离线缓存
+                    const offlineRecords = getOfflineCache();
+                    if (offlineRecords.length > 0 && navigator.onLine) {
+                        console.log('发现离线缓存，准备同步...');
+                        setTimeout(() => syncOfflineCache(), 2000);
+                    }
                     
                     // 加载保存的主题
                     const savedTheme = localStorage.getItem('focusTheme') || 'default';

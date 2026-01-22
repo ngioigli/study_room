@@ -42,6 +42,10 @@ public class User {
     /** 状态：1-正常，0-禁用 */
     private Integer status;
     
+    /** 隐藏排名：0-显示，1-隐藏 */
+    @TableField("hide_ranking")
+    private Integer hideRanking;
+    
     @TableField("created_at")
     private LocalDateTime createdAt;
     

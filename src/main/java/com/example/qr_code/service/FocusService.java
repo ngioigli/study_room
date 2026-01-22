@@ -38,22 +38,32 @@ public class FocusService {
      * @param endTime 结束时间
      * @return 保存的记录
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime) {
         return saveFocusRecord(userId, duration, startTime, endTime, "free");
     }
 
     /**
-     * 保存专注记录并更新学习统计（带类型）
+     * 保存专注记录并更新学习统计（带类型和幂等性校验）
      * @param userId 用户ID
      * @param duration 专注时长（秒）
      * @param startTime 开始时间
      * @param endTime 结束时间
      * @param type 专注类型: free 或 pomodoro
-     * @return 保存的记录
+     * @param clientId 客户端唯一标识（用于幂等性校验）
+     * @return 保存的记录（如果是重复请求则返回已有记录）
      */
-    @Transactional
-    public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime, String type) {
+    @Transactional(rollbackFor = Exception.class)
+    public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime, String type, String clientId) {
+        // 幂等性校验：检查是否已存在相同 clientId 的记录
+        if (clientId != null && !clientId.isEmpty()) {
+            FocusRecord existing = findByClientId(clientId);
+            if (existing != null) {
+                log.info("幂等性校验：发现重复请求，clientId={}, recordId={}", clientId, existing.getId());
+                return existing; // 返回已有记录，不重复插入
+            }
+        }
+        
         // 1. 保存专注记录
         FocusRecord record = new FocusRecord();
         record.setUserId(userId);
@@ -62,6 +72,7 @@ public class FocusService {
         record.setFocusDate(LocalDate.now());
         record.setStartTime(startTime);
         record.setEndTime(endTime);
+        record.setClientId(clientId);
         focusRecordMapper.insert(record);
 
         // 2. 计算经验值（带心情加成）
@@ -91,6 +102,32 @@ public class FocusService {
         petService.addExp(userId, finalExp);
 
         return record;
+    }
+    
+    /**
+     * 保存专注记录并更新学习统计（带类型）
+     * @param userId 用户ID
+     * @param duration 专注时长（秒）
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param type 专注类型: free 或 pomodoro
+     * @return 保存的记录
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public FocusRecord saveFocusRecord(Long userId, Integer duration, LocalDateTime startTime, LocalDateTime endTime, String type) {
+        return saveFocusRecord(userId, duration, startTime, endTime, type, null);
+    }
+    
+    /**
+     * 根据 clientId 查找记录（用于幂等性校验）
+     */
+    public FocusRecord findByClientId(String clientId) {
+        if (clientId == null || clientId.isEmpty()) {
+            return null;
+        }
+        QueryWrapper<FocusRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("client_id", clientId);
+        return focusRecordMapper.selectOne(wrapper);
     }
 
     /**

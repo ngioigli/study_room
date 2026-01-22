@@ -302,4 +302,78 @@ public class UserController {
         response.put("statuses", statuses);
         return response;
     }
+    
+    /**
+     * 获取用户隐私设置
+     * GET /api/user/privacy
+     */
+    @GetMapping("/privacy")
+    public Map<String, Object> getPrivacySettings(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        User sessionUser = (User) session.getAttribute("user");
+        
+        if (sessionUser == null) {
+            response.put("success", false);
+            response.put("code", 401);
+            response.put("message", "请先登录");
+            return response;
+        }
+        
+        // 从数据库获取最新用户信息
+        User user = userService.getUserById(sessionUser.getId());
+        if (user == null) {
+            response.put("success", false);
+            response.put("code", 404);
+            response.put("message", "用户不存在");
+            return response;
+        }
+        
+        response.put("success", true);
+        response.put("code", 0);
+        response.put("hideRanking", user.getHideRanking() != null && user.getHideRanking() == 1);
+        return response;
+    }
+    
+    /**
+     * 更新排行榜隐私设置
+     * PUT /api/user/privacy/ranking
+     */
+    @PutMapping("/privacy/ranking")
+    public Map<String, Object> updateRankingPrivacy(@RequestBody Map<String, Object> data, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        
+        if (user == null) {
+            response.put("success", false);
+            response.put("code", 401);
+            response.put("message", "请先登录");
+            return response;
+        }
+        
+        Object hideRankingObj = data.get("hideRanking");
+        boolean hideRanking = false;
+        
+        if (hideRankingObj instanceof Boolean) {
+            hideRanking = (Boolean) hideRankingObj;
+        } else if (hideRankingObj instanceof Number) {
+            hideRanking = ((Number) hideRankingObj).intValue() == 1;
+        }
+        
+        boolean success = userService.updateHideRanking(user.getId(), hideRanking);
+        
+        if (success) {
+            user.setHideRanking(hideRanking ? 1 : 0);
+            session.setAttribute("user", user);
+            
+            response.put("success", true);
+            response.put("code", 0);
+            response.put("message", hideRanking ? "已隐藏您的排行榜排名" : "您的排名已公开显示");
+            response.put("hideRanking", hideRanking);
+        } else {
+            response.put("success", false);
+            response.put("code", 500);
+            response.put("message", "设置失败，请重试");
+        }
+        return response;
+    }
 }

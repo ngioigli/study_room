@@ -40,6 +40,10 @@ public class FocusRecord {
     @TableField("end_time")
     private LocalDateTime endTime;
     
+    /** 客户端唯一标识（用于幂等性校验） */
+    @TableField("client_id")
+    private String clientId;
+    
     @TableField("created_at")
     private LocalDateTime createdAt;
 }

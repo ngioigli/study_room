@@ -3,6 +3,30 @@
 **存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🚀 超级团队模式 5 大改进完成（2026-01-22）**:
+  - **改进点 #1：专注结算逻辑补全**
+    - 前端 `focus.html` 新增 `saveFocusRecordWithRetry()` 自动重试机制（最多 3 次，指数退避 1s/2s/4s）
+    - 新增 `localStorage` 离线缓存：`focus_offline_records` 保存失败记录，网络恢复自动同步
+    - 添加网络状态监听（online/offline 事件）
+  - **改进点 #2：后端幂等性校验**
+    - `FocusRecord.java` 新增 `clientId` 字段
+    - `FocusService.saveFocusRecord()` 支持 clientId 去重，重复请求返回已有记录
+    - 数据库新增 `focus_records.client_id` 字段和索引
+  - **改进点 #3：数据一致性强化**
+    - 所有事务方法使用 `@Transactional(rollbackFor = Exception.class)` 确保原子性
+  - **改进点 #4：统一响应类**
+    - 新增 `com.example.qr_code.common.ApiResponse<T>` 统一响应类
+    - 支持 `success` + `code` 双字段兼容模式
+    - 提供 `success()`, `error()`, `unauthorized()`, `badRequest()` 等静态工厂方法
+  - **改进点 #5：座位并发冲突处理**
+    - `SeatMapper.java` 新增 `selectByIdForUpdate()` 行级锁查询方法
+    - `SeatService.occupySeat()` 使用 `FOR UPDATE` 防止并发抢座
+  - **改进点 #6：排行榜隐私保护**
+    - `users` 表新增 `hide_ranking` 字段（0-显示，1-隐藏）
+    - `User.java` 实体新增 `hideRanking` 字段
+    - `LearningStatsMapper` 排行榜查询自动过滤 `hide_ranking=1` 的用户
+    - `UserController` 新增 `/api/user/privacy` 和 `/api/user/privacy/ranking` 接口
+    - `UserService` 新增 `updateHideRanking()` 方法
 - **🧩 新增项目定制超级团队提示词手册（2026-01-22）**:
   - 新增 `src/md/12_AI_SUPER_TEAM_PROMPT_PACK.md`，将“超级团队 AI 提示词”按当前仓库现状与 `.codebuddy` 规则进行定制（技术栈边界、接口/页面/表结构、文档同步、MCP 模板使用说明等）。
 - **🛑 专注停止按钮保存修复（2026-01-22）**:

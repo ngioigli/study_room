@@ -56,7 +56,7 @@ public class SeatService {
      * @param powerOn 电源状态：true-通电，false-断电
      * @return 更新后的座位信息
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Seat controlPower(Long seatId, boolean powerOn) {
         Seat seat = seatMapper.selectById(seatId);
         if (seat == null) {
@@ -75,7 +75,7 @@ public class SeatService {
      * @param seatId 座位ID
      * @param status 状态：available-空闲, occupied-占用, reserved-预约, maintenance-维护
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Seat updateSeatStatus(Long seatId, String status) {
         Seat seat = seatMapper.selectById(seatId);
         if (seat == null) {
@@ -96,16 +96,18 @@ public class SeatService {
 
     /**
      * 入座操作：更新座位状态为占用，并通电
+     * 使用行级锁防止并发冲突
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Seat occupySeat(Long seatId) {
-        Seat seat = seatMapper.selectById(seatId);
+        // 使用 FOR UPDATE 行级锁，防止并发抢座
+        Seat seat = seatMapper.selectByIdForUpdate(seatId);
         if (seat == null) {
             throw new RuntimeException("座位不存在");
         }
         
         if (!"available".equals(seat.getStatus())) {
-            throw new RuntimeException("座位当前不可用");
+            throw new RuntimeException("座位当前不可用，可能已被他人占用");
         }
 
         seat.setStatus("occupied");
@@ -119,7 +121,7 @@ public class SeatService {
     /**
      * 离座操作：更新座位状态为空闲，并断电
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public Seat releaseSeat(Long seatId) {
         Seat seat = seatMapper.selectById(seatId);
         if (seat == null) {

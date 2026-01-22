@@ -3,12 +3,30 @@
 **存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🔒 安全性与代码质量全面修复（2026-01-22）**:
+  - **前后端接口对齐修复**：
+    - 修复index.html中订单API路径不一致问题（`/api/order/` → `/api/orders/`）
+    - 修复离座功能API调用错误（`POST /api/order/leave` → `PUT /api/orders/{id}/end`）
+  - **XSS安全漏洞修复**：
+    - 在encouragement.html、admin.html中添加HTML转义函数防止XSS攻击
+    - 对所有用户输入数据进行HTML转义处理
+  - **权限控制增强**：
+    - OrderController的getAllActiveOrders接口添加管理员权限验证
+    - 防止普通用户访问管理员功能
+  - **单元测试更新**：
+    - 新增testGetAllActiveOrders_NotAdmin测试用例
+    - 更新testGetAllActiveOrders_Success确保管理员权限验证
+    - 所有193个测试用例全部通过
+  - **代码质量提升**：
+    - 移除TODO标记，完善待办功能
+    - 统一前后端接口规范
+    - 增强用户数据安全性
 - **✅ Controller 单元测试全覆盖完成（2026-01-22）**:
-  - **已完成13个Controller的单元测试，共计约220个测试用例**
+  - **已完成13个Controller的单元测试，共计193个测试用例**
   - 新增测试：
     - RankingController 单元测试：涵盖今日/本周/本月/年度/总排行榜及用户排名查询等 10 个测试用例
     - EncouragementController 单元测试：涵盖鼓励卡片获取、创建、点赞、隐藏等 12 个测试用例
-    - OrderController 单元测试：涵盖订单创建、结束、取消、查询、历史记录等 20 个测试用例
+    - OrderController 单元测试：涵盖订单创建、结束、取消、查询、历史记录等 19 个测试用例（新增权限测试）
     - QrStatusController 单元测试：涵盖二维码状态检查、锁定、并发控制等 7 个测试用例
   - **测试覆盖率**：
     - Controller 层：100% 接口覆盖

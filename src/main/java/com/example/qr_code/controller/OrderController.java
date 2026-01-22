@@ -232,7 +232,12 @@ public class OrderController {
             return result;
         }
 
-        // TODO: 添加管理员权限验证
+        // 验证管理员权限
+        if (!"admin".equals(user.getRole())) {
+            result.put("success", false);
+            result.put("message", "权限不足，需要管理员权限");
+            return result;
+        }
 
         try {
             List<Order> orders = orderService.getAllActiveOrders();

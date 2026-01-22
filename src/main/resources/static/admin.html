@@ -703,10 +703,10 @@
                     <div class="list-item">
                         <div class="list-avatar">${info.icon}</div>
                         <div class="list-info">
-                            <div class="list-name">${seatNumber}</div>
+                            <div class="list-name">${escapeHtml(seatNumber)}</div>
                             <div class="list-meta">
                                 电源: ${powerOn ? '🟢 已通电' : '⚪ 已断电'}
-                                ${currentUser ? ` | 用户: ${currentUser}` : ''}
+                                ${currentUser ? ` | 用户: ${escapeHtml(currentUser)}` : ''}
                             </div>
                         </div>
                         <div class="list-actions">
@@ -754,7 +754,7 @@
                     <div class="list-avatar">${user.status === 0 ? '🚫' : '👤'}</div>
                     <div class="list-info">
                         <div class="list-name">
-                            ${user.username || user.nickname}
+                            ${escapeHtml(user.username || user.nickname || '未命名')}
                             ${user.role === 'admin' ? '<span class="status-badge admin">管理员</span>' : ''}
                             ${user.status === 0 ? '<span class="status-badge disabled">已禁用</span>' : ''}
                         </div>
@@ -773,6 +773,14 @@
                     </div>
                 </div>
             `).join('');
+        }
+        
+        // HTML转义函数，防止XSS攻击
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // 显示用户详情弹窗

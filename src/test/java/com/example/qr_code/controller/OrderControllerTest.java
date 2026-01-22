@@ -476,7 +476,7 @@ public class OrderControllerTest {
 
     /**
      * 测试场景：成功获取所有进行中的订单（管理员）
-     * 前置条件：用户已登录
+     * 前置条件：用户已登录且为管理员
      * 输入数据：无
      * 预期结果：返回所有活动订单列表
      */
@@ -484,6 +484,7 @@ public class OrderControllerTest {
     public void testGetAllActiveOrders_Success() {
         User mockUser = new User();
         mockUser.setId(1L);
+        mockUser.setRole("admin");
 
         when(session.getAttribute("user")).thenReturn(mockUser);
 
@@ -505,6 +506,30 @@ public class OrderControllerTest {
 
         verify(session, times(1)).getAttribute("user");
         verify(orderService, times(1)).getAllActiveOrders();
+    }
+
+    /**
+     * 测试场景：非管理员用户获取所有进行中的订单
+     * 前置条件：用户已登录但不是管理员
+     * 输入数据：无
+     * 预期结果：返回权限不足错误
+     */
+    @Test
+    public void testGetAllActiveOrders_NotAdmin() {
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setRole("user");
+
+        when(session.getAttribute("user")).thenReturn(mockUser);
+
+        Map<String, Object> response = orderController.getAllActiveOrders(session);
+
+        assertNotNull(response);
+        assertEquals(false, response.get("success"));
+        assertEquals("权限不足，需要管理员权限", response.get("message"));
+
+        verify(session, times(1)).getAttribute("user");
+        verify(orderService, never()).getAllActiveOrders();
     }
 
     /**

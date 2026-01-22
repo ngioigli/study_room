@@ -462,15 +462,18 @@
         // 加载当前占座状态
         async function loadCurrentSeatStatus() {
             try {
-                const res = await fetch('/api/order/current');
+                const res = await fetch('/api/orders/current');
                 const data = await res.json();
                 
-                if (data.success && data.order) {
+                if (data.success && data.hasActiveOrder) {
                     const card = document.getElementById('seatStatusCard');
                     card.classList.add('active');
                     
-                    document.getElementById('currentSeatNumber').textContent = data.order.seatNumber || '--';
-                    document.getElementById('seatPowerStatus').textContent = data.order.powerOn ? '⚡ 已通电' : '🔌 已断电';
+                    // 保存当前订单信息以便离座时使用
+                    window.currentOrderId = data.order.id;
+                    
+                    document.getElementById('currentSeatNumber').textContent = data.seat?.seatNumber || '--';
+                    document.getElementById('seatPowerStatus').textContent = data.seat?.powerOn ? '⚡ 已通电' : '🔌 已断电';
                     
                     // 计算使用时长
                     if (data.order.startTime) {
@@ -493,11 +496,16 @@
 
         // 一键离座
         async function leaveSeat() {
+            if (!window.currentOrderId) {
+                alert('未找到当前订单信息');
+                return;
+            }
+            
             if (!confirm('确定要离座并断电吗？')) return;
             
             try {
-                const res = await fetch('/api/order/leave', {
-                    method: 'POST',
+                const res = await fetch(`/api/orders/${window.currentOrderId}/end`, {
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await res.json();
@@ -505,7 +513,9 @@
                 if (data.success) {
                     alert('已成功离座，座位电源已断开');
                     document.getElementById('seatStatusCard').classList.remove('active');
+                    window.currentOrderId = null;
                     loadSeats();
+                    loadCurrentSeatStatus();
                 } else {
                     alert(data.message || '离座失败，请重试');
                 }

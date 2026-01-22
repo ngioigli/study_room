@@ -3,10 +3,34 @@
 **存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
-- **🚀 超级团队模式规则文件创建（2026-01-22）**:
-  - **目标**：把 `src/md/12_AI_SUPER_TEAM_PROMPT_PACK.md` 的内容适配到 `.codebuddy/rules/` 目录
-  - **新增文件**：
-    - `.codebuddy/rules/super-team-mode.mdc`：超级团队模式核心规则，触发口令"进入超级团队模式"
+- **📁 .codebuddy 目录结构重组（2026-01-22）**:
+  - **目标**：按照标准结构重新组织 .codebuddy 目录，Agent 放 agents/，Skill 放 skills/，Rule 放 rules/
+  - **新增/移动文件**：
+    - `agents/超级团队模式.md`：超级团队智能体定义
+    - `skills/README.md`：技能包说明
+    - `skills/troubleshooting/SKILL.md`：问题诊断技能
+    - `skills/frontend-dev/SKILL.md`：前端开发技能
+    - `skills/backend-dev/SKILL.md`：后端开发技能
+    - `skills/ui-design/SKILL.md`：UI 设计技能
+    - `skills/database/SKILL.md`：数据库技能
+    - `skills/testing/SKILL.md`：测试技能
+    - `skills/documentation/SKILL.md`：文档技能
+    - `skills/security/SKILL.md`：安全技能
+    - `skills/code-review/SKILL.md`：代码审查技能
+    - `README.md`：.codebuddy 目录说明
+  - **删除文件**：
+    - 删除 `rules/super-team/` 目录及其所有文件（已移动到 skills/）
+    - 删除 `rules/super-team-mode.mdc`（已整合到 agents/）
+    - 删除 `rules/rule_1768984644705_dflb7gazx.mdc`（与 git-commit-rules.mdc 重复）
+  - **保留规则文件**：
+    - `rules/assistant-identity.mdc`：AI 身份规范
+    - `rules/project-facts.mdc`：项目事实快照
+    - `rules/project-docs-sync.mdc`：文档同步规范
+    - `rules/git-commit-rules.mdc`：Git 提交规范
+    - `rules/java开发指南.mdc`：Java 开发规范
+    - `rules/_Java单测生成-Junit5.mdc`：单测生成规范
+    - `rules/java_单元测试AI生成实践指南.mdc`
+  - **使用方式**：说"进入超级团队模式"或"启动超级团队"即可激活
     - `.codebuddy/rules/project-facts.mdc`：项目事实快照（技术栈、目录、API、数据库等）
     - `.codebuddy/rules/git-commit-rules.mdc`：Git 双仓库提交规范
   - **使用方式**：说"进入超级团队模式"或"启动超级团队模式"即可激活所有规则

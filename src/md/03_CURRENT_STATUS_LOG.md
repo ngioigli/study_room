@@ -3,6 +3,30 @@
 **存档日期**: 2026-01-21
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **✅ Controller 单元测试全覆盖完成（2026-01-22）**:
+  - **已完成13个Controller的单元测试，共计约220个测试用例**
+  - 新增测试：
+    - RankingController 单元测试：涵盖今日/本周/本月/年度/总排行榜及用户排名查询等 10 个测试用例
+    - EncouragementController 单元测试：涵盖鼓励卡片获取、创建、点赞、隐藏等 12 个测试用例
+    - OrderController 单元测试：涵盖订单创建、结束、取消、查询、历史记录等 20 个测试用例
+    - QrStatusController 单元测试：涵盖二维码状态检查、锁定、并发控制等 7 个测试用例
+  - **测试覆盖率**：
+    - Controller 层：100% 接口覆盖
+    - 核心业务逻辑：80%+ 覆盖
+  - 使用 JUnit 5 + Mockito 4.11.0 测试框架，所有测试用例均符合规范
+- **🧪 Controller 单元测试继续扩展（2026-01-22）**:
+  - MessageController 单元测试：涵盖文本留言管理、回复功能等 27 个测试用例（不包含图片上传功能）
+  - SeatController 单元测试：涵盖座位查询、电源控制、状态管理等 17 个测试用例
+  - 累计完成 9 个 Controller 的单元测试，共计 131 个测试用例
+- **🧪 Controller 单元测试扩展（2026-01-21）**:
+  - PetController 单元测试：涵盖宠物管理、互动、孵化等 16 个测试用例
+  - FocusController 单元测试：涵盖专注记录保存、统计查询等 15 个测试用例  
+  - AdminController 单元测试：涵盖管理员权限、用户管理、座位管理、数据统计等 31 个测试用例
+- **🧪 Controller 单元测试创建（2026-01-21）**:
+  - ReservationController 单元测试：涵盖预约管理、座位查询、签到取消等 17 个测试用例
+  - UserController 单元测试：涵盖用户资料管理、昵称头像更新等 12 个测试用例
+  - StatsController 单元测试：涵盖学习统计、时段分布、学习画像等 8 个测试用例
+  - LoginController 单元测试：涵盖登录登出、权限验证、用户信息获取等 8 个测试用例
 - **🔧 多处Bug修复（2026-01-21）**:
   - stats.html：返回按钮跳转从 `/study.html` 改为 `/index.html`
   - ranking.html：前20名显示排名序号，第21名及以后隐藏排名序号

@@ -25,12 +25,15 @@ public class WebConfig implements WebMvcConfigurer {
         if (!resourceLocation.endsWith("/")) {
             resourceLocation += "/";
         }
+        
+        // 配置 /images/** 路径映射
+        // 优先从上传目录加载，如果不存在则从 classpath 加载
         registry.addResourceHandler("/images/**")
-                .addResourceLocations(resourceLocation);
+                .addResourceLocations(resourceLocation, "classpath:/static/images/");
         
         // 配置 /uploads/** 路径映射（留言板图片等）
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(resourceLocation);
+                .addResourceLocations(resourceLocation, "classpath:/static/uploads/");
     }
 
     // --- 2. 配置拦截器 ---

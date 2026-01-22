@@ -1,8 +1,44 @@
 # Project Status Log & Handover Note (项目现状与交接日志)
 
-**存档日期**: 2026-01-21
+**存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🧩 新增项目定制超级团队提示词手册（2026-01-22）**:
+  - 新增 `src/md/12_AI_SUPER_TEAM_PROMPT_PACK.md`，将“超级团队 AI 提示词”按当前仓库现状与 `.codebuddy` 规则进行定制（技术栈边界、接口/页面/表结构、文档同步、MCP 模板使用说明等）。
+- **🛑 专注停止按钮保存修复（2026-01-22）**:
+  - **问题**：点击"停止"按钮后没有触发保存专注记录
+  - **修复内容**：
+    - 将 stopTimer 函数改为 async，使用 await 等待 saveFocusRecord 完成
+    - 添加 isStopping 标志防止 visibilitychange 事件干扰保存流程
+    - 增强日志输出便于调试
+    - 修复自由模式下调用 saveFocusRecord 时缺少 type 参数的问题
+- **🎯 专注页面经验结算修复（2026-01-22）**:
+  - **问题**：focus.html 专注结束后没有经验结算，今日学习/专注次数/今日经验显示为 0
+  - **修复内容**：
+    - 修复 FocusController.saveFocusRecord 中 duration 参数类型转换问题（Integer 改为 Number 兼容处理）
+    - 增强 saveFocusRecord 前端函数的错误处理和日志输出
+    - 改进 stopTimer 函数，明确专注不足1分钟的提示
+    - 为 loadTodayStats 和 loadPetInfo 添加控制台日志便于调试
+    - 增加宠物升级检测和提示
+    - **数据库修复**：为 `focus_records` 表添加 `type` 字段（VARCHAR(20) DEFAULT 'free'），区分 free/pomodoro 模式
+- **📊 学习统计页面修复（2026-01-22）**:
+  - **问题**：stats.html 学习时段分布不显示，学习画像一直显示"加载中"
+  - **修复内容**：
+    - 修复 updateHourlyChart 函数中 hourlyData 数据访问逻辑（从按索引访问改为按 hour 字段映射）
+    - 增强错误处理，API 失败时显示友好的空状态
+    - 添加 showEmptyChart 和 showProfileError 辅助函数
+- **📱 扫码页面图片加载修复（2026-01-22）**:
+  - **问题**：qrcode_scan.html 页面尝试加载不存在的 dynamic_qrcode.jpg 导致控制台报错
+  - **修复内容**：
+    - 为 qrcodeImg 添加 onerror 事件处理，图片加载失败时显示友好占位符
+    - 更新 WebConfig 静态资源映射，添加 classpath 回退路径
+  - **说明**：动态二维码由外部微信系统通过 /upload/qrcode API 上传
+- **🗄️ 数据库字段修复（2026-01-22）**:
+  - **问题**：learning_stats 表缺少 tomato_count 字段导致管理后台报错
+  - **修复内容**：
+    - 通过 ALTER TABLE 为 learning_stats 表添加 tomato_count 字段
+    - 更新 study_room_init.sql 初始化脚本，添加 tomato_count 字段定义
+  - **影响**：管理后台概览数据加载恢复正常
 - **🔒 安全性与代码质量全面修复（2026-01-22）**:
   - **前后端接口对齐修复**：
     - 修复index.html中订单API路径不一致问题（`/api/order/` → `/api/orders/`）

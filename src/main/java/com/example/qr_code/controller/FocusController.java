@@ -39,7 +39,13 @@ public class FocusController {
         }
 
         try {
-            Integer duration = (Integer) body.get("duration");
+            // 安全地获取 duration，处理 Integer/Long/Number 类型
+            Object durationObj = body.get("duration");
+            Integer duration = null;
+            if (durationObj instanceof Number) {
+                duration = ((Number) durationObj).intValue();
+            }
+            
             if (duration == null || duration <= 0) {
                 result.put("success", false);
                 result.put("message", "无效的专注时长");

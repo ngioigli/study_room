@@ -647,15 +647,27 @@
             try {
                 const res = await fetch('/api/admin/stats/overview');
                 const data = await res.json();
+                console.log('概览数据:', data);
                 
                 if (data.success) {
                     document.getElementById('todayActiveUsers').textContent = data.activeUsers || 0;
                     document.getElementById('todayTotalHours').textContent = formatHours(data.totalDuration || 0);
                     document.getElementById('todayFocusCount').textContent = data.focusCount || 0;
                     document.getElementById('currentOccupied').textContent = data.occupiedSeats || 0;
+                } else {
+                    console.error('概览数据加载失败:', data.message);
+                    // 显示错误提示
+                    document.getElementById('todayActiveUsers').textContent = '0';
+                    document.getElementById('todayTotalHours').textContent = '0h';
+                    document.getElementById('todayFocusCount').textContent = '0';
+                    document.getElementById('currentOccupied').textContent = '0';
                 }
             } catch (err) {
                 console.error('加载概览失败:', err);
+                document.getElementById('todayActiveUsers').textContent = '错误';
+                document.getElementById('todayTotalHours').textContent = '错误';
+                document.getElementById('todayFocusCount').textContent = '错误';
+                document.getElementById('currentOccupied').textContent = '错误';
             }
         }
 

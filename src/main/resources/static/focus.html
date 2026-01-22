@@ -1137,6 +1137,7 @@
                 // ==================== 状态 ====================
                 const secondsElapsed = ref(0);
                 const isRunning = ref(false);
+                const isStopping = ref(false); // 防止停止时触发 visibilitychange
                 const statusText = ref('准备好了吗？');
                 
                 // 番茄钟模式状态
@@ -1420,25 +1421,42 @@
                     petAI.resetMilestone();
                 }
                 
-                function stopTimer() {
+                async function stopTimer() {
+                    // 设置停止标志，防止 visibilitychange 触发暂停
+                    isStopping.value = true;
+                    
+                    // 先清除计时器
                     clearInterval(timerId);
                     isRunning.value = false;
                     document.body.classList.remove('focus-mode');
                     
-                    // 保存记录
-                    if (secondsElapsed.value > 0) {
+                    // 保存当前时长，避免被重置
+                    const duration = secondsElapsed.value;
+                    console.log('停止计时器，时长:', duration, '秒');
+                    
+                    // 保存记录（需要至少1分钟）
+                    if (duration >= 60) {
                         if (focusMode.value === 'pomodoro') {
                             // 番茄钟模式下，记录实际专注时间
                             const focusedTime = pomodoroConfig.focusDuration * 60 - pomodoroTimeLeft.value;
+                            console.log('番茄钟模式，实际专注时间:', focusedTime, '秒');
                             if (focusedTime >= 60) {
-                                saveFocusRecord(focusedTime, 'pomodoro');
+                                await saveFocusRecord(focusedTime, 'pomodoro');
+                            } else {
+                                showToast('专注不足1分钟，不记录经验');
                             }
                         } else {
-                            saveFocusRecord(secondsElapsed.value);
+                            // 自由模式，保存实际计时时长
+                            console.log('自由模式，保存时长:', duration, '秒');
+                            await saveFocusRecord(duration, 'free');
                         }
+                    } else if (duration > 0) {
+                        showToast('专注不足1分钟，不记录经验');
                     }
                     
+                    // 保存完成后再重置状态
                     secondsElapsed.value = 0;
+                    isStopping.value = false;
                     
                     if (focusMode.value === 'pomodoro') {
                         pomodoroPhase.value = 'focus';
@@ -1453,6 +1471,7 @@
                 }
                 
                 async function saveFocusRecord(duration, type = 'free') {
+                    console.log('保存专注记录:', { duration, type });
                     try {
                         const res = await fetch('/api/focus/save', {
                             method: 'POST',
@@ -1460,28 +1479,46 @@
                             body: JSON.stringify({ duration, type })
                         });
                         const data = await res.json();
+                        console.log('保存结果:', data);
                         
                         if (data.success) {
+                            const expEarned = data.expEarned || 0;
                             if (type === 'pomodoro') {
-                                showToast(`🍅 番茄完成！获得 ${data.expEarned} 经验值（含20%奖励）`);
+                                showToast(`🍅 番茄完成！获得 ${expEarned} 经验值（含20%奖励）`);
                             } else {
-                                showToast(`专注 ${formatTime(duration)} 已记录！获得 ${data.expEarned} 经验值`);
+                                showToast(`专注 ${formatDuration(duration)} 已记录！获得 ${expEarned} 经验值`);
                             }
+                            
+                            // 更新今日统计
                             todayStats.totalDuration += duration;
                             todayStats.focusCount += 1;
-                            todayStats.expEarned += data.expEarned;
-                            petInfo.exp += data.expEarned;
+                            todayStats.expEarned += expEarned;
                             
-                            // 宠物开心
-                            if (type !== 'pomodoro') {
+                            // 更新宠物经验
+                            petInfo.exp += expEarned;
+                            
+                            // 检查是否升级
+                            const newLevel = Math.floor(petInfo.exp / 100) + 1;
+                            if (newLevel > petInfo.level) {
+                                petInfo.level = newLevel;
+                                showPetBubble(`🎉 恭喜！宠物升到 Lv.${newLevel} 啦！`);
+                            } else if (type !== 'pomodoro') {
                                 showPetBubble('太棒了！又获得经验啦~');
                             }
+                            
                             petState.value = 'playing';
                             setTimeout(() => petState.value = 'idle', 2000);
+                            
+                            return true;
+                        } else {
+                            console.error('保存失败:', data.message);
+                            showToast(data.message || '保存失败，请重试');
+                            return false;
                         }
                     } catch (err) {
                         console.error('保存失败:', err);
-                        showToast('保存失败，请重试');
+                        showToast('网络错误，保存失败');
+                        return false;
                     }
                 }
                 
@@ -1489,10 +1526,14 @@
                     try {
                         const res = await fetch('/api/focus/today');
                         const data = await res.json();
+                        console.log('今日统计数据:', data);
                         if (data.success) {
                             todayStats.totalDuration = data.totalDuration || 0;
                             todayStats.focusCount = data.focusCount || 0;
                             todayStats.expEarned = data.expEarned || 0;
+                            todayStats.tomatoCount = data.tomatoCount || 0;
+                        } else {
+                            console.warn('获取今日统计失败:', data.message);
                         }
                     } catch (err) {
                         console.error('获取统计失败:', err);
@@ -1503,6 +1544,7 @@
                     try {
                         const res = await fetch('/api/pet');
                         const data = await res.json();
+                        console.log('宠物信息:', data);
                         if (data.success && data.hasPet) {
                             hasPet.value = true;
                             const pet = data.pet;
@@ -1512,8 +1554,10 @@
                             petInfo.exp = pet.exp || 0;
                             petInfo.mood = pet.mood || 100;
                             petInfo.name = pet.name || '小蛋蛋';
+                            console.log('宠物经验:', petInfo.exp, 'expInLevel:', petInfo.exp % 100);
                         } else {
                             hasPet.value = false;
+                            console.warn('没有宠物或获取失败:', data.message);
                         }
                     } catch (err) {
                         console.error('获取宠物信息失败:', err);
@@ -1782,7 +1826,7 @@
                 // 页面离开提醒
                 function setupPageLeaveWarning() {
                     window.addEventListener('beforeunload', (e) => {
-                        if (isRunning.value) {
+                        if (isRunning.value && !isStopping.value) {
                             e.preventDefault();
                             e.returnValue = '离开页面将暂停专注计时，确定要离开吗？';
                             return e.returnValue;
@@ -1791,6 +1835,9 @@
 
                     // 监听页面可见性变化
                     document.addEventListener('visibilitychange', () => {
+                        // 如果正在停止，不要暂停
+                        if (isStopping.value) return;
+                        
                         if (document.hidden && isRunning.value) {
                             showToast('页面已隐藏，专注计时暂停');
                             pauseTimer();

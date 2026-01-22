@@ -523,20 +523,26 @@
                 clearInterval(countdownTimer);
             }
 
+
             loadQRCode();
         }
 
         // 加载二维码图片
         async function loadQRCode() {
-            try {
-                const timestamp = Date.now();
-                qrcodeImg.src = `/images/dynamic_qrcode.jpg?t=${timestamp}`;
+            const timestamp = Date.now();
+            qrcodeImg.src = `/images/dynamic_qrcode.jpg?t=${timestamp}`;
+            
+            qrcodeImg.onload = function() {
                 qrcodeImg.style.display = 'block';
                 qrcodePlaceholder.style.display = 'none';
-            } catch (err) {
+            };
+            
+            qrcodeImg.onerror = function() {
+                // 图片加载失败时显示占位符
                 qrcodeImg.style.display = 'none';
                 qrcodePlaceholder.style.display = 'block';
-            }
+                qrcodePlaceholder.innerHTML = '📱<br><small style="font-size:14px;color:#999;">二维码未配置</small>';
+            };
         }
 
         // 锁定操作

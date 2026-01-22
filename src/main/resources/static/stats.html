@@ -367,19 +367,46 @@
                 if (data.success) {
                     updateStatsCards(data);
                     updateTrendChart(data.dailyData);
+                } else {
+                    console.error('获取统计失败:', data.message);
+                    showEmptyChart(trendChart, '暂无数据');
                 }
             })
-            .catch(err => console.error('加载统计失败:', err));
+            .catch(err => {
+                console.error('加载统计失败:', err);
+                showEmptyChart(trendChart, '加载失败');
+            });
 
         // 加载时段分布
         fetch('/api/stats/hourly')
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
+                if (data.success && data.hourlyData) {
                     updateHourlyChart(data.hourlyData);
+                } else {
+                    console.error('获取时段分布失败:', data.message);
+                    showEmptyChart(hourlyChart, '暂无时段数据');
                 }
             })
-            .catch(err => console.error('加载时段分布失败:', err));
+            .catch(err => {
+                console.error('加载时段分布失败:', err);
+                showEmptyChart(hourlyChart, '加载失败');
+            });
+    }
+
+    // 显示空图表状态
+    function showEmptyChart(chart, message) {
+        chart.setOption({
+            title: {
+                text: message,
+                left: 'center',
+                top: 'center',
+                textStyle: { color: '#B2BEC3', fontSize: 14 }
+            },
+            xAxis: { show: false },
+            yAxis: { show: false },
+            series: []
+        });
     }
 
     // 更新统计卡片
@@ -461,9 +488,19 @@
         trendChart.setOption(option);
     }
 
+
     // 更新时段分布图表
     function updateHourlyChart(hourlyData) {
-        if (!hourlyData || hourlyData.length === 0) return;
+        if (!hourlyData || hourlyData.length === 0) {
+            showEmptyChart(hourlyChart, '暂无时段数据');
+            return;
+        }
+
+        // 将数组转换为按 hour 索引的映射，方便查找
+        const hourMap = {};
+        hourlyData.forEach(item => {
+            hourMap[item.hour] = item.minutes || 0;
+        });
 
         // 简化为6个时段
         const periods = [
@@ -478,7 +515,7 @@
         const periodData = periods.map(p => {
             let total = 0;
             for (let h = p.range[0]; h < p.range[1]; h++) {
-                total += hourlyData[h]?.minutes || 0;
+                total += hourMap[h] || 0;
             }
             return { name: p.name, value: total, icon: p.icon };
         });
@@ -542,9 +579,23 @@
             .then(data => {
                 if (data.success) {
                     updateProfile(data);
+                } else {
+                    console.error('获取画像失败:', data.message);
+                    showProfileError('暂无学习画像');
                 }
             })
-            .catch(err => console.error('加载画像失败:', err));
+            .catch(err => {
+                console.error('加载画像失败:', err);
+                showProfileError('加载失败');
+            });
+    }
+
+    // 显示画像加载失败状态
+    function showProfileError(message) {
+        document.getElementById('profileTags').innerHTML = 
+            '<span class="profile-tag">初来乍到</span>';
+        document.getElementById('profileSummary').innerText = message;
+        document.getElementById('profileSubtitle').innerText = '开始学习后即可生成画像';
     }
 
     // 更新学习画像

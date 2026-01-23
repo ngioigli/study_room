@@ -3,6 +3,7 @@ package com.example.qr_code.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.qr_code.entity.MessageBoard;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Repository;
@@ -41,6 +42,6 @@ public interface MessageBoardMapper extends BaseMapper<MessageBoard> {
     /**
      * 删除过期留言（用于定时清理）
      */
-    @Select("DELETE FROM message_board WHERE created_at < DATE_SUB(NOW(), INTERVAL #{days} DAY)")
+    @Delete("DELETE FROM message_board WHERE created_at < DATE_SUB(NOW(), INTERVAL #{days} DAY)")
     int deleteExpiredMessages(@Param("days") int days);
 }

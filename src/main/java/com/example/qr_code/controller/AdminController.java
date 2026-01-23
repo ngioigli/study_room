@@ -100,10 +100,23 @@ public class AdminController {
 
         Map<String, Object> result = new HashMap<>();
         try {
-            Integer status = (Integer) body.get("status");
+            Object statusObj = body.get("status");
+            Integer status = null;
+            if (statusObj instanceof Integer) {
+                status = (Integer) statusObj;
+            } else if (statusObj instanceof Number) {
+                status = ((Number) statusObj).intValue();
+            } else if (statusObj instanceof String) {
+                try {
+                    status = Integer.parseInt((String) statusObj);
+                } catch (NumberFormatException e) {
+                    // 忽略解析错误
+                }
+            }
+            
             if (status == null) {
                 result.put("success", false);
-                result.put("message", "请指定状态");
+                result.put("message", "请指定有效的状态值");
                 return result;
             }
 

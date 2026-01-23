@@ -1,0 +1,156 @@
+# 🔒 数据库与迁移文档强制同步规则
+
+> **优先级**：**最高** - 此规则必须在任何数据库相关修改前后执行  
+> **触发条件**：任何涉及数据库表结构、字段、数据的修改操作
+
+---
+
+## 🚨 强制执行清单（每次数据库修改必须完成）
+
+### 修改前
+
+- [ ] **阅读当前数据库结构**：`src/main/resources/schema.sql`
+- [ ] **阅读迁移文档**：`src/md/deploy/14_MIGRATION_DEPLOY_GUIDE.md`
+- [ ] **阅读错误日志**：`src/md/13_ERROR_LEARNING_LOG.md`
+
+### 修改后（全部必须执行）
+
+- [ ] **1. 更新 schema.sql**：`src/main/resources/schema.sql`
+- [ ] **2. 更新 study_room_init.sql**：`src/main/resources/sql/study_room_init.sql`
+- [ ] **3. 更新迁移文档**：如有结构变更，更新 `src/md/deploy/14_MIGRATION_DEPLOY_GUIDE.md`
+- [ ] **4. 更新状态日志**：`src/md/03_CURRENT_STATUS_LOG.md`
+- [ ] **5. 记录变更**：在 `src/md/deploy/15_DATABASE_CHANGELOG.md` 添加变更记录
+
+---
+
+## 📋 变更类型及必须同步的文件
+
+| 变更类型 | schema.sql | study_room_init.sql | 迁移文档 | CHANGELOG |
+|----------|------------|---------------------|----------|-----------|
+| 新增表 | ✅ 必须 | ✅ 必须 | ✅ 必须 | ✅ 必须 |
+| 删除表 | ✅ 必须 | ✅ 必须 | ✅ 必须 | ✅ 必须 |
+| 新增字段 | ✅ 必须 | ✅ 必须 | ⚠️ 按需 | ✅ 必须 |
+| 删除字段 | ✅ 必须 | ✅ 必须 | ⚠️ 按需 | ✅ 必须 |
+| 修改字段类型 | ✅ 必须 | ✅ 必须 | ⚠️ 按需 | ✅ 必须 |
+| 新增索引 | ✅ 必须 | ✅ 必须 | ❌ 不需 | ✅ 必须 |
+| 修改初始数据 | ❌ 不需 | ✅ 必须 | ❌ 不需 | ✅ 必须 |
+| 新增测试数据 | ⚠️ 按需 | ✅ 必须 | ❌ 不需 | ✅ 必须 |
+
+---
+
+## 📝 SQL 文件规范
+
+### schema.sql 规范
+
+```sql
+-- 必须使用 CREATE TABLE IF NOT EXISTS
+CREATE TABLE IF NOT EXISTS table_name (
+    ...
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表注释';
+
+-- 新增字段必须使用 ADD COLUMN IF NOT EXISTS（MySQL 8.0+）
+-- 或使用注释说明手动执行
+ALTER TABLE table_name ADD COLUMN IF NOT EXISTS column_name ...;
+
+-- 初始数据必须使用 INSERT IGNORE（防重复）
+INSERT IGNORE INTO table_name (...) VALUES (...);
+```
+
+### study_room_init.sql 规范
+
+```sql
+-- 此文件用于完整初始化，可以包含 DROP TABLE
+-- 1. 先删除表（按外键依赖倒序）
+DROP TABLE IF EXISTS table_name;
+
+-- 2. 创建表
+CREATE TABLE table_name (...);
+
+-- 3. 插入初始数据
+INSERT INTO table_name (...) VALUES (...);
+```
+
+---
+
+## 📊 CHANGELOG 记录格式
+
+在 `src/md/deploy/15_DATABASE_CHANGELOG.md` 中添加：
+
+```markdown
+### [DB-编号] 变更简述
+- **日期**：YYYY-MM-DD
+- **类型**：新增表/删除表/新增字段/修改字段/新增索引/数据变更
+- **表名**：涉及的表
+- **变更详情**：
+  - 具体的 DDL 或说明
+- **兼容性**：向后兼容/需迁移脚本
+- **关联修改**：
+  - [ ] schema.sql 已更新
+  - [ ] study_room_init.sql 已更新
+  - [ ] 迁移文档已更新（如需要）
+```
+
+---
+
+## ⚠️ 禁止行为
+
+1. **禁止只修改 Java 代码而不同步 SQL 文件**
+2. **禁止 schema.sql 和 study_room_init.sql 结构不一致**
+3. **禁止新增必填字段不给 DEFAULT 值**
+4. **禁止删除正在使用的字段/表而不更新代码**
+5. **禁止不记录数据库变更日志**
+
+---
+
+## 🔄 AI 执行流程
+
+当 AI 收到涉及数据库的需求时，必须按以下流程执行：
+
+```
+1. 识别数据库变更需求
+    ↓
+2. 阅读当前 schema.sql 和 study_room_init.sql
+    ↓
+3. 设计变更方案（DDL）
+    ↓
+4. 修改 Java 实体类/Mapper
+    ↓
+5. 【强制】同步更新 schema.sql
+    ↓
+6. 【强制】同步更新 study_room_init.sql
+    ↓
+7. 【强制】记录到 15_DATABASE_CHANGELOG.md
+    ↓
+8. 【按需】更新迁移文档 14_MIGRATION_DEPLOY_GUIDE.md
+    ↓
+9. 【强制】更新 03_CURRENT_STATUS_LOG.md
+```
+
+---
+
+## 📁 相关文件清单
+
+| 文件 | 路径 | 说明 |
+|------|------|------|
+| 数据库DDL | `src/main/resources/schema.sql` | Spring Boot 自动执行 |
+| 完整初始化 | `src/main/resources/sql/study_room_init.sql` | 手动/迁移使用 |
+| 迁移指南 | `src/md/deploy/14_MIGRATION_DEPLOY_GUIDE.md` | 一键部署文档 |
+| 变更日志 | `src/md/deploy/15_DATABASE_CHANGELOG.md` | 数据库版本历史 |
+| 导出脚本 | `migrate_export.bat` | 导出当前数据库 |
+| 导入脚本 | `migrate_import.bat` | 导入到新环境 |
+
+---
+
+## ✅ 自检清单
+
+完成数据库修改后，AI 必须回答以下问题：
+
+1. ✅ schema.sql 是否已更新？
+2. ✅ study_room_init.sql 是否已同步？
+3. ✅ 两个 SQL 文件结构是否一致？
+4. ✅ 15_DATABASE_CHANGELOG.md 是否已记录？
+5. ✅ 03_CURRENT_STATUS_LOG.md 是否已更新？
+6. ✅ 新增字段是否有 DEFAULT 值？
+7. ✅ Java 实体类是否已同步？
+
+**如果任何一项为否，必须立即修复后再继续！**

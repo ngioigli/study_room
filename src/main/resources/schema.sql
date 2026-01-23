@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS signature VARCHAR(100) DEFAULT NULL COMMENT '个性签名';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS today_status VARCHAR(50) DEFAULT '努力学习中 📚' COMMENT '今日状态';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS study_days INT DEFAULT 0 COMMENT '学习天数';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS hide_ranking TINYINT(1) DEFAULT 0 COMMENT '是否隐藏排行榜：0-显示，1-隐藏';
 
 -- 2. 座位表 (seats)
 CREATE TABLE IF NOT EXISTS seats (
@@ -74,6 +75,7 @@ CREATE TABLE IF NOT EXISTS focus_records (
 
 -- 为已存在的focus_records表添加type字段
 ALTER TABLE focus_records ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'free' COMMENT '专注类型: free(自由专注), pomodoro(番茄钟)';
+ALTER TABLE focus_records ADD COLUMN IF NOT EXISTS client_id VARCHAR(64) DEFAULT NULL COMMENT '客户端ID，用于幂等性校验';
 
 -- 5. 用户宠物表 (user_pets)
 CREATE TABLE IF NOT EXISTS user_pets (
@@ -136,6 +138,7 @@ CREATE TABLE IF NOT EXISTS seat_reservations (
     start_time TIME NOT NULL COMMENT '开始时间',
     end_time TIME NOT NULL COMMENT '结束时间',
     status TINYINT DEFAULT 1 COMMENT '状态：0-已取消，1-待使用，2-已使用，3-已过期',
+    check_in_time DATETIME DEFAULT NULL COMMENT '签到时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_user_id (user_id),
@@ -143,6 +146,9 @@ CREATE TABLE IF NOT EXISTS seat_reservations (
     INDEX idx_date (reservation_date),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='座位预约表';
+
+-- 为已存在的seat_reservations表添加check_in_time字段
+ALTER TABLE seat_reservations ADD COLUMN IF NOT EXISTS check_in_time DATETIME DEFAULT NULL COMMENT '签到时间';
 
 -- 9. 留言板表 (message_board)
 CREATE TABLE IF NOT EXISTS message_board (

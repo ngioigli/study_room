@@ -173,6 +173,34 @@ globs:
 ## 9. 数据库迁移策略
 
 - 优先使用"向后兼容"的增量变更：新增字段要给 DEFAULT
-- 必须同步修改：`schema.sql` 与 `study_room_init.sql`
+- 必须同步修改：`schema.sql` 与 `sql/study_room_init.sql`
 - 如果 `spring.sql.init.mode=always`，确保脚本可重复执行
-- 任何改表必须写入 `src/md/03_CURRENT_STATUS_LOG.md`
+- **任何改表必须写入**：
+  - `src/md/core/03_CURRENT_STATUS_LOG.md`（状态日志）
+  - `src/md/deploy/15_DATABASE_CHANGELOG.md`（变更日志）
+- 详细规则参见：`.codebuddy/rules/database-sync/rules/database-sync.mdc`
+
+---
+
+## 10. 文档目录结构
+
+```
+src/md/
+├── README.md              # 文档索引
+├── core/                  # 核心规范（AI规则、状态日志、错误日志）
+├── design/                # 设计文档（需求、架构、UI）
+├── guide/                 # 开发指南（任务书、开发指南）
+├── deploy/                # 部署迁移（迁移指南、变更日志）
+└── academic/              # 学术相关（论文大纲）
+```
+
+---
+
+## 11. 迁移部署相关文件
+
+| 文件 | 说明 |
+|------|------|
+| `migrate_export.bat` | 导出当前数据库（结构+数据） |
+| `migrate_import.bat` | 导入到新环境（清空重建） |
+| `src/md/deploy/14_MIGRATION_DEPLOY_GUIDE.md` | 一键迁移部署指南 |
+| `src/md/deploy/15_DATABASE_CHANGELOG.md` | 数据库变更日志 |

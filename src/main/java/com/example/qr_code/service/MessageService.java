@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.web.util.HtmlUtils;
+
 /**
  * MessageService 留言板服务类
  * 处理留言、回复等业务逻辑
@@ -61,9 +63,12 @@ public class MessageService {
             return false;
         }
         
+        // XSS 防护：对内容进行 HTML 转义
+        String safeContent = HtmlUtils.htmlEscape(content);
+        
         MessageBoard message = new MessageBoard();
         message.setUserId(userId);
-        message.setContent(content);
+        message.setContent(safeContent);
         message.setStatus(1);
         message.setReplyCount(0);
         
@@ -130,10 +135,13 @@ public class MessageService {
             return false;
         }
         
+        // XSS 防护：对内容进行 HTML 转义
+        String safeContent = HtmlUtils.htmlEscape(content);
+        
         MessageReply reply = new MessageReply();
         reply.setMessageId(messageId);
         reply.setUserId(userId);
-        reply.setContent(content);
+        reply.setContent(safeContent);
         reply.setStatus(1);
         
         if (messageReplyMapper.insert(reply) > 0) {

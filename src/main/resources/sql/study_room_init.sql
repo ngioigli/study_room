@@ -2,13 +2,13 @@
 -- 无人自习室智能门禁与助学平台 - 完整数据库初始化脚本
 -- 项目：基于Spring Boot的无人自习室智能门禁协同与沉浸式助学空间
 -- 作者：黎志鹏 (22软件3班 / 2210412115)
--- 版本：V1.1
--- 更新：2026-01-05
+-- 版本：V2.0
+-- 更新：2026-01-22
 -- 
 -- 特性：
 -- - 使用 CREATE TABLE IF NOT EXISTS，已存在的表不会被覆盖
 -- - 使用 INSERT IGNORE，已存在的数据不会重复插入
--- - 可安全在已有数据的数据库上执行
+-- - 与 schema.sql 保持完全同步
 -- 
 -- 使用方法：
 -- 1. 创建数据库：CREATE DATABASE study_room DEFAULT CHARSET utf8mb4;
@@ -21,14 +21,17 @@ USE study_room;
 
 -- =====================================================
 -- 1. 用户表 (users) - 核心表
--- 注意：如果表已存在则跳过，不会影响已有用户数据
 -- =====================================================
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password VARCHAR(100) NOT NULL COMMENT '密码',
     nickname VARCHAR(50) DEFAULT NULL COMMENT '昵称',
-    avatar VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
+    avatar VARCHAR(255) DEFAULT '👤' COMMENT '头像(emoji或URL)',
+    signature VARCHAR(100) DEFAULT NULL COMMENT '个性签名',
+    today_status VARCHAR(50) DEFAULT '努力学习中 📚' COMMENT '今日状态',
+    study_days INT DEFAULT 0 COMMENT '学习天数',
+    hide_ranking TINYINT(1) DEFAULT 0 COMMENT '是否隐藏排行榜：0-显示，1-隐藏',
     phone VARCHAR(20) DEFAULT NULL COMMENT '手机号',
     email VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
     role ENUM('user', 'admin') DEFAULT 'user' COMMENT '角色',
@@ -68,9 +71,7 @@ CREATE TABLE IF NOT EXISTS orders (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_user_id (user_id),
     INDEX idx_seat_id (seat_id),
-    INDEX idx_status (status),
-    CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_orders_seat FOREIGN KEY (seat_id) REFERENCES seats(id) ON DELETE CASCADE
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
 
 -- =====================================================
@@ -81,15 +82,15 @@ CREATE TABLE IF NOT EXISTS focus_records (
     user_id BIGINT NOT NULL COMMENT '用户ID',
     order_id BIGINT DEFAULT NULL COMMENT '关联订单ID（可选）',
     duration INT NOT NULL COMMENT '专注时长(秒)',
-    type VARCHAR(20) DEFAULT 'free' COMMENT '专注类型: free/pomodoro',
+    type VARCHAR(20) DEFAULT 'free' COMMENT '专注类型: free(自由专注), pomodoro(番茄钟)',
+    client_id VARCHAR(64) DEFAULT NULL COMMENT '客户端ID，用于幂等性校验',
     focus_date DATE NOT NULL COMMENT '专注日期',
     start_time DATETIME DEFAULT NULL COMMENT '开始时间',
     end_time DATETIME DEFAULT NULL COMMENT '结束时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_user_id (user_id),
     INDEX idx_focus_date (focus_date),
-    INDEX idx_user_date (user_id, focus_date),
-    CONSTRAINT fk_focus_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    INDEX idx_user_date (user_id, focus_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='专注记录表';
 
 -- =====================================================
@@ -106,8 +107,7 @@ CREATE TABLE IF NOT EXISTS user_pets (
     mood INT DEFAULT 100 COMMENT '心情值(0-100)',
     last_interact_time DATETIME DEFAULT NULL COMMENT '上次互动时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    CONSTRAINT fk_pet_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户宠物表';
 
 -- =====================================================
@@ -126,8 +126,7 @@ CREATE TABLE IF NOT EXISTS learning_stats (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_user_date (user_id, stat_date),
-    INDEX idx_stat_date (stat_date),
-    CONSTRAINT fk_stats_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    INDEX idx_stat_date (stat_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习统计表';
 
 -- =====================================================
@@ -146,49 +145,130 @@ CREATE TABLE IF NOT EXISTS access_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_user_id (user_id),
     INDEX idx_action_type (action_type),
-    INDEX idx_created_at (created_at),
-    CONSTRAINT fk_access_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='门禁通行记录表';
 
 -- =====================================================
--- 初始数据（仅在数据不存在时插入）
--- INSERT IGNORE：如果主键/唯一键冲突则跳过，不报错
+-- 8. 座位预约表 (seat_reservations)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS seat_reservations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '预约ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    seat_id BIGINT NOT NULL COMMENT '座位ID',
+    reservation_date DATE NOT NULL COMMENT '预约日期',
+    start_time TIME NOT NULL COMMENT '开始时间',
+    end_time TIME NOT NULL COMMENT '结束时间',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-已取消，1-待使用，2-已使用，3-已过期',
+    check_in_time DATETIME DEFAULT NULL COMMENT '签到时间',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_seat_id (seat_id),
+    INDEX idx_date (reservation_date),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='座位预约表';
+
+-- =====================================================
+-- 9. 留言板表 (message_board)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS message_board (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '留言ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    content TEXT NOT NULL COMMENT '留言内容',
+    images TEXT DEFAULT NULL COMMENT '图片URL列表，多个用逗号分隔',
+    reply_count INT DEFAULT 0 COMMENT '回复数量',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-隐藏，1-显示',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='留言板表';
+
+-- =====================================================
+-- 10. 留言回复表 (message_replies)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS message_replies (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '回复ID',
+    message_id BIGINT NOT NULL COMMENT '留言ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    content VARCHAR(500) NOT NULL COMMENT '回复内容',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-隐藏，1-显示',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_message_id (message_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='留言回复表';
+
+-- =====================================================
+-- 11. 鼓励卡片表 (encouragement_cards)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS encouragement_cards (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '卡片ID',
+    user_id BIGINT DEFAULT NULL COMMENT '用户ID（匿名则为NULL）',
+    emoji VARCHAR(10) DEFAULT '🌸' COMMENT '表情',
+    message VARCHAR(200) NOT NULL COMMENT '鼓励内容',
+    likes INT DEFAULT 0 COMMENT '点赞数',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-隐藏，1-显示',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_status (status),
+    INDEX idx_likes (likes)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='鼓励卡片表';
+
+-- =====================================================
+-- 12. 系统配置表 (system_config)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS system_config (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '配置ID',
+    config_key VARCHAR(100) NOT NULL UNIQUE COMMENT '配置键',
+    config_value TEXT COMMENT '配置值',
+    description VARCHAR(200) DEFAULT NULL COMMENT '配置描述',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
+
+-- =====================================================
+-- 初始数据（使用 INSERT IGNORE 防止重复插入）
 -- =====================================================
 
--- 座位数据（仅当 seats 表为空时插入）
--- 使用存储过程确保只在表为空时插入
-DELIMITER //
-CREATE PROCEDURE init_seats_if_empty()
-BEGIN
-    DECLARE seat_count INT;
-    SELECT COUNT(*) INTO seat_count FROM seats;
-    IF seat_count = 0 THEN
-        INSERT INTO seats (seat_number, description) VALUES 
-        ('A01', '靠窗位置'),
-        ('A02', '靠窗位置'),
-        ('A03', '靠窗位置'),
-        ('B01', '中间区域'),
-        ('B02', '中间区域'),
-        ('B03', '中间区域'),
-        ('C01', '角落安静区'),
-        ('C02', '角落安静区');
-    END IF;
-END //
-DELIMITER ;
+-- 初始座位数据
+INSERT IGNORE INTO seats (id, seat_number, description) VALUES 
+(1, 'A01', '靠窗位置'),
+(2, 'A02', '靠窗位置'),
+(3, 'A03', '靠窗位置'),
+(4, 'B01', '中间区域'),
+(5, 'B02', '中间区域'),
+(6, 'B03', '中间区域'),
+(7, 'C01', '角落安静区'),
+(8, 'C02', '角落安静区');
 
--- 执行存储过程
-CALL init_seats_if_empty();
+-- 初始鼓励卡片数据
+INSERT IGNORE INTO encouragement_cards (id, emoji, message, likes) VALUES
+(1, '🌸', '学习累了就休息一下吧，你已经很棒了！', 15),
+(2, '⭐', '每一点努力都不会白费，加油！', 23),
+(3, '🌈', '雨后总会有彩虹，坚持就是胜利！', 18),
+(4, '💪', '相信自己，你比想象中更强大！', 31),
+(5, '🎯', '专注当下，未来会感谢现在努力的你！', 27),
+(6, '☀️', '新的一天，新的开始，你可以的！', 12),
+(7, '🌻', '向阳而生，你的努力终会开花结果！', 20),
+(8, '💖', '有人默默为你加油，你不是一个人在战斗！', 35);
 
--- 删除临时存储过程
-DROP PROCEDURE IF EXISTS init_seats_if_empty;
+-- 初始管理员账号
+INSERT IGNORE INTO users (id, username, password, nickname, role) VALUES
+(1, 'admin', '123456', '管理员', 'admin');
+
+-- 测试用户账号
+INSERT IGNORE INTO users (id, username, password, nickname, role) VALUES
+(2, 'test', '123456', '测试用户', 'user');
 
 -- =====================================================
 -- 建表完成！
--- 共 7 张表：users, seats, orders, focus_records, 
---           user_pets, learning_stats, access_logs
+-- 共 12 张表：users, seats, orders, focus_records, 
+--           user_pets, learning_stats, access_logs,
+--           seat_reservations, message_board, message_replies,
+--           encouragement_cards, system_config
 -- 
 -- 安全特性：
 -- - CREATE TABLE IF NOT EXISTS：表存在则跳过
--- - 座位数据：仅在表为空时插入
+-- - INSERT IGNORE：数据存在则跳过
 -- - 不会覆盖任何已有数据
 -- =====================================================

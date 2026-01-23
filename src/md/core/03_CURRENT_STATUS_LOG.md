@@ -3,6 +3,42 @@
 **存档日期**: 2026-01-22
 **当前阶段**: Phase 5 完成（HTML 前端 + Spring Boot 后端）
 **最近更新**: 
+- **🔧 代码审查与潜在问题修复（2026-01-22）**:
+  - **修复高优先级问题**：
+    1. `MessageBoardMapper.java`：`@Select` 注解误用于 DELETE 语句，改为 `@Delete`
+    2. `schema.sql`：补充缺失字段 `hide_ranking`、`client_id`、`check_in_time`
+    3. `study_room_init.sql`：完全重写，与 schema.sql 保持一致（12张表）
+    4. `AdminController.java`：修复 `updateUserStatus` 方法的类型转换风险
+    5. `MessageService.java`：添加 XSS 防护（HtmlUtils.htmlEscape）
+  - **数据库字段同步**（详见 `deploy/15_DATABASE_CHANGELOG.md` [DB-002]）：
+    - `users.hide_ranking` - 是否隐藏排行榜
+    - `focus_records.client_id` - 幂等性校验
+    - `seat_reservations.check_in_time` - 签到时间
+  - **安全加固**：
+    - 留言板内容和回复内容添加 HTML 转义防 XSS
+- **📦 一键迁移部署方案与文档重组（2026-01-22）**:
+  - **新增迁移部署文档**：`src/md/deploy/14_MIGRATION_DEPLOY_GUIDE.md`
+    - Windows 环境完整部署指南
+    - JDK/Maven/MySQL 安装配置步骤
+    - 数据库导入导出操作指南
+    - 常见问题解答
+  - **新增数据库变更日志**：`src/md/deploy/15_DATABASE_CHANGELOG.md`
+    - 记录所有数据库结构变更
+    - 保证可追溯性
+  - **新增批处理脚本**：
+    - `migrate_export.bat`：导出当前数据库（结构+数据）
+    - `migrate_import.bat`：导入到新环境（清空并重建）
+  - **新增强制同步规则**：`.codebuddy/rules/database-sync/rules/database-sync.mdc`
+    - 数据库变更必须同步更新 schema.sql 和 study_room_init.sql
+    - 必须记录到 DATABASE_CHANGELOG.md
+    - AI 执行流程强制检查清单
+  - **文档目录重组**：`src/md/` 按分类整理到子文件夹
+    - `core/`：核心规范与状态（AI规则、状态日志、错误日志）
+    - `design/`：设计文档（产品需求、系统设计、UI规范）
+    - `guide/`：开发指南（任务书、开发指南、Prompt包）
+    - `deploy/`：部署迁移（迁移指南、数据库变更日志）
+    - `academic/`：学术相关（论文大纲）
+  - **新增文档索引**：`src/md/README.md`
 - **🚨 新增错误学习日志机制（2026-01-22）**:
   - **新增文件**：`src/md/13_ERROR_LEARNING_LOG.md` - 错误学习日志
   - **更新规则**：`.codebuddy/rules/project-docs-sync.mdc`
